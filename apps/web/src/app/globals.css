@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --green: #1a7a4a;
+  --gl: #25a866;
+  --dark: #0f1f15;
+  --panel: #162a1e;
+  --white: #f9fbf9;
+  --accent: #f5c518;
+  --gray: #6b7c70;
+}
+
+body {
+  background: var(--dark);
+  color: var(--white);
+  font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+}
+
+/* Leaflet popup override */
+.leaflet-popup-content-wrapper {
+  background: var(--panel) !important;
+  border: 1px solid var(--gl) !important;
+  border-radius: 12px !important;
+  color: var(--white) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.6) !important;
+}
+.leaflet-popup-tip {
+  background: var(--gl) !important;
+}
+.leaflet-popup-close-button {
+  color: var(--gray) !important;
+}
+.leaflet-control-zoom a {
+  background: var(--panel) !important;
+  color: var(--white) !important;
+  border-color: var(--gl) !important;
+}
+
