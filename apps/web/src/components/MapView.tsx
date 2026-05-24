@@ -10,6 +10,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 const SPORT_EMOJI: Record<string, string> = {
   basketball: '🏀', football: '⚽', tennis: '🎾',
   volleyball: '🏐', fitness: '🏋️', skate: '🛹',
+  padel: '🏸', pingpong: '🏓', pumptrack: '🚴', ninja: '🧗',
 }
 
 const SPORT_OPTIONS = [
@@ -19,6 +20,10 @@ const SPORT_OPTIONS = [
   { value: 'volleyball', label: '🏐 כדורעף' },
   { value: 'fitness',    label: '🏋️ כושר חוץ' },
   { value: 'skate',      label: '🛹 סקייטפארק' },
+  { value: 'padel',      label: '🏸 פדל' },
+  { value: 'pingpong',   label: '🏓 פינג-פונג' },
+  { value: 'pumptrack',  label: '🚴 פאמפטרק' },
+  { value: 'ninja',      label: '🧗 נינג׳ה' },
 ]
 
 interface Court {

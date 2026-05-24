@@ -1,13 +1,17 @@
 'use client'
 
 export const SPORTS = [
-  { id: 'all',        label: 'הכל',       emoji: '🏟️' },
-  { id: 'football',   label: 'כדורגל',    emoji: '⚽' },
-  { id: 'basketball', label: 'כדורסל',    emoji: '🏀' },
-  { id: 'tennis',     label: 'טניס',      emoji: '🎾' },
-  { id: 'volleyball', label: 'כדורעף',    emoji: '🏐' },
-  { id: 'fitness',    label: 'כושר חוץ',  emoji: '🏋️' },
-  { id: 'skate',      label: 'סקייטפארק', emoji: '🛹' },
+  { id: 'all',        label: 'הכל',        emoji: '🏟️' },
+  { id: 'football',   label: 'כדורגל',     emoji: '⚽' },
+  { id: 'basketball', label: 'כדורסל',     emoji: '🏀' },
+  { id: 'tennis',     label: 'טניס',       emoji: '🎾' },
+  { id: 'volleyball', label: 'כדורעף',     emoji: '🏐' },
+  { id: 'fitness',    label: 'כושר חוץ',   emoji: '🏋️' },
+  { id: 'skate',      label: 'סקייטפארק',  emoji: '🛹' },
+  { id: 'padel',      label: 'פדל',        emoji: '🏸' },
+  { id: 'pingpong',   label: 'פינג-פונג',  emoji: '🏓' },
+  { id: 'pumptrack',  label: 'פאמפטרק',    emoji: '🚴' },
+  { id: 'ninja',      label: 'נינג׳ה',     emoji: '🧗' },
 ]
 
 export const SPORT_COLORS: Record<string, string> = {
@@ -17,6 +21,10 @@ export const SPORT_COLORS: Record<string, string> = {
   volleyball: '#2ab8e0',
   fitness:    '#2a7fe0',
   skate:      '#f5c518',
+  padel:      '#e040a0',
+  pingpong:   '#40e0d0',
+  pumptrack:  '#ff6b35',
+  ninja:      '#9b59b6',
 }
 
 interface Props {
