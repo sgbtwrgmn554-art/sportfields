@@ -5,6 +5,7 @@ import jwt from '@fastify/jwt'
 import { authRoutes } from './routes/auth'
 import { courtsRoutes } from './routes/courts'
 import { checkinsRoutes } from './routes/checkins'
+import { adminRoutes } from './routes/admin'
 
 const app = Fastify({ logger: true })
 
@@ -24,6 +25,7 @@ async function main() {
   await app.register(authRoutes)
   await app.register(courtsRoutes)
   await app.register(checkinsRoutes)
+  await app.register(adminRoutes)
 
   app.get('/health', () => ({ status: 'ok' }))
 
