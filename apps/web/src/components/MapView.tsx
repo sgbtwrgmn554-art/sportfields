@@ -300,6 +300,35 @@ export default function MapView({ sport, onAuthRequired }: Props) {
           }}>
             {checkedIn === selectedCourt.id ? '👋 צ\'ק-אאוט — יצאתי' : '📍 אני כאן! צ\'ק-אין'}
           </button>
+
+          {/* Navigation buttons */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <a
+              href={`https://waze.com/ul?ll=${selectedCourt.lat},${selectedCourt.lng}&navigate=yes`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 6, padding: '9px 0', borderRadius: 10, textDecoration: 'none',
+                background: '#33ccff', color: '#fff',
+                fontFamily: 'Heebo, sans-serif', fontSize: 13, fontWeight: 700,
+              }}
+            >
+              🚙 Waze
+            </a>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${selectedCourt.lat},${selectedCourt.lng}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 6, padding: '9px 0', borderRadius: 10, textDecoration: 'none',
+                background: 'rgba(255,255,255,.08)', color: 'white',
+                border: '1px solid rgba(255,255,255,.2)',
+                fontFamily: 'Heebo, sans-serif', fontSize: 13, fontWeight: 700,
+              }}
+            >
+              🗺️ Google Maps
+            </a>
+          </div>
         </div>
       )}
 
