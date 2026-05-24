@@ -6,6 +6,7 @@ import SportFilter from '@/components/SportFilter'
 import AuthModal from '@/components/AuthModal'
 import AdBanner from '@/components/AdBanner'
 import { useAuth } from '@/lib/useAuth'
+import { t, Lang } from '@/lib/i18n'
 
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false })
 
@@ -13,6 +14,8 @@ export default function HomePage() {
   const [view, setView]       = useState<'map' | 'list'>('map')
   const [sport, setSport]     = useState<string>('all')
   const [showAuth, setShowAuth] = useState(false)
+  const [lang, setLang]       = useState<Lang>('he')
+  const txt = t[lang]
   const { user, logout, init } = useAuth()
 
   // טען auth מ-localStorage בטעינה
@@ -40,7 +43,7 @@ export default function HomePage() {
             <h1 style={{ fontSize: 18, fontWeight: 900, lineHeight: 1.1 }}>
               Sport<span style={{ color: 'var(--gl)' }}>Fields</span>
             </h1>
-            <div style={{ fontSize: 10, color: 'var(--gray)' }}>ישראל 🇮🇱</div>
+            <div style={{ fontSize: 10, color: 'var(--gray)' }}>{txt.appSub}</div>
           </div>
         </div>
 
@@ -55,9 +58,17 @@ export default function HomePage() {
                 background: view === v ? 'var(--green)' : 'rgba(255,255,255,.07)',
                 color: view === v ? 'white' : 'var(--gray)', transition: 'background .2s',
               }}>
-                {v === 'map' ? '🗺️ מפה' : '📋 רשימה'}
+                {v === 'map' ? txt.map : txt.list}
               </button>
             ))}
+            {/* Language toggle */}
+            <button onClick={() => setLang(lang === 'he' ? 'en' : 'he')} style={{
+              padding: '5px 10px', borderRadius: 20, border: '1px solid rgba(255,255,255,.15)',
+              fontSize: 12, fontFamily: 'Heebo, sans-serif', fontWeight: 700, cursor: 'pointer',
+              background: 'rgba(255,255,255,.07)', color: 'var(--gl)',
+            }}>
+              {lang === 'he' ? '🇺🇸 EN' : '🇮🇱 HE'}
+            </button>
           </div>
 
           {/* Auth button */}
@@ -74,7 +85,7 @@ export default function HomePage() {
                 background: 'none', border: 'none', color: 'var(--gray)',
                 fontFamily: 'Heebo, sans-serif', fontSize: 12, cursor: 'pointer',
               }}>
-                יציאה
+                {txt.logout}
               </button>
             </div>
           ) : (
@@ -83,7 +94,7 @@ export default function HomePage() {
               padding: '6px 14px', borderRadius: 20,
               fontFamily: 'Heebo, sans-serif', fontSize: 13, fontWeight: 700, cursor: 'pointer',
             }}>
-              כניסה 🔑
+              {txt.login}
             </button>
           )}
         </div>

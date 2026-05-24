@@ -126,6 +126,17 @@ export async function courtsRoutes(app: FastifyInstance) {
     return { success: true }
   })
 
+  // תיקון סוג ספורט — crowdsource (כל משתמש יכול לתקן)
+  app.patch('/courts/:id/sport', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { sport_type } = req.body as { sport_type: string }
+    const validSports = ['football','basketball','tennis','volleyball','fitness','skate','padel','pingpong','pumptrack','ninja']
+    if (!validSports.includes(sport_type))
+      return reply.status(400).send({ error: 'סוג ספורט לא תקין' })
+    await db.query('UPDATE courts SET sport_types = $1 WHERE id = $2', [[sport_type], id])
+    return { success: true }
+  })
+
   // מחיקת מגרש — אדמין או יוצר המגרש
   app.delete('/courts/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
@@ -168,6 +179,62 @@ export async function courtsRoutes(app: FastifyInstance) {
     ).catch(() => {})
 
     return { success: true, message: 'הדיווח התקבל — תודה!' }
+  })
+
+  // דירוג מגרש ⭐
+  app.post('/courts/:id/rate', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { rating } = req.body as { rating: number }
+    if (!rating || rating < 1 || rating > 5) return reply.status(400).send({ error: 'דירוג לא תקין' })
+
+    let userId: string | null = null
+    try { await req.jwtVerify(); userId = (req.user as any)?.userId } catch {}
+
+    if (userId) {
+      // משתמש מחובר — שמור דירוג אישי (פעם אחת לכל מגרש)
+      await db.query(
+        `INSERT INTO court_ratings (court_id, user_id, rating)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (court_id, user_id) DO UPDATE SET rating = $3`,
+        [id, userId, rating]
+      )
+      // עדכן סיכום
+      const { rows } = await db.query(
+        `SELECT COALESCE(SUM(rating),0) as s, COUNT(*) as c FROM court_ratings WHERE court_id = $1`, [id]
+      )
+      await db.query(`UPDATE courts SET rating_sum=$1, rating_count=$2 WHERE id=$3`,
+        [rows[0].s, rows[0].c, id])
+    } else {
+      // אנונימי — סתם מוסיף לסכום
+      await db.query(
+        `UPDATE courts SET rating_sum = rating_sum + $1, rating_count = rating_count + 1 WHERE id = $2`,
+        [rating, id]
+      )
+    }
+    const { rows } = await db.query(`SELECT rating_sum, rating_count FROM courts WHERE id=$1`, [id])
+    const avg = rows[0].rating_count > 0 ? (rows[0].rating_sum / rows[0].rating_count).toFixed(1) : null
+    return { success: true, avg, count: rows[0].rating_count }
+  })
+
+  // Leaderboard — שחקנים הכי פעילים
+  app.get('/leaderboard', async () => {
+    const { rows } = await db.query(
+      `SELECT u.id, u.name,
+        COUNT(ci.id) as checkin_count,
+        CASE
+          WHEN COUNT(ci.id) >= 50 THEN '🏆 אלוף'
+          WHEN COUNT(ci.id) >= 20 THEN '⭐ מקצוען'
+          WHEN COUNT(ci.id) >= 10 THEN '🔥 סדיר'
+          WHEN COUNT(ci.id) >= 3  THEN '🌱 מתחיל'
+          ELSE '👋 חדש'
+        END as badge
+       FROM users u
+       JOIN checkins ci ON ci.user_id = u.id
+       GROUP BY u.id, u.name
+       ORDER BY checkin_count DESC
+       LIMIT 20`
+    )
+    return rows
   })
 
   // הוספת מגרש חדש (crowdsource)
