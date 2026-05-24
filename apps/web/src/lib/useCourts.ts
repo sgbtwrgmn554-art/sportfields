@@ -1,60 +1,43 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-// מרכז ישראל בערך — מכסה את כל הארץ בטווח 500 ק"מ
-const ISRAEL_CENTER = { lat: 31.5, lng: 34.9 }
-const ISRAEL_RADIUS = 500_000 // 500 ק"מ — כל ישראל
-
-async function fetchCourts(lat: number, lng: number, sport: string) {
-  const params: Record<string, unknown> = { lat, lng, radius: ISRAEL_RADIUS }
-  if (sport !== 'all') params.sport = sport
-  const { data } = await axios.get(`${API}/courts/nearby`, { params })
-  return data
+export interface Bbox {
+  minLat: number; maxLat: number
+  minLng: number; maxLng: number
 }
 
-export function useNearbyCourts(sport: string) {
-  const [courts, setCourts]           = useState<any[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+// טוען מגרשים לפי מסגרת המפה הנוכחית בלבד — הרבה יותר מהיר
+export function useBboxCourts(sport: string) {
+  const [courts, setCourts]   = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const lastBbox = useRef<string>('')
 
-  useEffect(() => {
-    let cancelled = false
+  const fetchByBbox = useCallback(async (bbox: Bbox) => {
+    // מונע בקשות כפולות כשהמפה זזה מעט מאוד
+    const key = `${bbox.minLat.toFixed(3)},${bbox.maxLat.toFixed(3)},${bbox.minLng.toFixed(3)},${bbox.maxLng.toFixed(3)},${sport}`
+    if (key === lastBbox.current) return
+    lastBbox.current = key
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (cancelled) return
-        const { latitude: lat, longitude: lng } = pos.coords
-        setUserLocation({ lat, lng })
-        try {
-          const data = await fetchCourts(lat, lng, sport)
-          if (!cancelled) setCourts(data)
-        } catch (e) {
-          console.error('fetchCourts error', e)
-        } finally {
-          if (!cancelled) setLoading(false)
-        }
-      },
-      async () => {
-        // Fallback — GPS נדחה, מביאים מכל ישראל
-        if (cancelled) return
-        setUserLocation(ISRAEL_CENTER)
-        try {
-          const data = await fetchCourts(ISRAEL_CENTER.lat, ISRAEL_CENTER.lng, sport)
-          if (!cancelled) setCourts(data)
-        } catch (e) {
-          console.error('fetchCourts fallback error', e)
-        } finally {
-          if (!cancelled) setLoading(false)
-        }
-      },
-      { timeout: 5000 }
-    )
-
-    return () => { cancelled = true }
+    setLoading(true)
+    try {
+      const params: Record<string, unknown> = { ...bbox, limit: 300 }
+      if (sport !== 'all') params.sport = sport
+      const { data } = await axios.get(`${API}/courts/bbox`, { params })
+      setCourts(data)
+    } catch (e) {
+      console.error('bbox fetch error', e)
+    } finally {
+      setLoading(false)
+    }
   }, [sport])
 
-  return { courts, loading, userLocation }
+  return { courts, loading, fetchByBbox }
+}
+
+// שמור גם את הישן לתאימות אחורה
+export function useNearbyCourts(sport: string) {
+  return useBboxCourts(sport)
 }

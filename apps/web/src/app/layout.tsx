@@ -15,6 +15,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800;900&display=swap"
           rel="stylesheet"
         />
+        {/* Google AdSense — יופעל לאחר אישור חשבון */}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </head>
       <body>{children}</body>
     </html>

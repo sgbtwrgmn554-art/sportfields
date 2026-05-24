@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import CourtList from '@/components/CourtList'
 import SportFilter from '@/components/SportFilter'
 import AuthModal from '@/components/AuthModal'
+import AdBanner from '@/components/AdBanner'
 import { useAuth } from '@/lib/useAuth'
 
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false })
@@ -90,6 +91,9 @@ export default function HomePage() {
 
       {/* FILTER */}
       <SportFilter selected={sport} onChange={setSport} />
+
+      {/* AD BANNER — בין הפילטר למפה */}
+      <AdBanner slot="1234567890" format="banner" />
 
       {/* MAIN */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>

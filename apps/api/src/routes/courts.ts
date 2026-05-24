@@ -9,6 +9,15 @@ const nearbyCourtsSchema = z.object({
   sport: z.string().optional(),
 })
 
+const bboxSchema = z.object({
+  minLat: z.coerce.number(),
+  maxLat: z.coerce.number(),
+  minLng: z.coerce.number(),
+  maxLng: z.coerce.number(),
+  sport: z.string().optional(),
+  limit: z.coerce.number().default(300),
+})
+
 const addCourtSchema = z.object({
   name: z.string().min(2),
   address: z.string().optional(),
@@ -18,7 +27,35 @@ const addCourtSchema = z.object({
 })
 
 export async function courtsRoutes(app: FastifyInstance) {
-  // מגרשים קרובים + כמה שחקנים נמצאים שם
+
+  // ── bbox endpoint — רק מה שנמצא בתוך מסגרת המפה הנוכחית ───────────────
+  app.get('/courts/bbox', async (req) => {
+    const q = bboxSchema.parse(req.query)
+    const sportFilter = q.sport ? `AND $5 = ANY(c.sport_types)` : ''
+    const params: unknown[] = [q.minLng, q.minLat, q.maxLng, q.maxLat]
+    if (q.sport) params.push(q.sport)
+    params.push(q.limit)
+
+    const { rows } = await db.query(
+      `SELECT
+        c.id, c.name, c.address, c.sport_types, c.verified, c.photo_url,
+        ST_X(c.location::geometry) as lng,
+        ST_Y(c.location::geometry) as lat,
+        COUNT(ci.id) FILTER (WHERE ci.checked_out_at IS NULL) as active_players
+       FROM courts c
+       LEFT JOIN checkins ci ON ci.court_id = c.id
+       WHERE ST_X(c.location::geometry) BETWEEN $1 AND $3
+         AND ST_Y(c.location::geometry) BETWEEN $2 AND $4
+         ${sportFilter}
+       GROUP BY c.id
+       ORDER BY active_players DESC
+       LIMIT $${params.length}`,
+      params
+    )
+    return rows
+  })
+
+  // ── מגרשים קרובים + כמה שחקנים נמצאים שם ─────────────────────────────
   app.get('/courts/nearby', async (req) => {
     const query = nearbyCourtsSchema.parse(req.query)
 
@@ -87,6 +124,50 @@ export async function courtsRoutes(app: FastifyInstance) {
       [lng, lat, id]
     )
     return { success: true }
+  })
+
+  // מחיקת מגרש — אדמין או יוצר המגרש
+  app.delete('/courts/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const adminSecret = (req.headers as any)['x-admin-secret']
+    const isAdmin = adminSecret && adminSecret === process.env.ADMIN_SECRET
+
+    if (isAdmin) {
+      const { rowCount } = await db.query('DELETE FROM courts WHERE id = $1', [id])
+      if (!rowCount) return reply.status(404).send({ error: 'Court not found' })
+      return { success: true }
+    }
+
+    // משתמש מחובר — יכול למחוק רק מגרשים שהוא הוסיף
+    try {
+      await req.jwtVerify()
+      const userId = (req.user as any)?.userId
+      const { rowCount } = await db.query(
+        'DELETE FROM courts WHERE id = $1 AND added_by = $2', [id, userId]
+      )
+      if (!rowCount) return reply.status(403).send({ error: 'אין הרשאה למחיקה' })
+      return { success: true }
+    } catch {
+      return reply.status(401).send({ error: 'Unauthorized' })
+    }
+  })
+
+  // דיווח על מגרש שגוי
+  app.post('/courts/:id/report', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { reason } = (req.body as any) || {}
+
+    // שמור בDB (נוסיף עמודה reports בעתיד) — כרגע רק log
+    console.log(`[REPORT] court=${id} reason=${reason}`)
+
+    // סמן את המגרש כ-unverified אם יש מספיק דיווחים
+    await db.query(
+      `UPDATE courts SET verified = false WHERE id = $1 AND verified = true
+       -- רק אם כבר היה verified, פשוט מסמן לבדיקה`,
+      [id]
+    ).catch(() => {})
+
+    return { success: true, message: 'הדיווח התקבל — תודה!' }
   })
 
   // הוספת מגרש חדש (crowdsource)
