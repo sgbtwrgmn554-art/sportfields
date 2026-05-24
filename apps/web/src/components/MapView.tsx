@@ -55,25 +55,35 @@ export default function MapView({ sport, onAuthRequired }: Props) {
   useEffect(() => {
     if (typeof window === 'undefined' || mapInstance.current) return
 
-    // טוענים leaflet + markercluster
-    Promise.all([
-      import('leaflet'),
-      import('leaflet.markercluster'),
-    ]).then(([L]) => {
+    // טוענים leaflet CSS + leaflet + markercluster
+    const addCss = (href: string) => {
+      if (document.querySelector(`link[href="${href}"]`)) return
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'; link.href = href
+      document.head.appendChild(link)
+    }
+    addCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css')
+    addCss('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css')
+    addCss('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css')
+
+    import('leaflet').then(async (Lmod) => {
+      const L = (Lmod.default ?? Lmod) as any
+      ;(window as any).L = L          // markercluster צריך L גלובלי
       leafletRef.current = L
+
+      await import('leaflet.markercluster')
+
       const container = mapRef.current as any
       if (!container || container._leaflet_id) return
 
-      delete (L.Icon.Default.prototype as any)._getIconUrl
+      delete L.Icon.Default.prototype._getIconUrl
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
         iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       })
 
-      const map = L.map(container, {
-        center: [32.08, 34.78], zoom: 13, zoomControl: true,
-      })
+      const map = L.map(container, { center: [32.08, 34.78], zoom: 13, zoomControl: true })
       mapInstance.current = map
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -81,14 +91,14 @@ export default function MapView({ sport, onAuthRequired }: Props) {
       }).addTo(map)
 
       // Cluster group
-      const cluster = (L as any).markerClusterGroup({
+      const cluster = L.markerClusterGroup({
         maxClusterRadius: 60,
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
         iconCreateFunction: (c: any) => {
           const count = c.getChildCount()
-          return (L as any).divIcon({
+          return L.divIcon({
             html: `<div style="background:var(--green);color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.5)">${count}</div>`,
             className: '', iconSize: [36, 36],
           })
