@@ -892,6 +892,15 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     <div style="margin-top:7px;font-size:13px;color:var(--muted);text-align:center" id="rem-status"></div>
   </div>
   <div class="card">
+    <div style="font-size:17px;font-weight:900;margin-bottom:4px">📲 התראות Push (נעילת מסך)</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">לקבלת התראות גם כשהטלפון נעול, הגדר כתובת שרת Vercel. <a href="https://vercel.com" target="_blank" style="color:var(--accent)">ללא עלות</a> — ראה הוראות בקובץ README.</div>
+    <div style="display:flex;gap:8px">
+      <input id="push-server-inp" type="url" class="inp" placeholder="https://your-app.vercel.app" style="flex:1;text-align:left;font-size:13px;direction:ltr">
+      <button class="btn" onclick="savePushServer()" style="width:auto;padding:12px 14px;font-size:13px">שמור</button>
+    </div>
+    <div id="push-server-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;min-height:18px"></div>
+  </div>
+  <div class="card">
     <div class="sec">⚙️ כלליות</div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--border)">
       <div><div style="font-weight:700">שם</div><div style="font-size:12px;color:var(--muted)">מה יוצג בברכה</div></div>
@@ -1201,7 +1210,10 @@ let S={
   theme:'dark',photoFeatureOn:true,progressPhotos:[],
   weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
   apiKey:'',gender:'male',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
+  pushSubscribed:false,pushServerUrl:'',
 };
+// Global push server URL — filled from S.pushServerUrl after load
+let PUSH_SERVER='';
 function save(){if(!CURRENT_PROFILE_ID)return;try{localStorage.setItem('family-fit-data-'+CURRENT_PROFILE_ID,JSON.stringify(S))}catch(e){}}
 function load(){if(!CURRENT_PROFILE_ID)return;try{const d=localStorage.getItem('family-fit-data-'+CURRENT_PROFILE_ID);if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
 function checkReset(){
@@ -1380,6 +1392,8 @@ function renderSettings(){
   const rt=document.getElementById('rem-time');if(rt)rt.value=S.remTime;
   const aki=document.getElementById('api-key-inp');if(aki)aki.value=S.apiKey||'';
   const aks=document.getElementById('api-key-status');if(aks)aks.textContent=S.apiKey?'✅ מפתח API שמור':'⚠️ לא הוגדר מפתח';
+  const psi=document.getElementById('push-server-inp');if(psi)psi.value=S.pushServerUrl||'';
+  const pss=document.getElementById('push-server-status');if(pss)pss.textContent=S.pushServerUrl?'✅ שרת push מוגדר: '+S.pushServerUrl:'⚠️ לא הוגדר שרת push';
   renderGoalCards();renderActPills();renderRemDays();
   if(S.age&&S.height&&S.weight)calcMacros();
   const saved=localStorage.getItem('dad-rem-t');
@@ -1392,6 +1406,15 @@ function saveApiKey(){
   if(v){st.textContent='✅ מפתח API נשמר!';st.style.color='var(--green)';showToast('🔑 מפתח API נשמר!');}
   else{st.textContent='⚠️ לא הוגדר מפתח';st.style.color='var(--muted)';}
   setTimeout(()=>{if(st)st.textContent=v?'✅ מפתח API שמור':'⚠️ לא הוגדר מפתח';st.style.color='var(--muted)'},2500);
+}
+function savePushServer(){
+  const v=document.getElementById('push-server-inp').value.trim().replace(/\/$/,'');
+  S.pushServerUrl=v;save();
+  PUSH_SERVER=v;
+  const st=document.getElementById('push-server-status');
+  if(v){st.textContent='✅ שרת push נשמר!';st.style.color='var(--green)';showToast('📲 שרת push נשמר!');}
+  else{st.textContent='⚠️ לא הוגדר שרת push';st.style.color='var(--muted)';}
+  setTimeout(()=>{if(st){st.textContent=v?'✅ שרת push מוגדר: '+v:'⚠️ לא הוגדר שרת push';st.style.color='var(--muted)';}},2500);
 }
 function renderGoalCards(){
   const el=document.getElementById('goal-cards');if(!el)return;el.innerHTML='';
@@ -1989,6 +2012,41 @@ async function askAI(){
   btn.textContent='📩 שלח למאמן';btn.disabled=false;
 }
 
+// ── Web Push helpers ─────────────────────────────────────────────
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+
+async function setupPushNotifications(reminderTime,reminderDays){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  if(!PUSH_SERVER)return;
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')return;
+    // Get VAPID public key from server
+    let vapidKey='';
+    try{
+      const r=await fetch(PUSH_SERVER+'/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get-public-key'})});
+      const d=await r.json();
+      vapidKey=d.publicKey||'';
+    }catch(e){vapidKey='';}
+    if(!vapidKey)return;
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(vapidKey)});
+    }
+    await fetch(PUSH_SERVER+'/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'subscribe',subscription:sub,profileId:CURRENT_PROFILE_ID,reminderTime:reminderTime,reminderDays:reminderDays,profileName:S.dadName})});
+    S.pushSubscribed=true;save();
+    showToast('📲 התראות push פעילות!');
+  }catch(e){console.warn('Push setup failed:',e);}
+}
+
 async function setReminder(){
   const time=document.getElementById('rem-time').value;S.remTime=time;save();
   if(!('Notification' in window)){document.getElementById('rem-status').textContent='❌ הדפדפן לא תומך';return;}
@@ -1998,6 +2056,8 @@ async function setReminder(){
   startRemChecker();
   document.getElementById('rem-status').textContent='✅ תזכורת פעילה בשעה '+time;
   showToast('🔔 תזכורת הוגדרה!');
+  // Also set up Web Push if server is configured
+  if(PUSH_SERVER)setupPushNotifications(time,S.remDays);
 }
 let remIv=null;
 function startRemChecker(){
@@ -2402,6 +2462,7 @@ function getDefaultState(){
     theme:'dark',photoFeatureOn:true,progressPhotos:[],
     weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
     apiKey:'',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
+    pushSubscribed:false,pushServerUrl:'',
   };
 }
 
@@ -2416,6 +2477,7 @@ function enterProfile(id){
     startOnboarding(profile||{name:'',emoji:'💪'});
   } else {
     checkReset();applyTheme();
+    PUSH_SERVER=S.pushServerUrl||'';
     document.getElementById('screen-profiles').style.display='none';
     showMainApp();
     // Update avatar
@@ -2603,6 +2665,7 @@ function renderObSummary(plan){
 function enterApp(){
   document.getElementById('screen-onboarding').style.display='none';
   checkReset();applyTheme();
+  PUSH_SERVER=S.pushServerUrl||'';
   showMainApp();
   const profile=PROFILES.find(p=>p.id===CURRENT_PROFILE_ID);
   if(profile){const av=document.getElementById('profile-avatar');if(av)av.textContent=profile.emoji;}
@@ -2630,7 +2693,7 @@ function enterApp(){
         const def=getDefaultState();Object.keys(def).forEach(k=>{S[k]=def[k];});
         Object.assign(S,ld);S.onboardingDone=true;
         save();
-        checkReset();applyTheme();showMainApp();
+        checkReset();applyTheme();PUSH_SERVER=S.pushServerUrl||'';showMainApp();
         const av=document.getElementById('profile-avatar');if(av)av.textContent=p.emoji;
         renderAll();if(localStorage.getItem('dad-rem-t'))startRemChecker();setInterval(nextMotiv,6000);
       }catch(e){
