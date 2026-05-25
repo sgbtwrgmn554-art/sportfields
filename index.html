@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <title>כושר לאבא 💪</title>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" async></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
@@ -686,9 +687,40 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 <div class="tab" id="tab-scan">
   <div class="card">
     <div style="font-size:17px;font-weight:900;margin-bottom:4px">🔍 סורק רמזור</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">הזן שם מוצר וקבל 🟢🟡🔴</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">סרוק ברקוד, צלם מוצר, או הקלד שם — קבל 🟢🟡🔴</div>
+
+    <!-- 3 כפתורי סריקה -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="startBarcodeScanner()" style="padding:13px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:24px">📊</span>ברקוד
+      </button>
+      <button onclick="document.getElementById('scan-cam-inp').click()" style="padding:13px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:24px">📷</span>צלם
+      </button>
+      <button onclick="document.getElementById('scan-gal-inp').click()" style="padding:13px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:24px">🖼️</span>גלריה
+      </button>
+    </div>
+    <input type="file" id="scan-cam-inp" accept="image/*" capture="environment" style="display:none" onchange="scanFromPhoto(this)">
+    <input type="file" id="scan-gal-inp" accept="image/*" style="display:none" onchange="scanFromPhoto(this)">
+
+    <!-- מסגרת סורק ברקוד -->
+    <div id="barcode-scanner-wrap" style="display:none;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:8px">📊 כוון את המצלמה לברקוד</div>
+      <div id="barcode-reader" style="border-radius:14px;overflow:hidden;border:2px solid var(--accent)"></div>
+      <button onclick="stopBarcodeScanner()" class="btn btn-red" style="margin-top:10px;font-size:14px;padding:11px">עצור סריקה ✕</button>
+    </div>
+
+    <!-- תצוגת תמונה מוצר -->
+    <div id="scan-photo-wrap" style="display:none;margin-bottom:12px;position:relative">
+      <img id="scan-photo-img" style="width:100%;max-height:200px;object-fit:cover;border-radius:14px;border:1.5px solid var(--border)">
+      <button onclick="clearScanPhoto()" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.8);border:none;color:#fff;font-size:14px;cursor:pointer;line-height:1">✕</button>
+      <div id="scan-photo-badge" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);color:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700"></div>
+    </div>
+
+    <!-- קלט טקסט -->
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input class="inp" id="scan-inp" placeholder="שם מוצר..." style="text-align:right;flex:1;font-size:14px" onkeydown="if(event.key==='Enter')scanProduct()">
+      <input class="inp" id="scan-inp" placeholder="או הקלד שם מוצר..." style="text-align:right;flex:1;font-size:14px" onkeydown="if(event.key==='Enter')scanProduct()">
       <button class="btn" onclick="scanProduct()" style="width:auto;padding:12px 16px">🔍</button>
     </div>
     <div class="sec">דוגמאות:</div>
@@ -1640,14 +1672,135 @@ function calcMacros(){
 }
 function applyMacros(){showToast('✅ יעד: '+S.targetCal+' קל׳ | '+S.targetProtein+'g חלבון');renderFood();}
 
+// ═══ BARCODE SCANNER ═══
+let barcodeScanner=null;
+
+function startBarcodeScanner(){
+  const wrap=document.getElementById('barcode-scanner-wrap');
+  if(!window.Html5Qrcode){
+    showToast('⏳ טוען סורק ברקוד...');
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    s.onload=()=>startBarcodeScanner();
+    s.onerror=()=>showToast('❌ לא הצלחתי לטעון — נסה לצלם');
+    document.head.appendChild(s);return;
+  }
+  wrap.style.display='block';
+  wrap.scrollIntoView({behavior:'smooth'});
+  barcodeScanner=new Html5Qrcode('barcode-reader');
+  barcodeScanner.start(
+    {facingMode:'environment'},
+    {fps:10,qrbox:{width:260,height:120}},
+    (code)=>{stopBarcodeScanner();handleBarcodeResult(code);},
+    ()=>{}
+  ).catch(()=>{showToast('❌ אין גישה למצלמה');wrap.style.display='none';});
+}
+
+function stopBarcodeScanner(){
+  if(barcodeScanner){barcodeScanner.stop().catch(()=>{});barcodeScanner=null;}
+  document.getElementById('barcode-scanner-wrap').style.display='none';
+}
+
+async function handleBarcodeResult(barcode){
+  showToast('✅ ברקוד נסרק!');
+  const res=document.getElementById('tl-res');
+  res.className='tl-result';res.style.display='block';
+  res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> מחפש מוצר בבסיס נתונים...</div>';
+  try{
+    // Open Food Facts — בחינם, ללא מפתח
+    const offResp=await fetch('https://world.openfoodfacts.org/api/v0/product/'+barcode+'.json');
+    const offData=await offResp.json();
+    if(offData.status===1&&offData.product){
+      const p=offData.product;
+      const name=p.product_name_he||p.product_name||p.brands||'';
+      if(name){
+        document.getElementById('scan-inp').value=name;
+        await runScanAI(name,{
+          nutriscore: p.nutriscore_grade,
+          nova: p.nova_group,
+          ingredients: p.ingredients_text_he||p.ingredients_text||'',
+          sugar: p.nutriments?.sugars_100g,
+          fat: p.nutriments?.fat_100g,
+          salt: p.nutriments?.salt_100g,
+          cal: p.nutriments?.['energy-kcal_100g'],
+          protein: p.nutriments?.proteins_100g,
+        });return;
+      }
+    }
+    // לא נמצא — הצג הודעה
+    res.innerHTML='<div style="text-align:center;padding:16px"><div style="font-size:28px;margin-bottom:10px">🔍</div><div style="font-weight:700;font-size:15px">מוצר לא נמצא</div><div style="font-size:13px;color:var(--muted);margin-top:6px">ברקוד: '+barcode+'</div><div style="font-size:13px;color:var(--accent);margin-top:10px;font-weight:600">📷 נסה לצלם את אריזת המוצר</div></div>';
+  }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">שגיאת חיבור לאינטרנט</div>';}
+}
+
+// ═══ PHOTO SCAN ═══
+async function scanFromPhoto(input){
+  const file=input.files[0];if(!file)return;
+  input.value='';
+  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const base64=e.target.result.split(',')[1];
+    const wrap=document.getElementById('scan-photo-wrap');
+    document.getElementById('scan-photo-img').src=e.target.result;
+    document.getElementById('scan-photo-badge').textContent='📷 מנתח...';
+    wrap.style.display='block';
+    const res=document.getElementById('tl-res');
+    res.className='tl-result';res.style.display='block';
+    res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> AI מזהה מוצר...</div>';
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
+        {type:'text',text:'אתה תזונאי ישראלי. זהה את המוצר בתמונה (שם, מרכיבים נראים, ברקוד אם יש). החזר JSON בלבד: {name:"שם המוצר בעברית", light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים ניתוח תזונתי בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}
+      ]}]})});
+      const data=await resp.json();
+      let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+      const r=JSON.parse(txt);
+      const cls={green:'tl-green',yellow:'tl-yellow',red:'tl-red'};
+      const em={green:'🟢',yellow:'🟡',red:'🔴'};
+      res.className='tl-result '+(cls[r.light]||'tl-yellow');
+      res.innerHTML='<div class="tl-emoji">'+(em[r.light]||'🟡')+'</div><div class="tl-title">'+(r.name||r.title)+'</div><div style="font-size:14px;font-weight:700;margin-bottom:7px">'+r.subtitle+'</div><div class="tl-desc">'+r.desc+'</div>';
+      document.getElementById('scan-photo-badge').textContent='✅ זוהה';
+      if(r.name)document.getElementById('scan-inp').value=r.name;
+      S.scanHistory.push({name:r.name||r.title,light:r.light,verdict:r.title});
+      if(S.scanHistory.length>20)S.scanHistory=S.scanHistory.slice(-20);
+      save();renderScanHist();
+    }catch(err){
+      res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה. בדוק שמפתח ה-API נכון.</div>';
+      document.getElementById('scan-photo-badge').textContent='❌ שגיאה';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearScanPhoto(){
+  document.getElementById('scan-photo-wrap').style.display='none';
+}
+
+// ═══ SCAN BY TEXT / BARCODE DATA ═══
 async function scanProduct(){
   const name=document.getElementById('scan-inp').value.trim();if(!name)return;
+  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
+  await runScanAI(name);
+}
+
+async function runScanAI(name,extra){
   if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
   const res=document.getElementById('tl-res');
   res.className='tl-result';res.style.display='block';
   res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> בודק...</div>';
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי. המוצר: "'+name+'". החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין, צהוב=במידה, אדום=לא מומלץ'}]})});
+    let extraInfo='';
+    if(extra){
+      if(extra.nutriscore)extraInfo+=` ניוטרי-סקור: ${extra.nutriscore.toUpperCase()}.`;
+      if(extra.nova)extraInfo+=` NOVA: ${extra.nova}.`;
+      if(extra.cal)extraInfo+=` קלוריות: ${Math.round(extra.cal)} לכל 100g.`;
+      if(extra.protein)extraInfo+=` חלבון: ${extra.protein}g.`;
+      if(extra.sugar)extraInfo+=` סוכר: ${extra.sugar}g.`;
+      if(extra.fat)extraInfo+=` שומן: ${extra.fat}g.`;
+      if(extra.salt)extraInfo+=` מלח: ${extra.salt}g.`;
+      if(extra.ingredients)extraInfo+=` מרכיבים: ${extra.ingredients.slice(0,200)}.`;
+    }
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי ישראלי. המוצר: "'+name+'".'+extraInfo+' החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}]})});
     const data=await resp.json();
     let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const r=JSON.parse(txt);
