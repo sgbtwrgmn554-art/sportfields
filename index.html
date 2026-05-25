@@ -2029,12 +2029,6 @@ function renderAIHistory(){
 async function askAI(){
   const q=document.getElementById('ai-inp').value.trim();
   if(!q&&!AI_MEDIA)return;
-  if(!S.apiKey){
-    const card=document.getElementById('ai-card');const ans=document.getElementById('ai-ans');
-    card.style.display='block';
-    ans.textContent='⚠️ כדי להשתמש במאמן AI, הכנס מפתח API בלשונית ⚙️ הגדרות.';
-    return;
-  }
   const btn=document.getElementById('ai-btn'),card=document.getElementById('ai-card'),ans=document.getElementById('ai-ans');
   btn.textContent='⏳ חושב...';btn.disabled=true;card.style.display='block';
   ans.innerHTML='<div class="spin-wrap"><div class="spinner"></div> מכין תשובה...</div>';
