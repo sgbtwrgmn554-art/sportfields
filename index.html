@@ -178,10 +178,321 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .mdot.on{background:var(--accent);width:16px;border-radius:3px}
 
 .glow-line{height:.5px;background:var(--border);margin:6px 0}
+
+/* ═══ PROFILE SELECTOR ═══ */
+#screen-profiles,#screen-onboarding{position:fixed;inset:0;background:var(--bg);z-index:2000;overflow-y:auto}
+.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.p-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:22px 12px;text-align:center;cursor:pointer;transition:.2s;position:relative;-webkit-tap-highlight-color:transparent}
+.p-card:active{transform:scale(.96);border-color:var(--accent);background:var(--accent-s)}
+#pin-screen{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:3000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#pin-screen.show{display:flex}
+.pin-dots{display:flex;gap:16px;margin:20px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);transition:.2s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:280px}
+.pin-key{height:64px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:22px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s}
+.pin-key:active{background:var(--accent-s);border-color:var(--accent)}
+/* ═══ ONBOARDING ═══ */
+.ob-step{display:none;padding:60px 24px 120px;min-height:100vh}
+.ob-step.on{display:block}
+.ob-prog{display:flex;gap:4px;margin-bottom:32px}
+.ob-pd{flex:1;height:3px;border-radius:2px;background:var(--border);transition:.3s}
+.ob-pd.done{background:var(--accent)}
+.ob-h{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;line-height:1.3}
+.ob-p{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+.ob-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.ob-opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;border:2px solid var(--border);cursor:pointer;transition:.2s;background:transparent;width:100%;text-align:right;font-family:inherit;color:var(--text)}
+.ob-opt.sel{border-color:var(--accent);background:var(--accent-s)}
+.ob-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.ob-g-item{padding:18px 12px;border-radius:16px;border:2px solid var(--border);cursor:pointer;transition:.2s;text-align:center;background:transparent;font-family:inherit;color:var(--text);width:100%}
+.ob-g-item.sel{border-color:var(--accent);background:var(--accent-s)}
+.ob-num{font-size:52px;font-weight:300;text-align:center;width:100%;background:transparent;border:none;color:var(--text);font-family:inherit;letter-spacing:-2px;outline:none;border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:8px;-moz-appearance:textfield}
+.ob-num::-webkit-inner-spin-button,.ob-num::-webkit-outer-spin-button{-webkit-appearance:none}
+.ob-unit{text-align:center;font-size:14px;color:var(--muted);margin-bottom:24px}
+.ob-checks{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.ob-chk{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;border:1.5px solid var(--border);cursor:pointer;transition:.2s}
+.ob-chk.on{border-color:var(--accent);background:var(--accent-s)}
+.ob-chkbox{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;font-size:14px;color:#fff}
+.ob-chk.on .ob-chkbox{background:var(--accent);border-color:var(--accent)}
+.ob-emoji-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.ob-em-btn{width:52px;height:52px;border-radius:14px;border:2px solid var(--border);background:transparent;font-size:26px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center}
+.ob-em-btn.sel{border-color:var(--accent);background:var(--accent-s)}
+.ob-bottom{position:fixed;bottom:0;left:0;right:0;padding:16px 24px 40px;background:linear-gradient(transparent,var(--bg) 30%);z-index:10}
+.ob-nav{display:flex;gap:10px}
+.ob-back{background:var(--card2);color:var(--text2);border:none;border-radius:14px;padding:14px 20px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;transition:.15s;min-width:70px}
+.ob-next{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:14px 20px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;flex:1;transition:.15s}
+.ob-next:active,.ob-back:active{opacity:.75;transform:scale(.98)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     PROFILE SELECTOR
+═══════════════════════════════════════════ -->
+<div id="screen-profiles" style="display:none">
+  <div style="padding:60px 20px 20px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:56px;margin-bottom:12px">💪</div>
+      <div style="font-size:28px;font-weight:800;letter-spacing:-.5px">כושר משפחתי</div>
+      <div style="font-size:15px;color:var(--muted);margin-top:6px">מי מתאמן היום?</div>
+    </div>
+    <div class="p-grid" id="profiles-grid"></div>
+    <div style="padding:0 16px;margin-top:12px">
+      <button class="btn" onclick="startNewProfile()" style="background:transparent;border:1.5px dashed var(--border2);color:var(--muted);font-size:15px">
+        ➕ הוסף בן משפחה חדש
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PIN ENTRY ═══ -->
+<div id="pin-screen">
+  <div style="font-size:32px;font-weight:700;color:var(--text)" id="pin-name-lbl">הכנס PIN</div>
+  <div style="font-size:14px;color:var(--muted);margin-top:4px">4 ספרות</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div id="pin-err" style="font-size:13px;color:var(--red);min-height:20px;margin-bottom:8px"></div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinDigit('1')">1</button>
+    <button class="pin-key" onclick="pinDigit('2')">2</button>
+    <button class="pin-key" onclick="pinDigit('3')">3</button>
+    <button class="pin-key" onclick="pinDigit('4')">4</button>
+    <button class="pin-key" onclick="pinDigit('5')">5</button>
+    <button class="pin-key" onclick="pinDigit('6')">6</button>
+    <button class="pin-key" onclick="pinDigit('7')">7</button>
+    <button class="pin-key" onclick="pinDigit('8')">8</button>
+    <button class="pin-key" onclick="pinDigit('9')">9</button>
+    <button class="pin-key" onclick="pinCancel()" style="font-size:13px;color:var(--muted)">ביטול</button>
+    <button class="pin-key" onclick="pinDigit('0')">0</button>
+    <button class="pin-key" onclick="pinDel()" style="font-size:20px">⌫</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ONBOARDING WIZARD
+═══════════════════════════════════════════ -->
+<div id="screen-onboarding" style="display:none">
+
+  <!-- שלב 1: שם + אייקון -->
+  <div class="ob-step" id="ob-step-1">
+    <div class="ob-prog" id="ob-prog-1"></div>
+    <div style="font-size:64px;margin-bottom:16px">👋</div>
+    <div class="ob-h">ברוך הבא לכושר משפחתי!</div>
+    <div class="ob-p">בוא נכיר — מה שמך?</div>
+    <input class="inp" id="ob-name" type="text" placeholder="הכנס שם..." style="text-align:right;font-size:18px;margin-bottom:20px" oninput="OB.name=this.value">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">בחר אייקון</div>
+    <div class="ob-emoji-row" id="ob-emoji-row"></div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 2: מין -->
+  <div class="ob-step" id="ob-step-2">
+    <div class="ob-prog" id="ob-prog-2"></div>
+    <div style="font-size:64px;margin-bottom:16px">🧬</div>
+    <div class="ob-h">מה המין שלך?</div>
+    <div class="ob-p">עוזר לחשב קלוריות ותוכנית מדויקת יותר</div>
+    <div class="ob-grid2">
+      <button class="ob-g-item" id="ob-g-male" onclick="setGender('male')">
+        <div style="font-size:44px;margin-bottom:8px">👨</div>
+        <div style="font-size:16px;font-weight:700">גבר</div>
+      </button>
+      <button class="ob-g-item" id="ob-g-female" onclick="setGender('female')">
+        <div style="font-size:44px;margin-bottom:8px">👩</div>
+        <div style="font-size:16px;font-weight:700">אישה</div>
+      </button>
+    </div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 3: גיל -->
+  <div class="ob-step" id="ob-step-3">
+    <div class="ob-prog" id="ob-prog-3"></div>
+    <div style="font-size:64px;margin-bottom:16px">🎂</div>
+    <div class="ob-h">כמה גיל יש לך?</div>
+    <div class="ob-p">התוכנית מותאמת לגיל — לגיל 50+ יש המלצות שונות מגיל 25</div>
+    <input class="ob-num" id="ob-age" type="number" placeholder="45" min="10" max="100" oninput="OB.age=+this.value">
+    <div class="ob-unit">שנים</div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 4: גובה -->
+  <div class="ob-step" id="ob-step-4">
+    <div class="ob-prog" id="ob-prog-4"></div>
+    <div style="font-size:64px;margin-bottom:16px">📏</div>
+    <div class="ob-h">מה הגובה שלך?</div>
+    <div class="ob-p">גובה + משקל = חישוב קלוריות מדויק</div>
+    <input class="ob-num" id="ob-height" type="number" placeholder="175" min="100" max="250" oninput="OB.height=+this.value">
+    <div class="ob-unit">סנטימטר</div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 5: משקל נוכחי -->
+  <div class="ob-step" id="ob-step-5">
+    <div class="ob-prog" id="ob-prog-5"></div>
+    <div style="font-size:64px;margin-bottom:16px">⚖️</div>
+    <div class="ob-h">מה המשקל הנוכחי שלך?</div>
+    <div class="ob-p">כל המידע שמור רק אצלך — לא עובר לאף אחד</div>
+    <input class="ob-num" id="ob-weight" type="number" placeholder="85" min="30" max="300" step="0.1" oninput="OB.weight=+this.value">
+    <div class="ob-unit">קילוגרם</div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 6: משקל יעד -->
+  <div class="ob-step" id="ob-step-6">
+    <div class="ob-prog" id="ob-prog-6"></div>
+    <div style="font-size:64px;margin-bottom:16px">🎯</div>
+    <div class="ob-h">מה משקל היעד שלך?</div>
+    <div class="ob-p" id="ob-weight-diff-note">לאיזה משקל תרצה להגיע?</div>
+    <input class="ob-num" id="ob-goal-weight" type="number" placeholder="78" min="30" max="300" step="0.1" oninput="obUpdateGoalWeight(+this.value)">
+    <div class="ob-unit">קילוגרם</div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 7: מטרה -->
+  <div class="ob-step" id="ob-step-7">
+    <div class="ob-prog" id="ob-prog-7"></div>
+    <div style="font-size:64px;margin-bottom:16px">🏆</div>
+    <div class="ob-h">מה המטרה העיקרית?</div>
+    <div class="ob-p">נתאים תוכנית אימון ותזונה בהתאם</div>
+    <div class="ob-opts">
+      <button class="ob-opt" id="ob-goal-lose" onclick="setObGoal('lose')">
+        <span style="font-size:32px">⬇️</span>
+        <div><div style="font-size:15px;font-weight:700">ירידה במשקל</div><div style="font-size:12px;color:var(--muted)">קלוריות מופחתות + קרדיו</div></div>
+      </button>
+      <button class="ob-opt" id="ob-goal-gain" onclick="setObGoal('gain')">
+        <span style="font-size:32px">💪</span>
+        <div><div style="font-size:15px;font-weight:700">בניית שריר</div><div style="font-size:12px;color:var(--muted)">קלוריות גבוהות + אימוני כוח</div></div>
+      </button>
+      <button class="ob-opt" id="ob-goal-tone" onclick="setObGoal('tone')">
+        <span style="font-size:32px">✨</span>
+        <div><div style="font-size:15px;font-weight:700">חיטוב הגוף</div><div style="font-size:12px;color:var(--muted)">שילוב כוח + קרדיו</div></div>
+      </button>
+      <button class="ob-opt" id="ob-goal-maintain" onclick="setObGoal('maintain')">
+        <span style="font-size:32px">⚖️</span>
+        <div><div style="font-size:15px;font-weight:700">שמירה על הכושר</div><div style="font-size:12px;color:var(--muted)">לשמור על מה שיש ולהרגיש טוב</div></div>
+      </button>
+    </div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 8: רמת פעילות -->
+  <div class="ob-step" id="ob-step-8">
+    <div class="ob-prog" id="ob-prog-8"></div>
+    <div style="font-size:64px;margin-bottom:16px">🏃</div>
+    <div class="ob-h">כמה פעיל אתה כרגע?</div>
+    <div class="ob-p">לפני שהתחלת את האפליקציה — מה הרמה הנוכחית?</div>
+    <div class="ob-opts">
+      <button class="ob-opt" id="ob-act-sedentary" onclick="setObActivity('sedentary')">
+        <span style="font-size:28px">🛋️</span>
+        <div><div style="font-size:14px;font-weight:700">יושב רוב היום</div><div style="font-size:12px;color:var(--muted)">לא מתאמן כמעט</div></div>
+      </button>
+      <button class="ob-opt" id="ob-act-light" onclick="setObActivity('light')">
+        <span style="font-size:28px">🚶</span>
+        <div><div style="font-size:14px;font-weight:700">פעילות קלה</div><div style="font-size:12px;color:var(--muted)">הליכה, 1-2 פעמים שבוע</div></div>
+      </button>
+      <button class="ob-opt" id="ob-act-moderate" onclick="setObActivity('moderate')">
+        <span style="font-size:28px">🏋️</span>
+        <div><div style="font-size:14px;font-weight:700">פעילות בינונית</div><div style="font-size:12px;color:var(--muted)">3-4 פעמים שבוע</div></div>
+      </button>
+      <button class="ob-opt" id="ob-act-active" onclick="setObActivity('active')">
+        <span style="font-size:28px">⚡</span>
+        <div><div style="font-size:14px;font-weight:700">פעיל מאוד</div><div style="font-size:12px;color:var(--muted)">5+ פעמים שבוע</div></div>
+      </button>
+    </div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 9: שינה -->
+  <div class="ob-step" id="ob-step-9">
+    <div class="ob-prog" id="ob-prog-9"></div>
+    <div style="font-size:64px;margin-bottom:16px">😴</div>
+    <div class="ob-h">כמה שעות שינה בלילה?</div>
+    <div class="ob-p">שינה חשובה לבניית שריר ולירידה במשקל — לא פחות מאימון!</div>
+    <div class="ob-grid2">
+      <button class="ob-g-item" id="ob-sleep-5" onclick="setObSleep(5)">
+        <div style="font-size:32px;margin-bottom:6px">😫</div>
+        <div style="font-size:24px;font-weight:700">5</div>
+        <div style="font-size:12px;color:var(--muted)">שעות</div>
+      </button>
+      <button class="ob-g-item" id="ob-sleep-6" onclick="setObSleep(6)">
+        <div style="font-size:32px;margin-bottom:6px">😐</div>
+        <div style="font-size:24px;font-weight:700">6</div>
+        <div style="font-size:12px;color:var(--muted)">שעות</div>
+      </button>
+      <button class="ob-g-item" id="ob-sleep-7" onclick="setObSleep(7)">
+        <div style="font-size:32px;margin-bottom:6px">😊</div>
+        <div style="font-size:24px;font-weight:700">7</div>
+        <div style="font-size:12px;color:var(--muted)">שעות</div>
+      </button>
+      <button class="ob-g-item" id="ob-sleep-8" onclick="setObSleep(8)">
+        <div style="font-size:32px;margin-bottom:6px">😄</div>
+        <div style="font-size:24px;font-weight:700">8+</div>
+        <div style="font-size:12px;color:var(--muted)">שעות</div>
+      </button>
+    </div>
+    <div id="ob-sleep-tip" style="font-size:13px;color:var(--muted);text-align:center;line-height:1.6;min-height:40px"></div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">המשך ←</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 10: כאבים/מגבלות -->
+  <div class="ob-step" id="ob-step-10">
+    <div class="ob-prog" id="ob-prog-10"></div>
+    <div style="font-size:64px;margin-bottom:16px">🩹</div>
+    <div class="ob-h">יש לך כאבים או מגבלות?</div>
+    <div class="ob-p">נתאים את האימונים — בחר הכל שרלוונטי</div>
+    <div class="ob-checks" id="ob-injury-list"></div>
+    <div class="ob-bottom"><div class="ob-nav">
+      <button class="ob-back" onclick="obBack()">← חזור</button>
+      <button class="ob-next" onclick="obNext()">🚀 צור לי תוכנית!</button>
+    </div></div>
+  </div>
+
+  <!-- שלב 11: סיכום תוכנית -->
+  <div class="ob-step" id="ob-step-11" style="padding:40px 16px 120px">
+    <div id="ob-plan-summary"></div>
+    <div class="ob-bottom">
+      <button class="ob-next" onclick="enterApp()">בוא נתחיל! 💪</button>
+    </div>
+  </div>
+
+</div><!-- /screen-onboarding -->
+
+<!-- ═══════════════════════════════════════════
+     APP MAIN
+═══════════════════════════════════════════ -->
+<div id="app-main" style="display:none">
 
 <div class="hdr">
   <div class="hdr-top">
@@ -242,7 +553,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
       <button onclick="togglePhotoFeature()" style="display:block;margin:8px auto 0;background:none;border:1px solid var(--red);border-radius:8px;color:var(--red);padding:4px 12px;cursor:pointer;font-family:inherit;font-size:12px">הפעל מחדש</button>
     </div>
 
-    <div style="margin-top:16px">
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-blue" onclick="closeProfileModal();switchUser()">👥 החלף משתמש</button>
       <button class="btn" onclick="closeProfileModal()" style="background:var(--border);color:var(--text)">סגור</button>
     </div>
   </div>
@@ -647,6 +959,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   </div>
 </div>
 
+</div><!-- /app-main -->
+
 <script>
 const WORKOUTS={
   'בית':[
@@ -814,10 +1128,10 @@ let S={
   scanHistory:[],miniType:'קומקום (5 דק׳)',
   theme:'dark',photoFeatureOn:true,progressPhotos:[],
   weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
-  apiKey:'',
+  apiKey:'',gender:'male',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
 };
-function save(){try{localStorage.setItem('dad-fit3',JSON.stringify(S))}catch(e){}}
-function load(){try{const d=localStorage.getItem('dad-fit3');if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
+function save(){if(!CURRENT_PROFILE_ID)return;try{localStorage.setItem('family-fit-data-'+CURRENT_PROFILE_ID,JSON.stringify(S))}catch(e){}}
+function load(){if(!CURRENT_PROFILE_ID)return;try{const d=localStorage.getItem('family-fit-data-'+CURRENT_PROFILE_ID);if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
 function checkReset(){
   if(S.lastDate!==TODAY){
     if(!S.weekDone[new Date(S.lastDate).getDay()])S.streak=0;
@@ -1691,12 +2005,339 @@ function importData(event){
   reader.readAsText(file);
   event.target.value='';
 }
-load();
-checkReset();
-applyTheme();
-if(S.dadName){const av=document.getElementById('profile-avatar');if(av)av.textContent=S.dadName.charAt(0);}
-if(localStorage.getItem('dad-rem-t'))startRemChecker();
-renderAll();setInterval(nextMotiv,6000);
+// ═══════════════════════════════════════════
+//  PROFILE SYSTEM
+// ═══════════════════════════════════════════
+let PROFILES=[];
+let CURRENT_PROFILE_ID=null;
+let PIN_TARGET_ID=null;
+let PIN_VAL='';
+
+function loadProfiles(){
+  try{PROFILES=JSON.parse(localStorage.getItem('family-fit-profiles')||'[]');}catch(e){PROFILES=[];}
+  CURRENT_PROFILE_ID=localStorage.getItem('family-fit-current')||null;
+}
+function saveProfiles(){localStorage.setItem('family-fit-profiles',JSON.stringify(PROFILES));}
+
+function createProfile(name,emoji,pin){
+  const id='p_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const p={id,name:name||'',emoji:emoji||'💪',pin:pin||'',createdAt:new Date().toISOString()};
+  PROFILES.push(p);saveProfiles();return p;
+}
+
+function renderProfileSelector(){
+  const grid=document.getElementById('profiles-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  PROFILES.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='p-card';
+    div.innerHTML=`<div style="font-size:50px;margin-bottom:10px">${p.emoji}</div><div style="font-size:16px;font-weight:700">${p.name||'—'}</div>${p.pin?'<div style="position:absolute;top:10px;left:10px;font-size:14px;opacity:.7">🔒</div>':''}`;
+    div.onclick=()=>selectProfile(p.id);
+    grid.appendChild(div);
+  });
+}
+
+function selectProfile(id){
+  const p=PROFILES.find(x=>x.id===id);if(!p)return;
+  if(p.pin){
+    PIN_TARGET_ID=id;PIN_VAL='';
+    const lbl=document.getElementById('pin-name-lbl');
+    if(lbl)lbl.textContent=p.emoji+' '+p.name;
+    updatePinDots();
+    const pe=document.getElementById('pin-err');if(pe)pe.textContent='';
+    document.getElementById('pin-screen').classList.add('show');
+  } else {
+    enterProfile(id);
+  }
+}
+
+function pinDigit(d){
+  if(PIN_VAL.length>=4)return;
+  PIN_VAL+=d;updatePinDots();
+  if(PIN_VAL.length===4)setTimeout(checkPin,150);
+}
+function pinDel(){PIN_VAL=PIN_VAL.slice(0,-1);updatePinDots();const e=document.getElementById('pin-err');if(e)e.textContent='';}
+function pinCancel(){PIN_VAL='';PIN_TARGET_ID=null;document.getElementById('pin-screen').classList.remove('show');}
+function updatePinDots(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.toggle('filled',i<PIN_VAL.length);}}
+function checkPin(){
+  const p=PROFILES.find(x=>x.id===PIN_TARGET_ID);
+  if(p&&PIN_VAL===p.pin){
+    document.getElementById('pin-screen').classList.remove('show');
+    enterProfile(PIN_TARGET_ID);
+  } else {
+    const e=document.getElementById('pin-err');if(e)e.textContent='❌ PIN שגוי — נסה שוב';
+    PIN_VAL='';updatePinDots();
+    const dots=document.querySelector('.pin-dots');
+    if(dots){dots.style.animation='none';setTimeout(()=>dots.style.animation='shake .3s ease',10);}
+  }
+}
+
+function getDefaultState(){
+  return{
+    streak:0,waterCups:0,location:'בית',
+    weekDone:[false,false,false,false,false,false,false],
+    checkedEx:{},checkedMeals:{},
+    motivIdx:0,tipIdx:0,lastDate:TODAY,
+    dadName:'',remTime:'19:00',remDays:[0,1,2,3,4,5,6],
+    age:null,height:null,weight:null,gender:'male',
+    goal:'maintain',activity:'moderate',
+    targetCal:2000,targetProtein:120,targetCarbs:220,targetFat:65,
+    steps:0,weekSteps:[0,0,0,0,0,0,0],
+    scanHistory:[],miniType:'קומקום (5 דק׳)',
+    theme:'dark',photoFeatureOn:true,progressPhotos:[],
+    weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
+    apiKey:'',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
+  };
+}
+
+function enterProfile(id){
+  CURRENT_PROFILE_ID=id;
+  localStorage.setItem('family-fit-current',id);
+  const def=getDefaultState();
+  Object.keys(def).forEach(k=>{S[k]=def[k];});
+  load();
+  const profile=PROFILES.find(p=>p.id===id);
+  if(!S.onboardingDone){
+    startOnboarding(profile||{name:'',emoji:'💪'});
+  } else {
+    checkReset();applyTheme();
+    document.getElementById('screen-profiles').style.display='none';
+    showMainApp();
+    // Update avatar
+    if(profile){const av=document.getElementById('profile-avatar');if(av)av.textContent=profile.emoji;}
+    renderAll();
+    if(S.dadName){const av=document.getElementById('profile-avatar');if(av)av.textContent=S.dadName.charAt(0);}
+    if(localStorage.getItem('dad-rem-t'))startRemChecker();
+    setInterval(nextMotiv,6000);
+  }
+}
+
+function startNewProfile(){
+  const p=createProfile('','💪','');
+  CURRENT_PROFILE_ID=p.id;
+  localStorage.setItem('family-fit-current',p.id);
+  startOnboarding(p);
+}
+
+function showMainApp(){
+  document.getElementById('app-main').style.display='block';
+}
+function hideMainApp(){
+  document.getElementById('app-main').style.display='none';
+}
+function switchUser(){
+  hideMainApp();
+  const sp=document.getElementById('screen-profiles');
+  sp.style.display='block';
+  renderProfileSelector();
+}
+
+// ═══════════════════════════════════════════
+//  ONBOARDING
+// ═══════════════════════════════════════════
+const OB_TOTAL=10;
+let OB={step:0,name:'',emoji:'💪',gender:'male',age:null,height:null,weight:null,goalWeight:null,goal:null,activity:null,sleep:7,injuries:[]};
+const OB_EMOJIS=['💪','🏃','🧘','⚽','🥊','🏋️','🚴','🏊','🤸','😊','🌟','🔥','👊','🦁','🚀'];
+const OB_INJURIES=['גב תחתון','ברכיים','כתפיים','צוואר','אין כאבים — הכל בסדר'];
+
+function startOnboarding(profile){
+  OB={step:0,name:profile.name||'',emoji:profile.emoji||'💪',gender:'male',age:null,height:null,weight:null,goalWeight:null,goal:null,activity:null,sleep:7,injuries:[]};
+  // Emoji row
+  const er=document.getElementById('ob-emoji-row');
+  if(er){er.innerHTML='';OB_EMOJIS.forEach(em=>{const b=document.createElement('button');b.className='ob-em-btn'+(em===OB.emoji?' sel':'');b.textContent=em;b.onclick=()=>{OB.emoji=em;document.querySelectorAll('.ob-em-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};er.appendChild(b);});}
+  // Injury list
+  const il=document.getElementById('ob-injury-list');
+  if(il){il.innerHTML='';OB_INJURIES.forEach(inj=>{const div=document.createElement('div');div.className='ob-chk';div.innerHTML=`<div class="ob-chkbox" id="ob-injbox-${inj.replace(/\s/g,'_')}"></div><div style="font-size:15px;font-weight:600;flex:1">${inj}</div>`;div.onclick=()=>toggleInjury(inj,div);il.appendChild(div);});}
+  // Pre-fill name
+  const ni=document.getElementById('ob-name');if(ni&&OB.name)ni.value=OB.name;
+  document.getElementById('screen-profiles').style.display='none';
+  document.getElementById('screen-onboarding').style.display='block';
+  showObStep(1);
+}
+
+function showObStep(n){
+  OB.step=n;
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('on'));
+  const el=document.getElementById('ob-step-'+n);if(el)el.classList.add('on');
+  // Progress bars
+  for(let i=1;i<=OB_TOTAL+1;i++){
+    const pd=document.getElementById('ob-prog-'+i);if(!pd)continue;
+    pd.innerHTML='';
+    for(let j=1;j<=OB_TOTAL;j++){const d=document.createElement('div');d.className='ob-pd'+(j<n?' done':'');pd.appendChild(d);}
+  }
+  window.scrollTo(0,0);
+}
+
+function obNext(){
+  const s=OB.step;
+  if(s===1){OB.name=document.getElementById('ob-name').value.trim();if(!OB.name){showToast('⚠️ הכנס שם');return;}}
+  if(s===2&&!OB.gender){showToast('⚠️ בחר מין');return;}
+  if(s===3){OB.age=+(document.getElementById('ob-age').value);if(!OB.age||OB.age<10||OB.age>100){showToast('⚠️ הכנס גיל תקין (10-100)');return;}}
+  if(s===4){OB.height=+(document.getElementById('ob-height').value);if(!OB.height||OB.height<100||OB.height>250){showToast('⚠️ הכנס גובה תקין (100-250 ס״מ)');return;}}
+  if(s===5){OB.weight=+(document.getElementById('ob-weight').value);if(!OB.weight||OB.weight<20||OB.weight>300){showToast('⚠️ הכנס משקל תקין');return;}}
+  if(s===6){OB.goalWeight=+(document.getElementById('ob-goal-weight').value);if(!OB.goalWeight||OB.goalWeight<20||OB.goalWeight>300){showToast('⚠️ הכנס משקל יעד תקין');return;}}
+  if(s===7&&!OB.goal){showToast('⚠️ בחר מטרה');return;}
+  if(s===8&&!OB.activity){showToast('⚠️ בחר רמת פעילות');return;}
+  if(s===9&&!OB.sleep){OB.sleep=7;}
+  if(s===10){completeOnboarding();return;}
+  showObStep(s+1);
+}
+function obBack(){if(OB.step>1)showObStep(OB.step-1);}
+
+function setGender(g){OB.gender=g;document.getElementById('ob-g-male').classList.toggle('sel',g==='male');document.getElementById('ob-g-female').classList.toggle('sel',g==='female');}
+function setObGoal(g){OB.goal=g;['lose','gain','tone','maintain'].forEach(x=>document.getElementById('ob-goal-'+x).classList.toggle('sel',x===g));}
+function setObActivity(a){OB.activity=a;['sedentary','light','moderate','active'].forEach(x=>document.getElementById('ob-act-'+x).classList.toggle('sel',x===a));}
+function setObSleep(h){
+  OB.sleep=h;
+  [5,6,7,8].forEach(x=>document.getElementById('ob-sleep-'+x).classList.toggle('sel',x===h));
+  const t={5:'😟 5 שעות — מעט מדי. שינה קצרה מפריעה לשריר לגדול ולחילוף החומרים.',6:'😐 6 שעות — בסדר אבל לא אידיאלי. נסה להוסיף עוד שעה.',7:'😊 7 שעות — טוב! הגוף מתאושש יפה.',8:'😄 8+ שעות — מושלם! הגוף בונה שריר בשינה.'}[h]||'';
+  const el=document.getElementById('ob-sleep-tip');if(el)el.textContent=t;
+}
+function obUpdateGoalWeight(v){
+  OB.goalWeight=v;if(!OB.weight)return;
+  const diff=(OB.weight-v);
+  const el=document.getElementById('ob-weight-diff-note');if(!el)return;
+  if(Math.abs(diff)<0.5)el.textContent='💚 כבר במשקל תקין!';
+  else if(diff>0)el.textContent=`לרדת ${diff.toFixed(1)} ק״ג (כרגע ${OB.weight} ק״ג)`;
+  else el.textContent=`לעלות ${Math.abs(diff).toFixed(1)} ק״ג (כרגע ${OB.weight} ק״ג)`;
+}
+function toggleInjury(inj,div){
+  const noPainLabel='אין כאבים — הכל בסדר';
+  const idx=OB.injuries.indexOf(inj);
+  if(inj===noPainLabel){
+    OB.injuries=idx>=0?[]:[inj];
+    document.querySelectorAll('.ob-chk').forEach(d=>{d.classList.remove('on');const b=d.querySelector('.ob-chkbox');if(b)b.textContent='';});
+    if(idx<0){div.classList.add('on');const b=div.querySelector('.ob-chkbox');if(b)b.textContent='✓';}
+    return;
+  }
+  const npIdx=OB.injuries.indexOf(noPainLabel);
+  if(npIdx>=0){OB.injuries.splice(npIdx,1);document.querySelectorAll('.ob-chk').forEach(d=>{if(d.textContent.includes(noPainLabel)){d.classList.remove('on');const b=d.querySelector('.ob-chkbox');if(b)b.textContent='';} });}
+  if(idx>=0){OB.injuries.splice(idx,1);div.classList.remove('on');const b=div.querySelector('.ob-chkbox');if(b)b.textContent='';}
+  else{OB.injuries.push(inj);div.classList.add('on');const b=div.querySelector('.ob-chkbox');if(b)b.textContent='✓';}
+}
+
+function generatePlan(){
+  const w=OB.weight||80,h=OB.height||175,a=OB.age||40;
+  let bmr=OB.gender==='female'?447.593+(9.247*w)+(3.098*h)-(4.330*a):88.362+(13.397*w)+(4.799*h)-(5.677*a);
+  const actM={sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[OB.activity]||1.55;
+  let tdee=Math.round(bmr*actM);
+  const adj={lose:-400,gain:300,tone:-200,maintain:0}[OB.goal]||0;
+  let cal=Math.max(1200,Math.min(4000,tdee+adj));
+  const protM={lose:2.2,gain:2.5,tone:2.0,maintain:1.8}[OB.goal]||2.0;
+  const protein=Math.round(w*protM);
+  const fat=Math.round(cal*0.28/9);
+  const carbs=Math.max(50,Math.round((cal-protein*4-fat*9)/4));
+  const plans={
+    lose:['מנוחה','קרדיו','חזה + זרועות','קרדיו','גב + כתפיים','רגליים','קרדיו'],
+    gain:['מנוחה','חזה + זרועות','גב + כתפיים','מנוחה','רגליים','כתפיים + ידיים','מנוחה'],
+    tone:['מנוחה','חזה + כתפיים','קרדיו','גב + זרועות','קרדיו','רגליים','גמישות'],
+    maintain:['מנוחה','חזה','גב','קרדיו','רגליים','כתפיים','גמישות'],
+  };
+  return{cal,protein,fat,carbs,weeklyPlan:plans[OB.goal]||plans.maintain,tdee};
+}
+
+function completeOnboarding(){
+  const plan=generatePlan();
+  const profile=PROFILES.find(p=>p.id===CURRENT_PROFILE_ID);
+  if(profile){profile.name=OB.name;profile.emoji=OB.emoji;saveProfiles();}
+  S.dadName=OB.name;S.age=OB.age;S.height=OB.height;S.weight=OB.weight;
+  S.goalWeight=OB.goalWeight;S.goal=OB.goal;S.activity=OB.activity;
+  S.sleepHours=OB.sleep;S.injuries=[...OB.injuries];S.gender=OB.gender;
+  S.targetCal=plan.cal;S.targetProtein=plan.protein;S.targetFat=plan.fat;S.targetCarbs=plan.carbs;
+  S.weeklyPlan=plan.weeklyPlan;S.onboardingDone=true;
+  if(S.weight)S.weightLog=[{date:new Date().toLocaleDateString('he-IL'),w:S.weight}];
+  save();
+  renderObSummary(plan);
+  showObStep(11);
+}
+
+function renderObSummary(plan){
+  const goalText={lose:'ירידה במשקל',gain:'בניית שריר',tone:'חיטוב',maintain:'שמירה על כושר'}[OB.goal]||'כושר';
+  const diff=(OB.weight||0)-(OB.goalWeight||OB.weight||0);
+  const weightNote=Math.abs(diff)<0.5?'💚 כבר במשקל יעד!':(diff>0?`לרדת ${diff.toFixed(1)} ק״ג`:`לעלות ${Math.abs(diff).toFixed(1)} ק״ג`);
+  const sleepNote={5:'⚠️ 5 שעות שינה — מעט מדי! שינה קצרה מפריעה לשריר לגדול',6:'💤 6 שעות — נסה להוסיף עוד שעת שינה לתוצאות טובות יותר',7:'✅ 7 שעות שינה — מצוין!',8:'🌟 8+ שעות — מושלם לבניית שריר!'}[OB.sleep]||'';
+  const realInj=OB.injuries.filter(x=>x!=='אין כאבים — הכל בסדר');
+  const injNote=realInj.length?`⚠️ יש לך מגבלות ב: ${realInj.join(', ')} — האימונים מותאמים לך`:'';
+  const firstTip={lose:'התחל בהליכה של 20 דק׳ כל יום. זה הצעד הכי חשוב!',gain:'אכול חלבון בכל ארוחה ואל תדלג על ארוחות!',tone:'שלב אימוני כוח עם קרדיו 3-4 פעמים שבוע',maintain:'עקביות מנצחת הכל — 3 אימונים שבוע לאורך זמן!'}[OB.goal]||'';
+  const DAYS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+  const el=document.getElementById('ob-plan-summary');if(!el)return;
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:72px">${OB.emoji}</div>
+      <div style="font-size:24px;font-weight:800;margin-top:8px">היי, ${OB.name}! 🎉</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:6px">המטרה: ${goalText} — ${weightNote}</div>
+    </div>
+    <div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:.5px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">🍽️ תוכנית תזונה יומית</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--card2);border-radius:12px;padding:12px"><div style="font-size:26px;font-weight:700;color:var(--accent)">${plan.cal}</div><div style="font-size:11px;color:var(--muted)">קלוריות</div></div>
+        <div style="text-align:center;background:var(--card2);border-radius:12px;padding:12px"><div style="font-size:26px;font-weight:700;color:var(--orange)">${plan.protein}g</div><div style="font-size:11px;color:var(--muted)">חלבון</div></div>
+        <div style="text-align:center;background:var(--card2);border-radius:12px;padding:12px"><div style="font-size:26px;font-weight:700;color:var(--blue)">${plan.carbs}g</div><div style="font-size:11px;color:var(--muted)">פחמימות</div></div>
+        <div style="text-align:center;background:var(--card2);border-radius:12px;padding:12px"><div style="font-size:26px;font-weight:700;color:var(--yellow)">${plan.fat}g</div><div style="font-size:11px;color:var(--muted)">שומן</div></div>
+      </div>
+    </div>
+    <div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:.5px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📅 תוכנית אימון שבועית</div>
+      ${DAYS.map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)"><div style="font-size:12px;color:var(--muted);width:24px;flex-shrink:0">${d}</div><div style="font-size:14px;font-weight:600">${plan.weeklyPlan[i]}</div></div>`).join('')}
+    </div>
+    ${sleepNote?`<div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:.5px solid var(--border);font-size:13px;line-height:1.6">${sleepNote}</div>`:''}
+    ${injNote?`<div style="background:var(--red-s);border-radius:14px;padding:14px;margin-bottom:10px;border:.5px solid var(--red);font-size:13px;color:var(--red);line-height:1.6">${injNote}</div>`:''}
+    ${firstTip?`<div style="background:var(--accent-s);border-radius:14px;padding:14px;margin-bottom:10px;border:.5px solid var(--accent);font-size:13px;color:var(--accent);line-height:1.6">💡 <strong>טיפ ראשון:</strong> ${firstTip}</div>`:''}`;
+}
+
+function enterApp(){
+  document.getElementById('screen-onboarding').style.display='none';
+  checkReset();applyTheme();
+  showMainApp();
+  const profile=PROFILES.find(p=>p.id===CURRENT_PROFILE_ID);
+  if(profile){const av=document.getElementById('profile-avatar');if(av)av.textContent=profile.emoji;}
+  renderAll();
+  if(localStorage.getItem('dad-rem-t'))startRemChecker();
+  setInterval(nextMotiv,6000);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+(function initApp(){
+  loadProfiles();
+  applyTheme();
+
+  if(!PROFILES.length){
+    // Check for legacy data (dad-fit3)
+    const legacy=localStorage.getItem('dad-fit3');
+    if(legacy){
+      try{
+        const ld=JSON.parse(legacy);
+        const p=createProfile(ld.dadName||'אבא','💪','');
+        CURRENT_PROFILE_ID=p.id;
+        localStorage.setItem('family-fit-current',p.id);
+        const def=getDefaultState();Object.keys(def).forEach(k=>{S[k]=def[k];});
+        Object.assign(S,ld);S.onboardingDone=true;
+        save();
+        checkReset();applyTheme();showMainApp();
+        const av=document.getElementById('profile-avatar');if(av)av.textContent=p.emoji;
+        renderAll();if(localStorage.getItem('dad-rem-t'))startRemChecker();setInterval(nextMotiv,6000);
+      }catch(e){
+        document.getElementById('screen-profiles').style.display='block';
+        renderProfileSelector();
+      }
+    } else {
+      document.getElementById('screen-profiles').style.display='block';
+      renderProfileSelector();
+    }
+  } else {
+    const lastId=localStorage.getItem('family-fit-current');
+    const lastProfile=lastId&&PROFILES.find(p=>p.id===lastId);
+    if(lastProfile&&!lastProfile.pin){
+      enterProfile(lastId);
+    } else {
+      document.getElementById('screen-profiles').style.display='block';
+      renderProfileSelector();
+    }
+  }
+})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
