@@ -100,12 +100,18 @@ export default async function handler(req, res) {
 
     const { subscription, reminderTime, reminderDays } = record;
 
-    // Check if this subscription is due now
+    // Check if this subscription is due (within 5-minute window to handle cron timing)
     const daysToCheck = Array.isArray(reminderDays) ? reminderDays : [0, 1, 2, 3, 4, 5, 6];
-    if (reminderTime !== hhmm || !daysToCheck.includes(day)) {
-      results.skipped++;
-      continue;
-    }
+    if (!daysToCheck.includes(day)) { results.skipped++; continue; }
+    const [rh, rm] = (reminderTime || '19:00').split(':').map(Number);
+    const [ch, cm] = hhmm.split(':').map(Number);
+    const diffMins = (ch * 60 + cm) - (rh * 60 + rm);
+    if (diffMins < 0 || diffMins >= 5) { results.skipped++; continue; }
+    // Prevent duplicate: check last-sent key in KV
+    const sentKey = `sent:${record.profileId}:${reminderTime}:${new Date().toISOString().slice(0,10)}`;
+    const alreadySent = await kv.get(sentKey).catch(() => null);
+    if (alreadySent) { results.skipped++; continue; }
+    await kv.set(sentKey, '1', { ex: 86400 }).catch(() => {});
 
     // Send push notification
     try {

@@ -766,7 +766,11 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     <div style="text-align:center;font-size:13px;color:var(--muted);margin-top:5px" id="steps-km">0.0 ק״מ</div>
     <div class="prog-track" style="margin-top:12px"><div class="prog-bar" id="steps-prog" style="background:linear-gradient(90deg,var(--green),var(--accent));width:0%"></div></div>
     <div style="font-size:12px;color:var(--muted);margin-top:4px" id="steps-lbl">יעד: 8,000</div>
-    <div style="display:flex;gap:8px;margin-top:12px">
+    <!-- ספירה אוטומטית -->
+    <button id="auto-step-btn" class="btn btn-green" onclick="toggleAutoSteps()" style="width:100%;margin-top:14px;font-size:15px;font-weight:700;padding:13px">🏃 התחל ספירה אוטומטית</button>
+    <div id="auto-step-status" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px;min-height:16px"></div>
+    <!-- הוספה ידנית -->
+    <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn" onclick="addSteps(500)" style="flex:1;padding:10px;font-size:13px">+500</button>
       <button class="btn" onclick="addSteps(1000)" style="flex:1;padding:10px;font-size:13px">+1,000</button>
       <button class="btn" onclick="addSteps(2000)" style="flex:1;padding:10px;font-size:13px">+2,000</button>
@@ -893,12 +897,7 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   </div>
   <div class="card">
     <div style="font-size:17px;font-weight:900;margin-bottom:4px">📲 התראות Push (נעילת מסך)</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">לקבלת התראות גם כשהטלפון נעול, הגדר כתובת שרת Vercel. <a href="https://vercel.com" target="_blank" style="color:var(--accent)">ללא עלות</a> — ראה הוראות בקובץ README.</div>
-    <div style="display:flex;gap:8px">
-      <input id="push-server-inp" type="url" class="inp" placeholder="https://your-app.vercel.app" style="flex:1;text-align:left;font-size:13px;direction:ltr">
-      <button class="btn" onclick="savePushServer()" style="width:auto;padding:12px 14px;font-size:13px">שמור</button>
-    </div>
-    <div id="push-server-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;min-height:18px"></div>
+    <div style="font-size:13px;color:var(--green);font-weight:600;margin-top:6px">✅ התראות push מוגדרות — עובד גם כשהמסך נעול</div>
   </div>
   <div class="card">
     <div class="sec">⚙️ כלליות</div>
@@ -910,15 +909,10 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
       <button class="btn btn-red" onclick="resetToday()">🗑️ אפס את היום</button>
     </div>
 
-    <!-- מפתח API -->
+    <!-- AI מובנה -->
     <div style="padding:14px 0;border-bottom:.5px solid var(--border)">
-      <div style="font-size:15px;font-weight:700;margin-bottom:4px">🔑 מפתח API (AI)</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6">נדרש לפיצ'רים: מאמן AI, סריקת מוצרים, זיהוי ארוחות. קבל מפתח בחינם באתר <strong>console.anthropic.com</strong></div>
-      <div style="display:flex;gap:8px">
-        <input id="api-key-inp" type="password" class="inp" placeholder="sk-ant-..." style="flex:1;text-align:left;font-size:13px;direction:ltr" oninput="">
-        <button class="btn" onclick="saveApiKey()" style="width:auto;padding:12px 14px;font-size:13px">שמור</button>
-      </div>
-      <div id="api-key-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;min-height:18px"></div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">🤖 AI מובנה</div>
+      <div style="font-size:13px;color:var(--green);font-weight:600">✅ מאמן AI, סריקת מוצרים וזיהוי ארוחות — פעיל</div>
     </div>
 
     <!-- גיבוי ושחזור -->
@@ -1212,8 +1206,8 @@ let S={
   apiKey:'',gender:'male',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
   pushSubscribed:false,pushServerUrl:'',
 };
-// Global push server URL — filled from S.pushServerUrl after load
-let PUSH_SERVER='';
+// Push server — built-in, no user configuration needed
+const PUSH_SERVER='https://sportfields.vercel.app';
 function save(){if(!CURRENT_PROFILE_ID)return;try{localStorage.setItem('family-fit-data-'+CURRENT_PROFILE_ID,JSON.stringify(S))}catch(e){}}
 function load(){if(!CURRENT_PROFILE_ID)return;try{const d=localStorage.getItem('family-fit-data-'+CURRENT_PROFILE_ID);if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
 function checkReset(){
@@ -1390,10 +1384,7 @@ function renderSettings(){
   if(S.weight){const e=document.getElementById('inp-weight');if(e)e.value=S.weight;}
   const ni=document.getElementById('name-inp');if(ni)ni.value=S.dadName||'';
   const rt=document.getElementById('rem-time');if(rt)rt.value=S.remTime;
-  const aki=document.getElementById('api-key-inp');if(aki)aki.value=S.apiKey||'';
-  const aks=document.getElementById('api-key-status');if(aks)aks.textContent=S.apiKey?'✅ מפתח API שמור':'⚠️ לא הוגדר מפתח';
-  const psi=document.getElementById('push-server-inp');if(psi)psi.value=S.pushServerUrl||'';
-  const pss=document.getElementById('push-server-status');if(pss)pss.textContent=S.pushServerUrl?'✅ שרת push מוגדר: '+S.pushServerUrl:'⚠️ לא הוגדר שרת push';
+  // api key + push server are now built-in, no user input needed
   renderGoalCards();renderActPills();renderRemDays();
   if(S.age&&S.height&&S.weight)calcMacros();
   const saved=localStorage.getItem('dad-rem-t');
@@ -1624,6 +1615,75 @@ function addSteps(n){
 }
 function resetSteps(){S.steps=0;const dow=new Date().getDay();S.weekSteps[dow]=0;save();renderSteps();}
 
+// ═══════════════════════════════════════════
+//  ספירת צעדים אוטומטית — חיישן תנועה
+// ═══════════════════════════════════════════
+let stepAutoOn=false;
+let stepAbove=false;   // האם עברנו את הסף כלפי מעלה
+let stepLastTime=0;
+const STEP_THRESHOLD=13;  // m/s² — ספף לזיהוי צעד
+const STEP_MIN_MS=280;    // מינימום זמן בין צעדים
+
+function toggleAutoSteps(){
+  if(stepAutoOn){
+    stopAutoSteps();
+    return;
+  }
+  // iOS 13+ צריך אישור
+  if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+    DeviceMotionEvent.requestPermission()
+      .then(state=>{if(state==='granted')startAutoSteps();else showToast('❌ צריך לאשר גישה לחיישן');})
+      .catch(()=>showToast('❌ שגיאה בגישה לחיישן'));
+  } else if(typeof DeviceMotionEvent!=='undefined'){
+    startAutoSteps();
+  } else {
+    showToast('⚠️ הטלפון לא תומך בחיישן תנועה');
+  }
+}
+
+function startAutoSteps(){
+  stepAutoOn=true;
+  stepAbove=false;
+  window.addEventListener('devicemotion',onMotionStep,{passive:true});
+  const btn=document.getElementById('auto-step-btn');
+  if(btn){btn.textContent='⏹️ עצור ספירה';btn.style.background='var(--red)';}
+  const st=document.getElementById('auto-step-status');
+  if(st)st.textContent='🟢 ספירה אוטומטית פעילה — תתחיל ללכת!';
+  showToast('🏃 ספירה אוטומטית פעילה!');
+}
+
+function stopAutoSteps(){
+  stepAutoOn=false;
+  window.removeEventListener('devicemotion',onMotionStep);
+  const btn=document.getElementById('auto-step-btn');
+  if(btn){btn.textContent='🏃 התחל ספירה אוטומטית';btn.style.background='';}
+  const st=document.getElementById('auto-step-status');
+  if(st)st.textContent='';
+  showToast('⏹️ ספירה אוטומטית עצרה');
+}
+
+function onMotionStep(e){
+  const a=e.accelerationIncludingGravity;
+  if(!a||a.x==null)return;
+  const mag=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+  if(!stepAbove&&mag>STEP_THRESHOLD){
+    // עלינו מעל הסף
+    stepAbove=true;
+  } else if(stepAbove&&mag<STEP_THRESHOLD-2){
+    // ירדנו חזרה — זהו צעד
+    stepAbove=false;
+    const now=Date.now();
+    if(now-stepLastTime>STEP_MIN_MS){
+      stepLastTime=now;
+      S.steps++;
+      const dow=new Date().getDay();S.weekSteps[dow]=S.steps;
+      save();renderSteps();
+      document.getElementById('s-steps').textContent=S.steps.toLocaleString();
+      if(S.steps===1000||S.steps===5000||S.steps===10000)showToast('🎉 '+S.steps.toLocaleString()+' צעדים!');
+    }
+  }
+}
+
 // כפתור "סיכום היום" — מציג עידוד כולל
 function showDailySummary(){
   const exPct  = getExDone()/Math.max(WORKOUTS[S.location].length,1);
@@ -1759,7 +1819,6 @@ async function handleBarcodeResult(barcode){
 async function scanFromPhoto(input){
   const file=input.files[0];if(!file)return;
   input.value='';
-  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
   const reader=new FileReader();
   reader.onload=async(e)=>{
     const base64=e.target.result.split(',')[1];
@@ -1771,7 +1830,7 @@ async function scanFromPhoto(input){
     res.className='tl-result';res.style.display='block';
     res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> AI מזהה מוצר...</div>';
     try{
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:[
+      const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
         {type:'text',text:'אתה תזונאי ישראלי. זהה את המוצר בתמונה (שם, מרכיבים נראים, ברקוד אם יש). החזר JSON בלבד: {name:"שם המוצר בעברית", light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים ניתוח תזונתי בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}
       ]}]})});
@@ -1788,7 +1847,7 @@ async function scanFromPhoto(input){
       if(S.scanHistory.length>20)S.scanHistory=S.scanHistory.slice(-20);
       save();renderScanHist();
     }catch(err){
-      res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה. בדוק שמפתח ה-API נכון.</div>';
+      res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה בחיבור ל-AI.</div>';
       document.getElementById('scan-photo-badge').textContent='❌ שגיאה';
     }
   };
@@ -1802,12 +1861,10 @@ function clearScanPhoto(){
 // ═══ SCAN BY TEXT / BARCODE DATA ═══
 async function scanProduct(){
   const name=document.getElementById('scan-inp').value.trim();if(!name)return;
-  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
   await runScanAI(name);
 }
 
 async function runScanAI(name,extra){
-  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');return;}
   const res=document.getElementById('tl-res');
   res.className='tl-result';res.style.display='block';
   res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> בודק...</div>';
@@ -1823,7 +1880,7 @@ async function runScanAI(name,extra){
       if(extra.salt)extraInfo+=` מלח: ${extra.salt}g.`;
       if(extra.ingredients)extraInfo+=` מרכיבים: ${extra.ingredients.slice(0,200)}.`;
     }
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי ישראלי. המוצר: "'+name+'".'+extraInfo+' החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}]})});
+    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי ישראלי. המוצר: "'+name+'".'+extraInfo+' החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}]})});
     const data=await resp.json();
     let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const r=JSON.parse(txt);
@@ -1834,12 +1891,12 @@ async function runScanAI(name,extra){
     S.scanHistory.push({name,light:r.light,verdict:r.title});
     if(S.scanHistory.length>20)S.scanHistory=S.scanHistory.slice(-20);
     save();renderScanHist();
-  }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה. בדוק שמפתח ה-API נכון.</div>';}
+  }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה בחיבור ל-AI.</div>';}
 }
 
 async function analyzeMeal(event){
   const file=event.target.files[0];if(!file)return;
-  if(!S.apiKey){showToast('⚠️ הכנס מפתח API בהגדרות');event.target.value='';return;}
+  event.target.value='';
   const scoreEl=document.getElementById('meal-score');
   scoreEl.style.display='block';
   scoreEl.innerHTML='<div class="spin-wrap"><div class="spinner"></div> AI מזהה...</div>';
@@ -1847,7 +1904,7 @@ async function analyzeMeal(event){
   const preview=URL.createObjectURL(file);
   document.getElementById('upload-area').innerHTML='<img src="'+preview+'" style="max-height:180px;border-radius:12px;max-width:100%">';
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},{type:'text',text:'תזונאי ישראלי. JSON בלבד: {items:[שמות בעברית], calories_est:מספר, protein_est:מספר, score:1-10, verdict:"מצוין"/"טוב"/"בסדר"/"שפר", tips:["טיפ1","טיפ2"]}'}]}]})});
+    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},{type:'text',text:'תזונאי ישראלי. JSON בלבד: {items:[שמות בעברית], calories_est:מספר, protein_est:מספר, score:1-10, verdict:"מצוין"/"טוב"/"בסדר"/"שפר", tips:["טיפ1","טיפ2"]}'}]}]})});
     const data=await resp.json();
     let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const r=JSON.parse(txt);
@@ -1997,7 +2054,7 @@ async function askAI(){
     } else {
       content=sysPrompt+'\n\nשאלה: '+q;
     }
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})});
+    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})});
     const data=await resp.json();
     const text=data.content?.map(b=>b.text||'').join('')||'';
     ans.textContent=text;
@@ -2008,7 +2065,7 @@ async function askAI(){
     // ניקוי
     document.getElementById('ai-inp').value='';
     clearAIMedia();
-  }catch(e){ans.textContent='לא הצלחתי להתחבר. בדוק שמפתח ה-API נכון.';}
+  }catch(e){ans.textContent='לא הצלחתי להתחבר. נסה שוב.';}
   btn.textContent='📩 שלח למאמן';btn.disabled=false;
 }
 
@@ -2056,10 +2113,11 @@ async function setReminder(){
   startRemChecker();
   document.getElementById('rem-status').textContent='✅ תזכורת פעילה בשעה '+time;
   showToast('🔔 תזכורת הוגדרה!');
-  // Also set up Web Push if server is configured
-  if(PUSH_SERVER)setupPushNotifications(time,S.remDays);
+  // Set up Web Push for background notifications (always active)
+  setupPushNotifications(time,S.remDays);
 }
 let remIv=null;
+let remLastFiredKey='';
 function startRemChecker(){
   if(remIv)clearInterval(remIv);
   remIv=setInterval(()=>{
@@ -2067,11 +2125,18 @@ function startRemChecker(){
     const savedDays=JSON.parse(localStorage.getItem('dad-rem-d')||'[0,1,2,3,4,5,6]');
     const now=new Date();
     const hhmm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-    if(hhmm===saved&&savedDays.includes(now.getDay())&&getExDone()===0){
-      new Notification('💪 כושר לאבא',{body:'עוד לא אימנת היום! 5 דקות זה מספיק 🔥'});
+    const dateStr=now.toDateString();
+    // Workout reminder — once per minute, prevent duplicate
+    const workKey='work:'+hhmm+':'+dateStr;
+    if(hhmm===saved&&savedDays.includes(now.getDay())&&getExDone()===0&&remLastFiredKey!==workKey){
+      remLastFiredKey=workKey;
+      new Notification('💪 כושר לאבא',{body:'עוד לא אימנת היום! 5 דקות זה מספיק 🔥',icon:'/icon-192.png'});
     }
-    if(now.getMinutes()===0&&S.waterCups<8&&now.getHours()>=8&&now.getHours()<=21){
-      new Notification('💧 שתיית מים',{body:WATER_MSGS[Math.floor(Math.random()*WATER_MSGS.length)]});
+    // Water reminder — top of each hour
+    const waterKey='water:'+now.getHours()+':'+dateStr;
+    if(now.getMinutes()===0&&S.waterCups<8&&now.getHours()>=8&&now.getHours()<=21&&remLastFiredKey!==waterKey){
+      remLastFiredKey=waterKey;
+      new Notification('💧 שתיית מים',{body:WATER_MSGS[Math.floor(Math.random()*WATER_MSGS.length)],icon:'/icon-192.png'});
     }
   },30000);
 }
@@ -2477,7 +2542,6 @@ function enterProfile(id){
     startOnboarding(profile||{name:'',emoji:'💪'});
   } else {
     checkReset();applyTheme();
-    PUSH_SERVER=S.pushServerUrl||'';
     document.getElementById('screen-profiles').style.display='none';
     showMainApp();
     // Update avatar
@@ -2665,7 +2729,6 @@ function renderObSummary(plan){
 function enterApp(){
   document.getElementById('screen-onboarding').style.display='none';
   checkReset();applyTheme();
-  PUSH_SERVER=S.pushServerUrl||'';
   showMainApp();
   const profile=PROFILES.find(p=>p.id===CURRENT_PROFILE_ID);
   if(profile){const av=document.getElementById('profile-avatar');if(av)av.textContent=profile.emoji;}
@@ -2693,7 +2756,7 @@ function enterApp(){
         const def=getDefaultState();Object.keys(def).forEach(k=>{S[k]=def[k];});
         Object.assign(S,ld);S.onboardingDone=true;
         save();
-        checkReset();applyTheme();PUSH_SERVER=S.pushServerUrl||'';showMainApp();
+        checkReset();applyTheme();showMainApp();
         const av=document.getElementById('profile-avatar');if(av)av.textContent=p.emoji;
         renderAll();if(localStorage.getItem('dad-rem-t'))startRemChecker();setInterval(nextMotiv,6000);
       }catch(e){
