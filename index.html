@@ -749,14 +749,54 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 <div class="tab" id="tab-ai">
   <div class="card">
     <div style="font-size:17px;font-weight:900;margin-bottom:4px">🤖 מאמן AI</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">שאל כל שאלה על כושר ותזונה</div>
-    <textarea class="textarea" id="ai-inp" rows="3" placeholder="למשל: כואב לי הברך, מה מותר?"></textarea>
-    <div style="margin-top:8px"><button class="btn" id="ai-btn" onclick="askAI()">📩 שלח</button></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">שאל כל שאלה — עם תמונה, סרטון, או סתם טקסט</div>
+
+    <!-- כפתורי מדיה -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <button onclick="document.getElementById('ai-cam').click()" style="padding:12px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:22px">📷</span>צלם
+      </button>
+      <button onclick="document.getElementById('ai-img').click()" style="padding:12px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:22px">🖼️</span>תמונה
+      </button>
+      <button onclick="document.getElementById('ai-vid').click()" style="padding:12px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:22px">🎥</span>סרטון
+      </button>
+    </div>
+    <input type="file" id="ai-cam" accept="image/*" capture="environment" style="display:none" onchange="attachAIMedia(this)">
+    <input type="file" id="ai-img" accept="image/*" style="display:none" onchange="attachAIMedia(this)">
+    <input type="file" id="ai-vid" accept="video/*" style="display:none" onchange="attachAIMedia(this)">
+
+    <!-- תצוגה מקדימה של מדיה -->
+    <div id="ai-media-preview" style="display:none;margin-bottom:12px;position:relative">
+      <img id="ai-preview-img" style="width:100%;max-height:220px;object-fit:cover;border-radius:14px;border:1.5px solid var(--border)">
+      <div id="ai-preview-badge" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.75);color:#fff;border-radius:10px;padding:5px 12px;font-size:12px;font-weight:700;backdrop-filter:blur(4px)"></div>
+      <button onclick="clearAIMedia()" style="position:absolute;top:10px;left:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.75);border:none;color:#fff;font-size:16px;cursor:pointer;line-height:1;backdrop-filter:blur(4px)">✕</button>
+      <div id="ai-vid-proc" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#fff;font-size:14px;font-weight:700">
+        <div class="spinner" style="border-color:rgba(255,255,255,.3);border-top-color:#fff;width:28px;height:28px"></div>
+        מחלץ פריים...
+      </div>
+    </div>
+
+    <textarea class="textarea" id="ai-inp" rows="3" placeholder="שאל על האימון, הכאב, האוכל, הטכניקה... (אפשר גם בלי תמונה)"></textarea>
+    <div style="margin-top:10px"><button class="btn" id="ai-btn" onclick="askAI()">📩 שלח למאמן</button></div>
   </div>
+
   <div class="card card-green" id="ai-card" style="display:none">
     <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:7px">💬 תשובת המאמן:</div>
-    <div style="font-size:15px;line-height:1.75" id="ai-ans"></div>
+    <div style="font-size:15px;line-height:1.8" id="ai-ans"></div>
+    <button id="ai-copy-btn" onclick="copyAIAnswer()" style="margin-top:12px;background:none;border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer">📋 העתק תשובה</button>
   </div>
+
+  <!-- היסטוריית שיחה -->
+  <div class="card" id="ai-history-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">💬 שיחות אחרונות</div>
+      <button onclick="clearAIHistory()" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit">נקה</button>
+    </div>
+    <div id="ai-history-list"></div>
+  </div>
+
   <div class="card"><div class="sec">❓ שאלות נפוצות</div><div id="quick-qs"></div></div>
 </div>
 
@@ -1660,19 +1700,140 @@ function updTimer(){const m=Math.floor(timerLeft/60).toString().padStart(2,'0'),
 function toggleTimer(){timerOn=!timerOn;if(timerLeft<=0){timerLeft=timerTotal;timerOn=true;}document.getElementById('timer-btn').textContent=timerOn?'⏸️ עצור':'▶️ המשך';}
 function stopTimer(){clearInterval(timerIv);timerOn=false;document.getElementById('timer-card').style.display='none';}
 
+// ═══════════════════════════════════════════
+//  AI CHAT + MEDIA
+// ═══════════════════════════════════════════
+let AI_MEDIA=null; // {base64, mediaType, label}
+let AI_HISTORY=[]; // [{q, imgFlag, ans, ts}]
+
+async function attachAIMedia(input){
+  const file=input.files[0];if(!file){return;}
+  input.value='';
+  const prev=document.getElementById('ai-media-preview');
+  const prevImg=document.getElementById('ai-preview-img');
+  const badge=document.getElementById('ai-preview-badge');
+  const proc=document.getElementById('ai-vid-proc');
+  prev.style.display='block';
+  if(file.type.startsWith('video/')){
+    if(proc){proc.style.display='flex';}
+    try{
+      const base64=await extractVideoFrame(file);
+      AI_MEDIA={base64,mediaType:'image/jpeg',label:'🎥 פריים מסרטון'};
+      prevImg.src='data:image/jpeg;base64,'+base64;
+      if(badge)badge.textContent='🎥 פריים מסרטון';
+      showToast('🎥 פריים חולץ מהסרטון!');
+    }catch(e){
+      showToast('⚠️ לא הצלחתי לקרוא את הסרטון');
+      prev.style.display='none';
+    }finally{
+      if(proc)proc.style.display='none';
+    }
+  } else {
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const base64=e.target.result.split(',')[1];
+      AI_MEDIA={base64,mediaType:file.type||'image/jpeg',label:'📷 תמונה'};
+      prevImg.src=e.target.result;
+      if(badge)badge.textContent='📷 תמונה';
+      showToast('📷 תמונה צורפה!');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function extractVideoFrame(videoFile){
+  return new Promise((resolve,reject)=>{
+    const video=document.createElement('video');
+    const canvas=document.createElement('canvas');
+    const url=URL.createObjectURL(videoFile);
+    video.muted=true;video.playsInline=true;video.src=url;
+    video.addEventListener('loadedmetadata',()=>{
+      video.currentTime=Math.min(1.5,video.duration/3||0);
+    });
+    video.onseeked=()=>{
+      try{
+        const maxW=1280;
+        const ratio=video.videoHeight/video.videoWidth;
+        canvas.width=Math.min(video.videoWidth,maxW);
+        canvas.height=Math.round(canvas.width*ratio);
+        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+        const b64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+        URL.revokeObjectURL(url);resolve(b64);
+      }catch(e){URL.revokeObjectURL(url);reject(e);}
+    };
+    video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('video error'));};
+    video.load();
+  });
+}
+
+function clearAIMedia(){
+  AI_MEDIA=null;
+  document.getElementById('ai-media-preview').style.display='none';
+}
+
+function copyAIAnswer(){
+  const t=document.getElementById('ai-ans').textContent;
+  navigator.clipboard?.writeText(t).then(()=>showToast('📋 הועתק!'));
+}
+
+function clearAIHistory(){AI_HISTORY=[];renderAIHistory();}
+
+function renderAIHistory(){
+  const card=document.getElementById('ai-history-card');
+  const list=document.getElementById('ai-history-list');
+  if(!AI_HISTORY.length){if(card)card.style.display='none';return;}
+  if(card)card.style.display='block';
+  if(!list)return;
+  list.innerHTML='';
+  [...AI_HISTORY].reverse().slice(0,5).forEach(h=>{
+    const d=document.createElement('div');
+    d.style.cssText='padding:12px 0;border-bottom:.5px solid var(--border)';
+    d.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${h.imgFlag?'📷 ':''}${h.q||'(תמונה בלבד)'}</div><div style="font-size:12px;color:var(--muted);line-height:1.6">${h.ans.slice(0,120)}${h.ans.length>120?'...':''}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${h.ts}</div>`;
+    list.appendChild(d);
+  });
+}
+
 async function askAI(){
-  const q=document.getElementById('ai-inp').value.trim();if(!q)return;
-  if(!S.apiKey){const ans=document.getElementById('ai-ans');const card=document.getElementById('ai-card');card.style.display='block';ans.textContent='⚠️ כדי להשתמש במאמן AI, הכנס מפתח API בלשונית ⚙️ הגדרות.';return;}
+  const q=document.getElementById('ai-inp').value.trim();
+  if(!q&&!AI_MEDIA)return;
+  if(!S.apiKey){
+    const card=document.getElementById('ai-card');const ans=document.getElementById('ai-ans');
+    card.style.display='block';
+    ans.textContent='⚠️ כדי להשתמש במאמן AI, הכנס מפתח API בלשונית ⚙️ הגדרות.';
+    return;
+  }
   const btn=document.getElementById('ai-btn'),card=document.getElementById('ai-card'),ans=document.getElementById('ai-ans');
   btn.textContent='⏳ חושב...';btn.disabled=true;card.style.display='block';
   ans.innerHTML='<div class="spin-wrap"><div class="spinner"></div> מכין תשובה...</div>';
   try{
-    const profile=S.age?'(גבר, '+S.age+' שנים, '+S.weight+'ק״ג, מטרה: '+(GOALS.find(g=>g.id===S.goal)?.label)+')':'';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:'אתה מאמן כושר ותזונאי ישראלי. מסייע לגבר 50-60 '+profile+'. ענה בעברית פשוטה וחמה. 4-5 משפטים. השאלה: '+q}]})});
+    const gender=S.gender==='female'?'אישה':'גבר';
+    const goalLabel=GOALS.find(g=>g.id===S.goal)?.label||'';
+    const injuries=S.injuries&&S.injuries.length&&!S.injuries.includes('אין כאבים — הכל בסדר')?'מגבלות: '+S.injuries.join(', ')+'.':'';
+    const profile=S.age?`(${gender}, ${S.age} שנים, ${S.weight||'?'}ק״ג, גובה ${S.height||'?'}ס״מ, מטרה: ${goalLabel}${injuries?' — '+injuries:''})`: '';
+    const sysPrompt=`אתה מאמן כושר ותזונאי ישראלי מנוסה ואנושי. מסייע ל${gender} ${profile}. ענה בעברית פשוטה, חמה וענייה. אם רואה תמונה — תאר מה אתה רואה ותן עצות מדויקות. 4-6 משפטים.`;
+    let content;
+    if(AI_MEDIA){
+      const question=q||(AI_MEDIA.label==='🎥 פריים מסרטון'?'מה אתה רואה בסרטון? תן לי עצות לשיפור הטכניקה.':'מה אתה רואה? תן לי עצות מותאמות.');
+      content=[
+        {type:'image',source:{type:'base64',media_type:AI_MEDIA.mediaType,data:AI_MEDIA.base64}},
+        {type:'text',text:sysPrompt+'\n\nשאלת המשתמש: '+question+(AI_MEDIA.label==='🎥 פריים מסרטון'?' [זהו פריים מסרטון תנועה/אימון]':'')}
+      ];
+    } else {
+      content=sysPrompt+'\n\nשאלה: '+q;
+    }
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})});
     const data=await resp.json();
-    ans.textContent=data.content.map(b=>b.text||'').join('');
+    const text=data.content?.map(b=>b.text||'').join('')||'';
+    ans.textContent=text;
+    // שמור בהיסטוריה
+    AI_HISTORY.push({q:q||'',imgFlag:!!AI_MEDIA,ans:text,ts:new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})});
+    if(AI_HISTORY.length>20)AI_HISTORY=AI_HISTORY.slice(-20);
+    renderAIHistory();
+    // ניקוי
+    document.getElementById('ai-inp').value='';
+    clearAIMedia();
   }catch(e){ans.textContent='לא הצלחתי להתחבר. בדוק שמפתח ה-API נכון.';}
-  btn.textContent='📩 שלח';btn.disabled=false;
+  btn.textContent='📩 שלח למאמן';btn.disabled=false;
 }
 
 async function setReminder(){
