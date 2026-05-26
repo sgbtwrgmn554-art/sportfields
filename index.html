@@ -2382,13 +2382,8 @@ async function setupPushNotifications(reminderTime,reminderDays){
     const perm=await Notification.requestPermission();
     if(perm!=='granted')return;
     // Get VAPID public key from server
-    let vapidKey='';
-    try{
-      const r=await fetch(PUSH_SERVER+'/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get-public-key'})});
-      const d=await r.json();
-      vapidKey=d.publicKey||'';
-    }catch(e){vapidKey='';}
-    if(!vapidKey)return;
+    // VAPID public key — built in, no server call needed
+    const vapidKey='BHyt40zGQEoG35nH5h-6l-DgKWsqWgac9iutFSf8svFvVywSBC-r9wDQO_3BVc7L3vb5emttWV8RoIMDXwgyqT8';
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
     if(!sub){
