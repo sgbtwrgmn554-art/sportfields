@@ -138,22 +138,29 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .snum{font-size:20px;font-weight:700;line-height:1;letter-spacing:-.5px}
 .slbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
 
-/* ── Water Glass ── */
-.water-glass-outer{position:relative;width:100%;height:110px;cursor:pointer;user-select:none}
-.water-glass{position:relative;width:100%;height:100%;border-radius:12px 12px 36px 36px;border:1.5px solid rgba(150,210,255,.18);background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.01) 100%);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.2),0 8px 32px rgba(10,132,255,.08)}
-.water-fill{position:absolute;bottom:0;left:0;right:0;transition:height .6s cubic-bezier(.34,1.2,.64,1);background:linear-gradient(180deg,rgba(10,132,255,.55) 0%,rgba(10,132,255,.82) 60%,rgba(0,90,200,.9) 100%)}
+/* ── Water Glass — Premium Ceramic ── */
+.water-glass-outer{position:relative;width:100%;height:120px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.water-glass{position:relative;width:100%;height:100%;border-radius:10px 10px 34px 34px;background:linear-gradient(180deg,#222226 0%,#161618 100%);overflow:hidden;border:1px solid rgba(255,255,255,.1);border-top:1.5px solid rgba(255,255,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 -2px 8px rgba(0,0,0,.45),inset 3px 0 12px rgba(0,0,0,.2),inset -3px 0 6px rgba(0,0,0,.12),0 6px 24px rgba(0,0,0,.55)}
+.water-glass::before{content:'';position:absolute;top:-1px;left:10%;right:10%;height:1px;background:rgba(255,255,255,.55);filter:blur(1.2px);border-radius:50%;z-index:10;pointer-events:none}
+.water-fill{position:absolute;bottom:0;left:0;right:0;transition:height .6s cubic-bezier(.34,1.2,.64,1);background:linear-gradient(180deg,rgba(15,140,255,.65) 0%,rgba(10,100,215,.88) 55%,rgba(0,60,170,.97) 100%)}
 .water-wave-wrap{position:absolute;top:-18px;left:-5%;width:110%;pointer-events:none}
 .water-wave-wrap svg{width:100%;display:block}
 @keyframes waveMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .wave-anim{animation:waveMove 3s linear infinite}
 .wave-anim2{animation:waveMove 4.5s linear infinite reverse;opacity:.5}
-.water-shine{position:absolute;top:8px;left:8%;width:18%;height:35%;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);pointer-events:none}
-.water-shine2{position:absolute;top:14px;left:30%;width:8%;height:20%;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
-.water-tap-zones{position:absolute;inset:0;display:flex}
-.water-zone{flex:1;height:100%}
-.water-cup-marks{position:absolute;top:0;bottom:0;right:10px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none}
-.water-cup-mark{width:6px;height:1px;background:rgba(255,255,255,.15);border-radius:1px}
-body.light-mode .water-glass{border-color:rgba(10,132,255,.2);background:linear-gradient(180deg,rgba(10,132,255,.04),rgba(255,255,255,.6));box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 4px 16px rgba(10,132,255,.1)}
+.water-shine{position:absolute;top:9px;left:7%;width:15%;height:30%;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.13),transparent);pointer-events:none;z-index:4}
+.water-shine2{position:absolute;top:13px;left:27%;width:6%;height:15%;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;z-index:4}
+.water-shine3{position:absolute;top:7px;right:18%;width:4%;height:25%;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none;z-index:4}
+.water-tap-zones{position:absolute;inset:0;display:flex;flex-direction:column-reverse}
+.water-zone{flex:1;width:100%}
+.water-cup-marks{position:absolute;top:8px;bottom:8px;right:10px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;z-index:4}
+.water-cup-mark{width:8px;height:.8px;background:rgba(255,255,255,.1);border-radius:1px}
+.water-sparkle{position:absolute;top:-2px;z-index:11;width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.85);filter:blur(.6px);animation:sparkle-anim var(--dur,2.5s) ease-in-out infinite var(--delay,0s);pointer-events:none}
+@keyframes sparkle-anim{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.4)}}
+.wdot{height:7px;border-radius:4px;background:var(--border2);transition:all .38s cubic-bezier(.34,1.5,.64,1)}
+.wdot.on{background:var(--blue);box-shadow:0 0 8px rgba(10,132,255,.8),0 0 16px rgba(10,132,255,.3)}
+body.light-mode .water-glass{background:linear-gradient(180deg,rgba(10,132,255,.04),rgba(255,255,255,.6));border:1px solid rgba(10,132,255,.2);border-top:1.5px solid rgba(10,132,255,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 4px 16px rgba(10,132,255,.1)}
+body.light-mode .water-glass::before{background:rgba(10,132,255,.45)}
 body.light-mode .water-fill{background:linear-gradient(180deg,rgba(10,132,255,.4),rgba(10,132,255,.7))}
 body.light-mode .water-shine{background:linear-gradient(135deg,rgba(255,255,255,.6),transparent)}
 
@@ -588,30 +595,44 @@ body.light-mode .water-shine{background:linear-gradient(135deg,rgba(255,255,255,
     </div>
   </div>
 
-  <!-- מעקב מים — כוס זכוכית -->
+  <!-- מעקב מים — כוס קרמיקה פרמיום -->
   <div style="margin:12px 16px 0">
-    <div class="card" style="margin:0;padding:14px 16px 16px">
+    <div class="card" style="margin:0;padding:16px 16px 16px;position:relative;overflow:hidden">
+      <!-- פינות דקורטיביות -->
+      <div style="position:absolute;top:9px;left:9px;width:16px;height:16px"><svg viewBox="0 0 16 16" fill="none"><path d="M0 0 L9 0 L9 1.5 L1.5 1.5 L1.5 9 L0 9 Z" fill="rgba(255,255,255,.2)"/></svg></div>
+      <div style="position:absolute;top:9px;right:9px;width:16px;height:16px"><svg viewBox="0 0 16 16" fill="none"><path d="M16 0 L7 0 L7 1.5 L14.5 1.5 L14.5 9 L16 9 Z" fill="rgba(255,255,255,.2)"/></svg></div>
+      <div style="position:absolute;bottom:9px;left:9px;width:16px;height:16px"><svg viewBox="0 0 16 16" fill="none"><path d="M0 16 L9 16 L9 14.5 L1.5 14.5 L1.5 7 L0 7 Z" fill="rgba(255,255,255,.15)"/></svg></div>
+      <div style="position:absolute;bottom:9px;right:9px;width:16px;height:16px"><svg viewBox="0 0 16 16" fill="none"><path d="M16 16 L7 16 L7 14.5 L14.5 14.5 L14.5 7 L16 7 Z" fill="rgba(255,255,255,.15)"/></svg></div>
+
       <!-- כותרת -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:15px;font-weight:900;color:var(--blue);display:flex;align-items:center;gap:6px">
-          💧 <span style="background:linear-gradient(90deg,#0a84ff,#5ac8fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">מים יומיים</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--muted);font-weight:500" id="water-lbl"></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px;font-weight:900;background:linear-gradient(130deg,#fff 20%,rgba(180,220,255,.75));-webkit-background-clip:text;-webkit-text-fill-color:transparent">מים יומיים</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 0 7px rgba(10,132,255,.9));flex-shrink:0">
+            <path d="M12 2C12 2 5 10 5 15C5 18.87 8.13 22 12 22C15.87 22 19 18.87 19 15C19 10 12 2 12 2Z" fill="url(#wdg)"/>
+            <path d="M9 18C9 18 7 16.5 7 15" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"/>
+            <defs><radialGradient id="wdg" cx="38%" cy="28%"><stop offset="0%" stop-color="#c0f0ff"/><stop offset="48%" stop-color="#3ab0ff"/><stop offset="100%" stop-color="#0a5ee0"/></radialGradient></defs>
+          </svg>
         </div>
-        <div style="font-size:13px;color:var(--muted);font-weight:600" id="water-lbl"></div>
       </div>
 
-      <!-- כוס זכוכית -->
+      <!-- כוס קרמיקה -->
       <div class="water-glass-outer" id="water-glass-outer">
         <div class="water-glass">
+          <!-- ניצוצות על השפה -->
+          <div class="water-sparkle" style="left:8%;--dur:2.8s;--delay:0s"></div>
+          <div class="water-sparkle" style="left:50%;--dur:3.4s;--delay:1.1s"></div>
+          <div class="water-sparkle" style="left:88%;--dur:2.2s;--delay:.6s"></div>
           <!-- מילוי מים -->
           <div class="water-fill" id="water-fill" style="height:0%">
-            <!-- גלים -->
             <div class="water-wave-wrap">
               <svg viewBox="0 0 200 20" preserveAspectRatio="none" style="height:20px">
                 <g class="wave-anim">
-                  <path d="M0 10 C20 0,40 20,60 10 C80 0,100 20,120 10 C140 0,160 20,180 10 C200 0,220 20,240 10 C260 0,280 20,300 10 C320 0,340 20,360 10 L360 20 L0 20Z" fill="rgba(255,255,255,0.25)"/>
+                  <path d="M0 10 C20 0,40 20,60 10 C80 0,100 20,120 10 C140 0,160 20,180 10 C200 0,220 20,240 10 C260 0,280 20,300 10 C320 0,340 20,360 10 L360 20 L0 20Z" fill="rgba(255,255,255,0.26)"/>
                 </g>
                 <g class="wave-anim2">
-                  <path d="M0 12 C25 2,50 22,75 12 C100 2,125 22,150 12 C175 2,200 22,225 12 C250 2,275 22,300 12 C325 2,350 22,375 12 L375 20 L0 20Z" fill="rgba(255,255,255,0.15)"/>
+                  <path d="M0 12 C25 2,50 22,75 12 C100 2,125 22,150 12 C175 2,200 22,225 12 C250 2,275 22,300 12 C325 2,350 22,375 12 L375 20 L0 20Z" fill="rgba(255,255,255,0.14)"/>
                 </g>
               </svg>
             </div>
@@ -619,6 +640,7 @@ body.light-mode .water-shine{background:linear-gradient(135deg,rgba(255,255,255,
           <!-- ברק זכוכית -->
           <div class="water-shine"></div>
           <div class="water-shine2"></div>
+          <div class="water-shine3"></div>
           <!-- סימוני כוסות בצד -->
           <div class="water-cup-marks" id="water-cup-marks"></div>
           <!-- אזורי לחיצה (8 שכבות) -->
@@ -626,10 +648,12 @@ body.light-mode .water-shine{background:linear-gradient(135deg,rgba(255,255,255,
         </div>
       </div>
 
+      <!-- מפריד -->
+      <div style="height:.5px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);margin:12px 0 10px"></div>
       <!-- טקסט מתחת -->
-      <div style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center" id="water-pct-lbl"></div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px" id="water-pct-lbl"></div>
       <!-- נקודות כוסות -->
-      <div style="display:flex;justify-content:center;gap:5px;margin-top:8px" id="water-dots"></div>
+      <div style="display:flex;justify-content:center;gap:5px" id="water-dots"></div>
     </div>
   </div>
 
@@ -1428,7 +1452,7 @@ function renderHome(){
   if(wf)wf.style.height=Math.max(0,S.waterCups/8*100)+'%';
   // נקודות כוסות בתחתית
   const wdots=document.getElementById('water-dots');
-  if(wdots){wdots.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.style.cssText='width:'+(i<S.waterCups?'14px':'7px')+';height:7px;border-radius:4px;background:'+(i<S.waterCups?'var(--blue)':'var(--border2)')+';transition:.3s';wdots.appendChild(d);}}
+  if(wdots){wdots.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className='wdot'+(i<S.waterCups?' on':'');d.style.width=i<S.waterCups?'14px':'7px';wdots.appendChild(d);}}
   // סימוני כוסות בצד הכוס
   const marks=document.getElementById('water-cup-marks');
   if(marks){marks.innerHTML='';for(let i=0;i<7;i++){const m=document.createElement('div');m.className='water-cup-mark';marks.appendChild(m);}}
