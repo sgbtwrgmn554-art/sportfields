@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@vercel/kv": "^2.0.0",
+    "leaflet": "^1.9.4",
     "web-push": "^3.6.7"
   }
 }
