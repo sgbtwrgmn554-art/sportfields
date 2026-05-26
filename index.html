@@ -139,8 +139,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .slbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
 
 .water-row{display:flex;gap:7px;flex-wrap:wrap}
-.wbtn{width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border2);background:transparent;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
-.wbtn.on{border-color:var(--accent);background:var(--accent-s)}
+.wbtn{width:100%;aspect-ratio:1;border-radius:10px;border:1.5px solid var(--border2);background:transparent;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;min-height:32px}
+.wbtn.on{border-color:var(--blue);background:rgba(10,132,255,.15);filter:drop-shadow(0 0 4px rgba(10,132,255,.35))}
 
 .navbar{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 20px;z-index:100;overflow-x:auto}
 .nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;font-family:inherit;padding:3px 6px;white-space:nowrap;min-width:46px;transition:.2s}
@@ -573,12 +573,20 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     </div>
   </div>
 
-  <!-- מעקב מים -->
+  <!-- מעקב מים — עיצוב חדש -->
   <div style="margin:12px 16px 0">
-    <div class="card" style="margin:0">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">💧 מים — חשוב לשריר</div>
-      <div class="water-row" id="water-row"></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px" id="water-lbl"></div>
+    <div class="card" style="margin:0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:800;color:var(--blue)">💧 מים יומיים</div>
+        <div style="font-size:12px;color:var(--muted)" id="water-lbl"></div>
+      </div>
+      <!-- כוסות גדולות ויזואליות -->
+      <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:10px" id="water-row"></div>
+      <!-- פס התקדמות -->
+      <div style="height:6px;background:var(--border);border-radius:10px;overflow:hidden">
+        <div id="water-prog-bar" style="height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:10px;transition:.4s;width:0%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center" id="water-pct-lbl"></div>
     </div>
   </div>
 
@@ -666,6 +674,25 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     <div class="prog-track"><div class="prog-bar" id="prot-prog" style="background:linear-gradient(90deg,var(--accent),#ea580c);width:0%"></div></div>
     <div style="font-size:11px;color:var(--muted)" id="prot-pct">חלבון: 0%</div>
   </div>
+  <!-- העדפות תזונה -->
+  <div class="card" id="food-prefs-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:900">🥑 העדפות תזונה</div>
+      <button onclick="toggleFoodPrefsForm()" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:8px;border:1px solid var(--border)">✏️ ערוך</button>
+    </div>
+    <div id="food-prefs-display"></div>
+    <div id="food-prefs-form" style="display:none;margin-top:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;margin-top:4px">⚠️ אלרגיות / רגישויות:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="allergy-chips"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">🚫 לא אוהב / לא אוכל:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="dislike-chips"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">💚 אוהב במיוחד:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="like-chips"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">📝 הערות / צרכים מיוחדים:</div>
+      <input class="inp" id="food-notes-inp" placeholder="לדוג׳: כשר, ללא גלוטן, צמחוני..." style="text-align:right;margin-bottom:10px" onchange="saveFoodNotes()">
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec">📸 צלם ארוחה — AI יזהה</div>
     <div class="upload-area" id="upload-area" onclick="document.getElementById('meal-file').click()">
@@ -677,6 +704,95 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     <div class="meal-score" id="meal-score"></div>
   </div>
   <div id="food-list"></div>
+  <!-- מתכונים בריאים -->
+  <div class="card" style="margin-bottom:0">
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px">🍳 מתכונים בריאים</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">כשר · עשיר בחלבון · קל להכנה</div>
+    <!-- טאבים -->
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px" id="recipe-tab-pills">
+      <button class="pill active" onclick="showRecipeTab('protein')">💪 חלבון</button>
+      <button class="pill" onclick="showRecipeTab('lowcal')">🥗 קלורי נמוך</button>
+      <button class="pill" onclick="showRecipeTab('snacks')">⚡ חטיפים</button>
+    </div>
+    <!-- עשיר בחלבון -->
+    <div id="recipe-protein">
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🍗 חזה עוף גריל + ירקות</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 20 דק׳ · <span style="color:var(--accent)">💪 45g חלבון</span> · 350 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">חזה עוף 200g + פפריקה + שום + שמן זית. צלייה 12 דק׳ מכל צד. הגש עם ברוקולי מאודה.</div>
+        <a href="https://www.youtube.com/results?search_query=חזה+עוף+גריל+בריא" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥚 ביצים מקושקשות עם גבינה</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 5 דק׳ · <span style="color:var(--accent)">💪 28g חלבון</span> · 290 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">3 ביצים + 30g גבינה צהובה + 1 כף שמן. מחמם מחבת, מוסיפים ביצים ומערבבים. מפזרים גבינה.</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🐟 סלמון אפוי בתנור</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 25 דק׳ · <span style="color:var(--accent)">💪 40g חלבון</span> · 380 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">פילה סלמון 200g + לימון + שמיר + שמן זית. אפייה 200° למשך 18–20 דק׳.</div>
+        <a href="https://www.youtube.com/results?search_query=סלמון+אפוי+בתנור+בריא" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🫘 שניצל קינואה וחומוס</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 30 דק׳ · <span style="color:var(--accent)">💪 22g חלבון</span> · 310 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">קופסת חומוס + ¾ כוס קינואה מבושלת + 1 ביצה + תבלינים. מעצבים קציצות ואופים 200° / 20 דק׳.</div>
+        <a href="https://www.youtube.com/results?search_query=קציצות+קינואה+חומוס" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+    </div>
+    <!-- קלורי נמוך -->
+    <div id="recipe-lowcal" style="display:none">
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥗 סלט ממלא עם טונה</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 5 דק׳ · <span style="color:var(--accent)">💪 25g חלבון</span> · <span style="color:var(--green)">210 קל׳</span></div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">עגבניות + מלפפון + פלפל + טונה בשימורים 120g + לימון. מעורבב ומוסיפים שמן זית 1 כף.</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🍲 מרק עוף ביתי</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 60 דק׳ · <span style="color:var(--accent)">💪 18g חלבון</span> · <span style="color:var(--green)">160 קל׳</span></div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">חלקי עוף + גזר + בצל + סלרי + מים. בישול שעה על אש נמוכה. ממלא ועשיר בחלבון.</div>
+        <a href="https://www.youtube.com/results?search_query=מרק+עוף+ביתי+בריא" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🫛 מרק עדשות אדומות</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 30 דק׳ · <span style="color:var(--accent)">💪 14g חלבון</span> · <span style="color:var(--green)">195 קל׳</span></div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">עדשות אדומות + בצל + שום + כמון + כורכום + עגבניות. בישול 25 דק׳ ובלנדר.</div>
+        <a href="https://www.youtube.com/results?search_query=מרק+עדשות+אדומות+בריא" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥬 אורז כרובית עם ירקות</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 15 דק׳ · <span style="color:var(--accent)">💪 8g חלבון</span> · <span style="color:var(--green)">140 קל׳</span></div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">כרובית מגורדת במפולת מזון → טיגון 5 דק׳ + ירקות קפואים + רוטב סויה. תחליף אורז מלא.</div>
+      </div>
+    </div>
+    <!-- חטיפי חלבון -->
+    <div id="recipe-snacks" style="display:none">
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥤 שייק בננה-חלבון</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 2 דק׳ · <span style="color:var(--accent)">💪 38g חלבון</span> · 320 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">250ml חלב + 1 בננה + 1 כף חמאת בוטנים + 1 סקופ אבקת חלבון (וניל). בלנדר 30 שניות.</div>
+        <a href="https://www.youtube.com/results?search_query=שייק+חלבון+בננה+בריא" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥞 פנקייק חלבון (2 מנות)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 10 דק׳ · <span style="color:var(--accent)">💪 24g חלבון</span> · 280 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">2 ביצים + 50g קוטג׳ 5% + 30g שיבולת שועל + 1/2 כפית אבקת אפייה. מערבבים ומטגנים.</div>
+        <a href="https://www.youtube.com/results?search_query=פנקייק+חלבון+קוטג+" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🍫 כדורי אנרגיה (12 כדורים)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 15 דק׳ · <span style="color:var(--accent)">💪 3g חלבון לכדור</span> · 80 קל׳ לכדור</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">1 כוס שיבולת שועל + 3 כפות חמאת בוטנים + 2 כפות דבש + 2 כפות שוקולד צ׳יפס + שקדים טחונים. מעצבים כדורים ומקררים.</div>
+        <a href="https://www.youtube.com/results?search_query=כדורי+אנרגיה+בריאים" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ הדגמה</a>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px">🥛 קוטג׳ עם פירות ואגוזים</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">⏱️ 1 דק׳ · <span style="color:var(--accent)">💪 20g חלבון</span> · 230 קל׳</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">200g קוטג׳ 5% + חצי בננה פרוסה + חופן אגוזי מלך + כפית דבש. מהיר, ממלא, מושלם לאחרי אימון.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card card-green" style="margin-bottom:12px">
     <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:5px">🥤 כלל זהב:</div>
     <div style="font-size:14px;line-height:1.7">חלבון תוך 30 דק׳ אחרי אימון — קוטג׳, יוגורט יווני, או 3 ביצים!</div>
@@ -990,6 +1106,14 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
         <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6" id="bmi-tip"></div>
       </div>
     </div>
+    <!-- הערת דיוק -->
+    <div style="background:var(--blue-s);border-radius:12px;padding:12px;margin-top:4px;border:1px solid var(--blue)">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">🎯 רוצה מדידה מדויקת יותר?</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">
+        📏 <strong>רמה 1:</strong> מדוד היקפים — חזה, מותניים, ירכיים, זרועות<br>
+        🩺 <strong>רמה 2:</strong> בדיקת אחוז שומן אצל רופא או מאמן כושר — המדד המדויק ביותר
+      </div>
+    </div>
   </div>
 
   <!-- גרף משקל -->
@@ -1205,6 +1329,7 @@ let S={
   weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
   apiKey:'',gender:'male',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
   pushSubscribed:false,pushServerUrl:'',
+  foodPrefs:{allergies:[],dislikes:[],likes:[],notes:''},
 };
 // Push server — built-in, no user configuration needed
 const PUSH_SERVER='https://sportfields.vercel.app';
@@ -1254,8 +1379,10 @@ function renderHome(){
   document.getElementById('s-water').textContent=S.waterCups+'/8';
   document.getElementById('s-steps').textContent=S.steps.toLocaleString();
   const wr=document.getElementById('water-row');wr.innerHTML='';
-  for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbtn'+(i<S.waterCups?' on':'');b.textContent='💧';b.onclick=()=>{S.waterCups=i<S.waterCups?i:i+1;save();if(S.waterCups>=8)showEncourageCard('water');renderAll();};wr.appendChild(b);}
-  document.getElementById('water-lbl').textContent=S.waterCups>=8?'כל הכבוד! 8 כוסות 🎉':'עוד '+(8-S.waterCups)+' כוסות';
+  for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbtn'+(i<S.waterCups?' on':'');b.textContent=i<S.waterCups?'💧':'○';b.onclick=()=>{S.waterCups=i<S.waterCups?i:i+1;save();if(S.waterCups>=8)showEncourageCard('water');renderAll();};wr.appendChild(b);}
+  document.getElementById('water-lbl').textContent=S.waterCups>=8?'🎉 כל הכבוד!':'עוד '+(8-S.waterCups)+' כוסות';
+  const wpb=document.getElementById('water-prog-bar');if(wpb)wpb.style.width=(S.waterCups/8*100)+'%';
+  const wpl=document.getElementById('water-pct-lbl');if(wpl)wpl.textContent=S.waterCups>=8?'✅ יעד יומי הושג!':S.waterCups===0?'לא שתית עדיין — קדימה! 💧':S.waterCups+' מתוך 8 כוסות ('+Math.round(S.waterCups/8*100)+'%)';
   document.getElementById('daily-tip').textContent=TIPS[S.tipIdx%TIPS.length];
 }
 
@@ -1272,6 +1399,70 @@ function renderWorkout(){
     const div=document.createElement('div');div.className='ci'+(isDone?' done':'');
     div.innerHTML='<div class="cbox'+(isDone?' done':'')+'" onclick="toggleEx(\''+key+'\')">'+(isDone?'<span style="color:#fff;font-size:16px">✓</span>':'')+'</div><div style="flex:1"><div class="cn">'+ex.emoji+' '+ex.name+'</div><div class="cs">'+ex.sets+' סטים × '+ex.reps+' • '+ex.muscle+'</div><div class="tip">💡 '+ex.tip+'</div>'+(ex.yt?'<a href="'+ex.yt+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ סרטון הדגמה</a>':'')+'</div>';
     el.appendChild(div);
+  });
+}
+
+// ── העדפות תזונה ──────────────────────────────
+const FOOD_ALLERGY_OPTS=['ללא גלוטן','רגישות לחלב','אלרגיה לביצים','אלרגיה לאגוזים','אלרגיה לדגים','אלרגיה לסויה','אלרגיה לבוטנים'];
+const FOOD_DISLIKE_OPTS=['כוסברה','חריף','ירקות ירוקים','כבד','פטריות','קטניות','מאכלי ים'];
+const FOOD_LIKE_OPTS=['עוף','בשר בקר','דגים','ביצים','גבינות','קטניות','פירות','שוקולד','אורז','פסטה'];
+
+function renderFoodPrefsDisplay(){
+  const fp=S.foodPrefs||{allergies:[],dislikes:[],likes:[],notes:''};
+  const disp=document.getElementById('food-prefs-display');if(!disp)return;
+  const all=[...fp.allergies,...fp.dislikes,...fp.likes];
+  if(all.length===0&&!fp.notes){
+    disp.innerHTML='<div style="font-size:13px;color:var(--muted)">לחץ ✏️ ערוך כדי להגדיר העדפות תזונה אישיות</div>';return;
+  }
+  let h='<div style="display:flex;flex-wrap:wrap;gap:5px">';
+  (fp.allergies||[]).forEach(a=>h+='<span style="padding:4px 9px;border-radius:20px;font-size:11px;background:#ff000018;border:1px solid #ff444455;color:var(--red)">⚠️ '+a+'</span>');
+  (fp.dislikes||[]).forEach(d=>h+='<span style="padding:4px 9px;border-radius:20px;font-size:11px;background:#ff8c0018;border:1px solid #ff8c0055;color:var(--yellow)">🚫 '+d+'</span>');
+  (fp.likes||[]).forEach(l=>h+='<span style="padding:4px 9px;border-radius:20px;font-size:11px;background:#00800018;border:1px solid #00800055;color:var(--green)">💚 '+l+'</span>');
+  if(fp.notes)h+='<span style="padding:4px 9px;border-radius:20px;font-size:11px;background:var(--card2);border:1px solid var(--border)">📝 '+fp.notes+'</span>';
+  h+='</div>';disp.innerHTML=h;
+}
+function renderFoodPrefChips(containerId,opts,selected,category){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML='';
+  opts.forEach(opt=>{
+    const sel=(selected||[]).includes(opt);
+    const b=document.createElement('button');
+    b.style.cssText='padding:5px 11px;border-radius:20px;border:1.5px solid '+(sel?'var(--accent)':'var(--border2)')+';background:'+(sel?'var(--accent-s)':'transparent')+';font-size:12px;cursor:pointer;color:var(--text);font-family:inherit;transition:.15s';
+    b.textContent=opt;
+    b.onclick=()=>{
+      if(!S.foodPrefs)S.foodPrefs={allergies:[],dislikes:[],likes:[],notes:''};
+      const arr=S.foodPrefs[category];const idx=arr.indexOf(opt);
+      if(idx>=0)arr.splice(idx,1);else arr.push(opt);
+      save();renderFoodPrefChips(containerId,opts,S.foodPrefs[category],category);renderFoodPrefsDisplay();
+    };
+    el.appendChild(b);
+  });
+}
+function toggleFoodPrefsForm(){
+  const form=document.getElementById('food-prefs-form');
+  if(!form)return;
+  const open=form.style.display==='none'||form.style.display==='';
+  form.style.display=open?'block':'none';
+  if(open){
+    if(!S.foodPrefs)S.foodPrefs={allergies:[],dislikes:[],likes:[],notes:''};
+    renderFoodPrefChips('allergy-chips',FOOD_ALLERGY_OPTS,S.foodPrefs.allergies,'allergies');
+    renderFoodPrefChips('dislike-chips',FOOD_DISLIKE_OPTS,S.foodPrefs.dislikes,'dislikes');
+    renderFoodPrefChips('like-chips',FOOD_LIKE_OPTS,S.foodPrefs.likes,'likes');
+    const ni=document.getElementById('food-notes-inp');if(ni)ni.value=S.foodPrefs.notes||'';
+  }
+}
+function saveFoodNotes(){
+  const ni=document.getElementById('food-notes-inp');if(!ni)return;
+  if(!S.foodPrefs)S.foodPrefs={allergies:[],dislikes:[],likes:[],notes:''};
+  S.foodPrefs.notes=ni.value.trim();save();renderFoodPrefsDisplay();
+}
+// ── מתכונים ───────────────────────────────────
+function showRecipeTab(tab){
+  ['protein','lowcal','snacks'].forEach(t=>{
+    const el=document.getElementById('recipe-'+t);if(el)el.style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('#recipe-tab-pills .pill').forEach((b,i)=>{
+    b.classList.toggle('active',['protein','lowcal','snacks'][i]===tab);
   });
 }
 
@@ -1296,6 +1487,7 @@ function renderFood(){
   document.getElementById('prot-prog').style.width=pct*100+'%';
   document.getElementById('prot-pct').textContent='חלבון: '+Math.round(pct*100)+'% ('+S.targetProtein+'g יעד)';
   document.getElementById('s-prot').textContent=prot+'g';
+  renderFoodPrefsDisplay();
 }
 
 function renderScan(){
@@ -2111,7 +2303,7 @@ async function setReminder(){
   setupPushNotifications(time,S.remDays);
 }
 let remIv=null;
-let remLastFiredKey='';
+const remFiredKeys=new Set();
 function startRemChecker(){
   if(remIv)clearInterval(remIv);
   remIv=setInterval(()=>{
@@ -2120,17 +2312,30 @@ function startRemChecker(){
     const now=new Date();
     const hhmm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
     const dateStr=now.toDateString();
+    const h=now.getHours(),m=now.getMinutes();
     // Workout reminder — once per minute, prevent duplicate
     const workKey='work:'+hhmm+':'+dateStr;
-    if(hhmm===saved&&savedDays.includes(now.getDay())&&getExDone()===0&&remLastFiredKey!==workKey){
-      remLastFiredKey=workKey;
+    if(hhmm===saved&&savedDays.includes(now.getDay())&&getExDone()===0&&!remFiredKeys.has(workKey)){
+      remFiredKeys.add(workKey);
       new Notification('💪 כושר לאבא',{body:'עוד לא אימנת היום! 5 דקות זה מספיק 🔥',icon:'/icon-192.png'});
     }
     // Water reminder — top of each hour
-    const waterKey='water:'+now.getHours()+':'+dateStr;
-    if(now.getMinutes()===0&&S.waterCups<8&&now.getHours()>=8&&now.getHours()<=21&&remLastFiredKey!==waterKey){
-      remLastFiredKey=waterKey;
+    const waterKey='water:'+h+':'+dateStr;
+    if(m===0&&S.waterCups<8&&h>=8&&h<=21&&!remFiredKeys.has(waterKey)){
+      remFiredKeys.add(waterKey);
       new Notification('💧 שתיית מים',{body:WATER_MSGS[Math.floor(Math.random()*WATER_MSGS.length)],icon:'/icon-192.png'});
+    }
+    // Food log reminder at 12:00 if no meals logged yet
+    const noonFoodKey='noon-food:'+dateStr;
+    if(h===12&&m===0&&Object.values(S.checkedMeals).filter(Boolean).length===0&&!remFiredKeys.has(noonFoodKey)){
+      remFiredKeys.add(noonFoodKey);
+      new Notification('🍽️ תיעוד ארוחות',{body:'לא הודעת לי מה אכלת היום — בוא נתעד! 📲',icon:'/icon-192.png'});
+    }
+    // Afternoon food reminder at 17:00
+    const pmFoodKey='pm-food:'+dateStr;
+    if(h===17&&m===0&&!remFiredKeys.has(pmFoodKey)){
+      remFiredKeys.add(pmFoodKey);
+      new Notification('🥗 ארוחת אחה״צ',{body:'זמן לאכול משהו בריא! אל תשכח חלבון 💪',icon:'/icon-192.png'});
     }
   },30000);
 }
@@ -2292,8 +2497,8 @@ function clearWeightHistory(){
 // ═══════════════════════════════════════════
 //  WEEKLY PLAN
 // ═══════════════════════════════════════════
-const PLAN_OPTIONS=['חזה','גב','רגליים','כתפיים','ידיים','בטן','קרדיו','גמישות','מנוחה'];
-const PLAN_EMOJIS={חזה:'🫁',גב:'🔙',רגליים:'🦵',כתפיים:'🏋️',ידיים:'💪',בטן:'🎯',קרדיו:'🏃',גמישות:'🧘',מנוחה:'😴'};
+const PLAN_OPTIONS=['חזה','גב','רגליים','כתפיים','ידיים','בטן','גוף עליון','גוף תחתון','כל הגוף','HIIT','קרדיו','גמישות','שחייה','פילאטיס','יוגה','מנוחה'];
+const PLAN_EMOJIS={חזה:'🫁',גב:'🔙',רגליים:'🦵',כתפיים:'🏋️',ידיים:'💪',בטן:'🎯','גוף עליון':'⬆️','גוף תחתון':'⬇️','כל הגוף':'🔄','HIIT':'⚡',קרדיו:'🏃',גמישות:'🧘',שחייה:'🏊',פילאטיס:'🩰',יוגה:'🕉️',מנוחה:'😴'};
 
 function renderPlanTab(){
   if(!S.weeklyPlan)S.weeklyPlan=['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'];
