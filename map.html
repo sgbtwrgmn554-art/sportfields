@@ -197,13 +197,22 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* ── COUNTRY SWITCHER ── */
-.country-bar{display:flex;gap:6px;padding:0 0 10px}
+.country-bar{display:flex;gap:6px;padding:0 0 8px}
 .country-btn{
   flex:1;padding:7px 0;border-radius:12px;font-size:13px;font-weight:800;
   border:.5px solid var(--border);background:var(--card2);color:var(--muted);
   cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:5px;
 }
 .country-btn.on{background:var(--green-s);border-color:var(--green);color:var(--green)}
+
+/* ── LANG SWITCHER ── */
+.lang-bar{display:flex;gap:6px;padding:0 0 10px}
+.lang-btn{
+  flex:1;padding:6px 0;border-radius:10px;font-size:12px;font-weight:800;
+  border:.5px solid var(--border);background:transparent;color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.lang-btn.on{background:rgba(10,132,255,.15);border-color:var(--blue);color:var(--blue)}
 
 /* ── LOAD AREA BTN ── */
 .load-area-btn{
@@ -246,48 +255,28 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
     </div>
     <span class="hdr-count" id="hdr-count">טוען...</span>
     <div class="hdr-actions">
-      <button class="hdr-btn" id="btn-favs" onclick="toggleFavsOnly()">❤️ מועדפים</button>
+      <button class="hdr-btn" id="btn-favs" onclick="toggleFavsOnly()">❤️ <span data-t="favs"></span></button>
       <button class="hdr-btn" onclick="locateMe()">📍</button>
     </div>
   </div>
   <!-- COUNTRY BAR -->
   <div class="country-bar">
-    <button class="country-btn on" id="cbtn-il" onclick="switchCountry('il')">🇮🇱 ישראל</button>
-    <button class="country-btn"   id="cbtn-us" onclick="switchCountry('us')">🇺🇸 ארצות הברית</button>
+    <button class="country-btn on" id="cbtn-il" onclick="switchCountry('il')">🇮🇱 <span data-t="israel"></span></button>
+    <button class="country-btn"   id="cbtn-us" onclick="switchCountry('us')">🇺🇸 <span data-t="usa"></span></button>
+  </div>
+  <!-- LANG BAR -->
+  <div class="lang-bar">
+    <button class="lang-btn on" id="lbtn-he" onclick="setLang('he')">🇮🇱 עברית</button>
+    <button class="lang-btn"   id="lbtn-en" onclick="setLang('en')">🇺🇸 English</button>
   </div>
   <div class="tabs">
-    <div class="tab active" id="tab-map" onclick="switchTab('map')">🗺️ מפה</div>
-    <div class="tab" id="tab-list" onclick="switchTab('list')">📋 רשימה</div>
+    <div class="tab active" id="tab-map" onclick="switchTab('map')">🗺️ <span data-t="tab_map"></span></div>
+    <div class="tab" id="tab-list" onclick="switchTab('list')">📋 <span data-t="tab_list"></span></div>
   </div>
 </div>
 
-<!-- FILTER PILLS -->
-<div class="pills" id="pills">
-  <button class="pill on" data-sport="all"        onclick="setFilter('all',this)">🏟️ הכל</button>
-  <button class="pill" data-sport="soccer"        onclick="setFilter('soccer',this)">⚽ כדורגל</button>
-  <button class="pill" data-sport="basketball"    onclick="setFilter('basketball',this)">🏀 כדורסל</button>
-  <button class="pill" data-sport="racket"        onclick="setFilter('racket',this)">🎾 מחבט</button>
-  <button class="pill" data-sport="volleyball"    onclick="setFilter('volleyball',this)">🏐 כדורעף</button>
-  <button class="pill" data-sport="handball"      onclick="setFilter('handball',this)">🤾 כדוריד</button>
-  <button class="pill" data-sport="fitness"       onclick="setFilter('fitness',this)">💪 כושר</button>
-  <button class="pill" data-sport="rugby"         onclick="setFilter('rugby',this)">🏉 רוגבי</button>
-  <button class="pill" data-sport="baseball"      onclick="setFilter('baseball',this)">⚾ בייסבול</button>
-  <button class="pill" data-sport="cricket"       onclick="setFilter('cricket',this)">🏏 קריקט</button>
-  <button class="pill" data-sport="swimming"      onclick="setFilter('swimming',this)">🏊 שחייה</button>
-  <button class="pill" data-sport="athletics"     onclick="setFilter('athletics',this)">🏃 אתלטיקה</button>
-  <button class="pill" data-sport="golf"          onclick="setFilter('golf',this)">⛳ גולף</button>
-  <button class="pill" data-sport="wheels"        onclick="setFilter('wheels',this)">🛹 גלגלים</button>
-  <button class="pill" data-sport="equestrian"    onclick="setFilter('equestrian',this)">🏇 רכיבה</button>
-  <button class="pill" data-sport="archery"       onclick="setFilter('archery',this)">🏹 קשתות</button>
-  <button class="pill" data-sport="ice_hockey"    onclick="setFilter('ice_hockey',this)">🏒 הוקי קרח</button>
-  <button class="pill" data-sport="american_football" onclick="setFilter('american_football',this)">🏈 פוטבול</button>
-  <button class="pill" data-sport="field_hockey"  onclick="setFilter('field_hockey',this)">🏑 הוקי שדה</button>
-  <button class="pill" data-sport="lacrosse"      onclick="setFilter('lacrosse',this)">🥍 לקרוס</button>
-  <button class="pill" data-sport="disc_golf"     onclick="setFilter('disc_golf',this)">🥏 פריסבי</button>
-  <button class="pill" data-sport="boules"        onclick="setFilter('boules',this)">🎳 פטנק</button>
-  <button class="pill" data-sport="multi"         onclick="setFilter('multi',this)">🏟️ רב תכליתי</button>
-  <button class="pill" data-sport="other"         onclick="setFilter('other',this)">🎯 אחר</button>
-</div>
+<!-- FILTER PILLS (rendered dynamically) -->
+<div class="pills" id="pills"></div>
 
 <!-- MAP VIEW -->
 <div id="map-view">
@@ -321,60 +310,213 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 <script>
 // ─────────────────────────────────────────────
+//  TRANSLATIONS
+// ─────────────────────────────────────────────
+const STRINGS = {
+  he:{
+    israel:'ישראל', usa:'ארצות הברית',
+    tab_map:'מפה', tab_list:'רשימה',
+    favs:'מועדפים',
+    loading:'טוען...', select_area:'בחר אזור',
+    load_area:'🔍 טען מגרשים באזור זה',
+    loaded_n:(n)=>`✅ נטענו ${n} מגרשים`,
+    added_n:(a,t)=>`✅ נוספו ${a} מגרשים (סה"כ ${t})`,
+    err_load:'❌ שגיאת טעינה – בדוק אינטרנט',
+    fly_us:'🇺🇸 זום לאזור ולחץ "טען מגרשים"',
+    locating:'📍 מאתר מיקום...',
+    located:'✅ מיקום נמצא!',
+    locate_err:'❌ לא ניתן לאתר מיקום',
+    locate_na:'⚠️ מיקום לא זמין',
+    favs_only:'❤️ מועדפים בלבד', all_fields:'🏟️ כל המגרשים',
+    fav_add:'❤️ נוסף למועדפים', fav_rem:'💔 הוסר ממועדפים',
+    checkin_done:'🎉 צ׳ק-אין!', rating_saved:(n)=>`⭐ דירוג נשמר: ${n}/5`,
+    player_added:(n)=>`👤 ${n} נוסף!`, player_remove:'הסר',
+    sec_rating:'דירוג שלך', sec_details:'פרטים', sec_nav:'ניווט', sec_players:'שחקנים',
+    checkin_btn:'📍 צ׳ק-אין', checkin_done_btn:'✅ צ׳ק-אין בוצע',
+    fav_add_btn:'🤍 הוסף למועדפים', fav_rem_btn:'❤️ הסר ממועדפים',
+    add_player:'+ הוסף שחקן', player_prompt:'שם השחקן:',
+    remove_player_confirm:(n)=>`הסר ${n}?`,
+    waze:'🚗 Waze', gmap:'🗺️ Google Maps',
+    empty_title:'אין מגרשים', empty_sub:'נסה להוריד את הפילטר',
+    public:'ציבורי ✅', private:'פרטי 🔒',
+    lit_yes:'יש תאורה ✅', lit_no:'ללא תאורה',
+    free:'חינם 🆓', paid:'בתשלום',
+    // filter pills
+    all:'הכל', soccer:'כדורגל', basketball:'כדורסל',
+    racket:'מחבט', volleyball:'כדורעף', handball:'כדוריד',
+    fitness_f:'כושר', rugby:'רוגבי', baseball:'בייסבול',
+    cricket:'קריקט', swimming:'שחייה', athletics:'אתלטיקה',
+    golf:'גולף', wheels:'גלגלים', equestrian:'רכיבה',
+    archery:'קשתות', ice_hockey:'הוקי קרח', american_football:'פוטבול',
+    field_hockey:'הוקי שדה', lacrosse:'לקרוס', disc_golf:'פריסבי',
+    boules:'פטנק', multi:'רב תכליתי', other:'אחר',
+    // surfaces
+    surf_grass:'דשא 🌿', surf_turf:'דשא סינטטי', surf_asphalt:'אספלט',
+    surf_concrete:'בטון', surf_sand:'חול 🏖️', surf_clay:'חימר',
+    surf_tartan:'טרטן', surf_rubber:'גומי',
+  },
+  en:{
+    israel:'Israel', usa:'United States',
+    tab_map:'Map', tab_list:'List',
+    favs:'Favorites',
+    loading:'Loading...', select_area:'Select area',
+    load_area:'🔍 Load fields in this area',
+    loaded_n:(n)=>`✅ Loaded ${n} fields`,
+    added_n:(a,t)=>`✅ Added ${a} fields (total ${t})`,
+    err_load:'❌ Load error – check internet',
+    fly_us:'🇺🇸 Zoom to an area and tap "Load fields"',
+    locating:'📍 Finding location...',
+    located:'✅ Location found!',
+    locate_err:'❌ Could not find location',
+    locate_na:'⚠️ Location unavailable',
+    favs_only:'❤️ Favorites only', all_fields:'🏟️ All fields',
+    fav_add:'❤️ Added to favorites', fav_rem:'💔 Removed from favorites',
+    checkin_done:'🎉 Checked in!', rating_saved:(n)=>`⭐ Rating saved: ${n}/5`,
+    player_added:(n)=>`👤 ${n} added!`, player_remove:'Remove',
+    sec_rating:'Your Rating', sec_details:'Details', sec_nav:'Navigation', sec_players:'Players',
+    checkin_btn:'📍 Check In', checkin_done_btn:'✅ Checked In',
+    fav_add_btn:'🤍 Add to Favorites', fav_rem_btn:'❤️ Remove from Favorites',
+    add_player:'+ Add Player', player_prompt:'Player name:',
+    remove_player_confirm:(n)=>`Remove ${n}?`,
+    waze:'🚗 Waze', gmap:'🗺️ Google Maps',
+    empty_title:'No fields found', empty_sub:'Try changing the filter',
+    public:'Public ✅', private:'Private 🔒',
+    lit_yes:'Lights ✅', lit_no:'No lights',
+    free:'Free 🆓', paid:'Paid',
+    // filter pills
+    all:'All', soccer:'Soccer', basketball:'Basketball',
+    racket:'Racket', volleyball:'Volleyball', handball:'Handball',
+    fitness_f:'Fitness', rugby:'Rugby', baseball:'Baseball',
+    cricket:'Cricket', swimming:'Swimming', athletics:'Athletics',
+    golf:'Golf', wheels:'Wheels', equestrian:'Equestrian',
+    archery:'Archery', ice_hockey:'Ice Hockey', american_football:'Football',
+    field_hockey:'Field Hockey', lacrosse:'Lacrosse', disc_golf:'Disc Golf',
+    boules:'Boules', multi:'Multi-sport', other:'Other',
+    // surfaces
+    surf_grass:'Grass 🌿', surf_turf:'Artificial Turf', surf_asphalt:'Asphalt',
+    surf_concrete:'Concrete', surf_sand:'Sand 🏖️', surf_clay:'Clay',
+    surf_tartan:'Tartan', surf_rubber:'Rubber',
+  }
+};
+
+let currentLang = localStorage.getItem('arena_lang')||'he';
+function t(key,...args){
+  const s=STRINGS[currentLang]||STRINGS.he;
+  const v=s[key];
+  return typeof v==='function'?v(...args):(v||key);
+}
+
+function setLang(lang){
+  currentLang=lang;
+  localStorage.setItem('arena_lang',lang);
+  // update lang buttons
+  document.getElementById('lbtn-he').classList.toggle('on',lang==='he');
+  document.getElementById('lbtn-en').classList.toggle('on',lang==='en');
+  // RTL/LTR
+  document.documentElement.setAttribute('dir',lang==='he'?'rtl':'ltr');
+  document.documentElement.setAttribute('lang',lang==='he'?'he':'en');
+  // update data-t spans
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    el.textContent=t(el.dataset.t);
+  });
+  // re-render pills
+  renderPills();
+  // re-render list if open
+  if(currentTab==='list') renderList();
+}
+
+// ─────────────────────────────────────────────
+//  FILTER PILLS (dynamic)
+// ─────────────────────────────────────────────
+const PILL_LIST=[
+  {sport:'all',      emoji:'🏟️', tkey:'all'},
+  {sport:'soccer',   emoji:'⚽', tkey:'soccer'},
+  {sport:'basketball',emoji:'🏀',tkey:'basketball'},
+  {sport:'racket',   emoji:'🎾', tkey:'racket'},
+  {sport:'volleyball',emoji:'🏐',tkey:'volleyball'},
+  {sport:'handball', emoji:'🤾', tkey:'handball'},
+  {sport:'fitness',  emoji:'💪', tkey:'fitness_f'},
+  {sport:'rugby',    emoji:'🏉', tkey:'rugby'},
+  {sport:'baseball', emoji:'⚾', tkey:'baseball'},
+  {sport:'cricket',  emoji:'🏏', tkey:'cricket'},
+  {sport:'swimming', emoji:'🏊', tkey:'swimming'},
+  {sport:'athletics',emoji:'🏃', tkey:'athletics'},
+  {sport:'golf',     emoji:'⛳', tkey:'golf'},
+  {sport:'wheels',   emoji:'🛹', tkey:'wheels'},
+  {sport:'equestrian',emoji:'🏇',tkey:'equestrian'},
+  {sport:'archery',  emoji:'🏹', tkey:'archery'},
+  {sport:'ice_hockey',emoji:'🏒',tkey:'ice_hockey'},
+  {sport:'american_football',emoji:'🏈',tkey:'american_football'},
+  {sport:'field_hockey',emoji:'🏑',tkey:'field_hockey'},
+  {sport:'lacrosse', emoji:'🥍', tkey:'lacrosse'},
+  {sport:'disc_golf',emoji:'🥏', tkey:'disc_golf'},
+  {sport:'boules',   emoji:'🎳', tkey:'boules'},
+  {sport:'multi',    emoji:'🏟️', tkey:'multi'},
+  {sport:'other',    emoji:'🎯', tkey:'other'},
+];
+
+function renderPills(){
+  document.getElementById('pills').innerHTML=PILL_LIST.map(p=>
+    `<button class="pill${currentFilter===p.sport?' on':''}" data-sport="${p.sport}"
+      onclick="setFilter('${p.sport}',this)">${p.emoji} ${t(p.tkey)}</button>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
 //  CONSTANTS & DATA
 // ─────────────────────────────────────────────
 const SPORT_META = {
   // ⚽ כדורגל ושטח
-  soccer:        {label:'כדורגל',      emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
-  football:      {label:'כדורגל',      emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
-  futsal:        {label:'פוטסל',       emoji:'🥅',color:'#2ecc71',bg:'#092b15'},
-  rugby:         {label:'רוגבי',       emoji:'🏉',color:'#8e5cf6',bg:'#13093d'},
-  rugby_league:  {label:'רוגבי ליג',   emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
-  rugby_union:   {label:'רוגבי יוניון',emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
-  field_hockey:  {label:'הוקי שדה',    emoji:'🏑',color:'#1abc9c',bg:'#09241f'},
-  american_football:{label:'פוטבול אמריקאי',emoji:'🏈',color:'#e67e22',bg:'#2b1608'},
-  australian_football:{label:'פוטבול אוסטרלי',emoji:'🏈',color:'#d35400',bg:'#2b1608'},
+  soccer:        {label:'כדורגל',labelEn:'Soccer',          emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  football:      {label:'כדורגל',labelEn:'Soccer',          emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  futsal:        {label:'פוטסל', labelEn:'Futsal',          emoji:'🥅',color:'#2ecc71',bg:'#092b15'},
+  rugby:         {label:'רוגבי', labelEn:'Rugby',           emoji:'🏉',color:'#8e5cf6',bg:'#13093d'},
+  rugby_league:  {label:'רוגבי ליג',labelEn:'Rugby League', emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  rugby_union:   {label:'רוגבי יוניון',labelEn:'Rugby Union',emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  field_hockey:  {label:'הוקי שדה',labelEn:'Field Hockey',  emoji:'🏑',color:'#1abc9c',bg:'#09241f'},
+  american_football:{label:'פוטבול אמריקאי',labelEn:'Football',emoji:'🏈',color:'#e67e22',bg:'#2b1608'},
+  australian_football:{label:'פוטבול אוסטרלי',labelEn:'Aussie Rules',emoji:'🏈',color:'#d35400',bg:'#2b1608'},
   // 🏀 מגרשי כדור
-  basketball:    {label:'כדורסל',      emoji:'🏀',color:'#ff9f0a',bg:'#1a110a'},
-  volleyball:    {label:'כדורעף',      emoji:'🏐',color:'#0a84ff',bg:'#0a0f1a'},
-  handball:      {label:'כדוריד',      emoji:'🤾',color:'#ff6b35',bg:'#1a0e09'},
-  baseball:      {label:'בייסבול',     emoji:'⚾',color:'#e74c3c',bg:'#1f0909'},
-  softball:      {label:'סופטבול',     emoji:'🥎',color:'#f39c12',bg:'#1f1509'},
-  cricket:       {label:'קריקט',       emoji:'🏏',color:'#27ae60',bg:'#091a0f'},
-  lacrosse:      {label:'לקרוס',       emoji:'🥍',color:'#16a085',bg:'#091918'},
-  netball:       {label:'נטבול',       emoji:'🏐',color:'#9b59b6',bg:'#160b20'},
+  basketball:    {label:'כדורסל',labelEn:'Basketball',      emoji:'🏀',color:'#ff9f0a',bg:'#1a110a'},
+  volleyball:    {label:'כדורעף',labelEn:'Volleyball',      emoji:'🏐',color:'#0a84ff',bg:'#0a0f1a'},
+  handball:      {label:'כדוריד',labelEn:'Handball',        emoji:'🤾',color:'#ff6b35',bg:'#1a0e09'},
+  baseball:      {label:'בייסבול',labelEn:'Baseball',       emoji:'⚾',color:'#e74c3c',bg:'#1f0909'},
+  softball:      {label:'סופטבול',labelEn:'Softball',       emoji:'🥎',color:'#f39c12',bg:'#1f1509'},
+  cricket:       {label:'קריקט', labelEn:'Cricket',         emoji:'🏏',color:'#27ae60',bg:'#091a0f'},
+  lacrosse:      {label:'לקרוס', labelEn:'Lacrosse',        emoji:'🥍',color:'#16a085',bg:'#091918'},
+  netball:       {label:'נטבול', labelEn:'Netball',         emoji:'🏐',color:'#9b59b6',bg:'#160b20'},
   // 🎾 מחבט
-  tennis:        {label:'טניס',        emoji:'🎾',color:'#ffd60a',bg:'#1a180a'},
-  padel:         {label:'פאדל',        emoji:'🎾',color:'#5ac8fa',bg:'#0a1418'},
-  badminton:     {label:'בדמינטון',    emoji:'🏸',color:'#e91e63',bg:'#1f0912'},
-  squash:        {label:'סקווש',       emoji:'🎾',color:'#ff5722',bg:'#1f0d09'},
-  table_tennis:  {label:'פינג פונג',   emoji:'🏓',color:'#00bcd4',bg:'#091a1f'},
-  racquetball:   {label:'רקטבול',      emoji:'🎾',color:'#ff4081',bg:'#1f0912'},
-  pickleball:    {label:'פיקלבול',     emoji:'🏓',color:'#76ff03',bg:'#0f1f03'},
+  tennis:        {label:'טניס',  labelEn:'Tennis',          emoji:'🎾',color:'#ffd60a',bg:'#1a180a'},
+  padel:         {label:'פאדל',  labelEn:'Padel',           emoji:'🎾',color:'#5ac8fa',bg:'#0a1418'},
+  badminton:     {label:'בדמינטון',labelEn:'Badminton',     emoji:'🏸',color:'#e91e63',bg:'#1f0912'},
+  squash:        {label:'סקווש', labelEn:'Squash',          emoji:'🎾',color:'#ff5722',bg:'#1f0d09'},
+  table_tennis:  {label:'פינג פונג',labelEn:'Table Tennis', emoji:'🏓',color:'#00bcd4',bg:'#091a1f'},
+  racquetball:   {label:'רקטבול',labelEn:'Racquetball',     emoji:'🎾',color:'#ff4081',bg:'#1f0912'},
+  pickleball:    {label:'פיקלבול',labelEn:'Pickleball',     emoji:'🏓',color:'#76ff03',bg:'#0f1f03'},
   // 🏃 ריצה וכושר
-  athletics:     {label:'אתלטיקה',     emoji:'🏃',color:'#ff453a',bg:'#1f0909'},
-  running:       {label:'ריצה',        emoji:'🏃',color:'#ff6b6b',bg:'#1f0909'},
-  fitness:       {label:'כושר',        emoji:'💪',color:'#30d158',bg:'#0a1a0f'},
-  gymnastics:    {label:'התעמלות',     emoji:'🤸',color:'#ff2d55',bg:'#1f0912'},
-  yoga:          {label:'יוגה',        emoji:'🧘',color:'#af52de',bg:'#160b20'},
-  martial_arts:  {label:'אומנויות לחימה',emoji:'🥋',color:'#ff3b30',bg:'#1f0909'},
-  boxing:        {label:'איגרוף',      emoji:'🥊',color:'#ff3b30',bg:'#1f0909'},
-  wrestling:     {label:'היאבקות',     emoji:'🤼',color:'#ff6b35',bg:'#1f0d09'},
+  athletics:     {label:'אתלטיקה',labelEn:'Athletics',      emoji:'🏃',color:'#ff453a',bg:'#1f0909'},
+  running:       {label:'ריצה',  labelEn:'Running',         emoji:'🏃',color:'#ff6b6b',bg:'#1f0909'},
+  fitness:       {label:'כושר',  labelEn:'Fitness',         emoji:'💪',color:'#30d158',bg:'#0a1a0f'},
+  gymnastics:    {label:'התעמלות',labelEn:'Gymnastics',     emoji:'🤸',color:'#ff2d55',bg:'#1f0912'},
+  yoga:          {label:'יוגה',  labelEn:'Yoga',            emoji:'🧘',color:'#af52de',bg:'#160b20'},
+  martial_arts:  {label:'אומנויות לחימה',labelEn:'Martial Arts',emoji:'🥋',color:'#ff3b30',bg:'#1f0909'},
+  boxing:        {label:'איגרוף',labelEn:'Boxing',          emoji:'🥊',color:'#ff3b30',bg:'#1f0909'},
+  wrestling:     {label:'היאבקות',labelEn:'Wrestling',      emoji:'🤼',color:'#ff6b35',bg:'#1f0d09'},
   // 🚴 פנאי ואחר
-  swimming:      {label:'שחייה',       emoji:'🏊',color:'#0a84ff',bg:'#0a0f1a'},
-  cycling:       {label:'אופניים',     emoji:'🚴',color:'#34c759',bg:'#0a1a0f'},
-  skateboard:    {label:'סקייטבורד',   emoji:'🛹',color:'#ff9500',bg:'#1a1209'},
-  roller_skating:{label:'החלקה',       emoji:'🛼',color:'#5ac8fa',bg:'#0a1418'},
-  ice_hockey:    {label:'הוקי קרח',    emoji:'🏒',color:'#64d2ff',bg:'#091418'},
-  equestrian:    {label:'רכיבה על סוסים',emoji:'🏇',color:'#a2845e',bg:'#1a1209'},
-  archery:       {label:'קשתות',       emoji:'🏹',color:'#ff9f0a',bg:'#1a110a'},
-  golf:          {label:'גולף',        emoji:'⛳',color:'#34c759',bg:'#0a1a0f'},
-  disc_golf:     {label:'פריסבי גולף', emoji:'🥏',color:'#5e5ce6',bg:'#0e0e20'},
-  bowls:         {label:'בולינג דשא',  emoji:'🎳',color:'#aeaeb2',bg:'#111113'},
-  boules:        {label:'פטנק',        emoji:'🎳',color:'#636366',bg:'#111113'},
+  swimming:      {label:'שחייה', labelEn:'Swimming',        emoji:'🏊',color:'#0a84ff',bg:'#0a0f1a'},
+  cycling:       {label:'אופניים',labelEn:'Cycling',        emoji:'🚴',color:'#34c759',bg:'#0a1a0f'},
+  skateboard:    {label:'סקייטבורד',labelEn:'Skateboarding',emoji:'🛹',color:'#ff9500',bg:'#1a1209'},
+  roller_skating:{label:'החלקה', labelEn:'Roller Skating',  emoji:'🛼',color:'#5ac8fa',bg:'#0a1418'},
+  ice_hockey:    {label:'הוקי קרח',labelEn:'Ice Hockey',    emoji:'🏒',color:'#64d2ff',bg:'#091418'},
+  equestrian:    {label:'רכיבה על סוסים',labelEn:'Equestrian',emoji:'🏇',color:'#a2845e',bg:'#1a1209'},
+  archery:       {label:'קשתות', labelEn:'Archery',         emoji:'🏹',color:'#ff9f0a',bg:'#1a110a'},
+  golf:          {label:'גולף',  labelEn:'Golf',            emoji:'⛳',color:'#34c759',bg:'#0a1a0f'},
+  disc_golf:     {label:'פריסבי גולף',labelEn:'Disc Golf',  emoji:'🥏',color:'#5e5ce6',bg:'#0e0e20'},
+  bowls:         {label:'בולינג דשא',labelEn:'Bowls',       emoji:'🎳',color:'#aeaeb2',bg:'#111113'},
+  boules:        {label:'פטנק',  labelEn:'Boules',          emoji:'🎳',color:'#636366',bg:'#111113'},
   // 🏟️ כללי
-  multi:         {label:'רב תכליתי',   emoji:'🏟️',color:'#bf5af2',bg:'#120a1a'},
-  other:         {label:'ספורט',       emoji:'🎯',color:'#636366',bg:'#111113'},
+  multi:         {label:'רב תכליתי',labelEn:'Multi-sport',  emoji:'🏟️',color:'#bf5af2',bg:'#120a1a'},
+  other:         {label:'ספורט', labelEn:'Sport',           emoji:'🎯',color:'#636366',bg:'#111113'},
 };
 
 function getSportKey(tags){
@@ -481,7 +623,7 @@ map.on('moveend zoomend', ()=>{
   const btn=document.getElementById('load-area-btn');
   if(z>=COUNTRIES.us.minZoomLoad){
     btn.classList.add('show');
-    btn.innerHTML='🔍 טען מגרשים באזור זה';
+    btn.innerHTML=t('load_area');
   } else {
     btn.classList.remove('show');
   }
@@ -536,8 +678,8 @@ function switchCountry(id){
   if(c.fullLoad){
     loadFields();
   } else {
-    showToast('🇺🇸 זום לאזור ולחץ "טען מגרשים"');
-    document.getElementById('hdr-count').textContent='בחר אזור';
+    showToast(t('fly_us'));
+    document.getElementById('hdr-count').textContent=t('select_area');
   }
 }
 
@@ -558,14 +700,14 @@ async function loadFields(){
 
 async function loadAreaFields(){
   const btn=document.getElementById('load-area-btn');
-  btn.innerHTML='⏳ טוען...';
+  btn.innerHTML='⏳ '+t('loading');
   btn.style.pointerEvents='none';
   const b=map.getBounds();
   const s=b.getSouth().toFixed(4),w=b.getWest().toFixed(4);
   const n=b.getNorth().toFixed(4),e=b.getEast().toFixed(4);
   showSkeleton();
-  await fetchAndProcess(s,w,n,e,true); // append=true for USA
-  btn.innerHTML='🔍 טען מגרשים באזור זה';
+  await fetchAndProcess(s,w,n,e,true);
+  btn.innerHTML=t('load_area');
   btn.style.pointerEvents='auto';
 }
 
@@ -582,7 +724,7 @@ async function fetchAndProcess(s,w,n,e,append=false){
     processFields(d.elements||[],append);
   }catch(e){
     console.error(e);
-    showToast('❌ שגיאת טעינה – בדוק אינטרנט');
+    showToast(t('err_load'));
     hideSkeleton();
   }
 }
@@ -621,11 +763,12 @@ function processFields(els,append=false){
 
   applyFilter(currentFilter);
   hideSkeleton();
-  document.getElementById('hdr-count').textContent=allFields.length+' מגרשים';
+  const fieldWord=currentLang==='he'?'מגרשים':'fields';
+  document.getElementById('hdr-count').textContent=allFields.length+' '+fieldWord;
   if(append){
-    showToast('✅ נוספו '+added+' מגרשים (סה"כ '+allFields.length+')');
+    showToast(t('added_n',added,allFields.length));
   } else {
-    showToast('✅ נטענו '+allFields.length+' מגרשים');
+    showToast(t('loaded_n',allFields.length));
   }
   if(currentTab==='list') renderList();
 }
@@ -663,7 +806,8 @@ function applyFilter(sport){
     const show=(sport==='all'||m._f.fg===sport||m._f.sk===sport)&&(!favsOnly||favs[m._f.id]);
     if(show){markerLayer.addLayer(m);n++;}
   });
-  document.getElementById('hdr-count').textContent=n+' מגרשים';
+  const fw=currentLang==='he'?'מגרשים':'fields';
+  document.getElementById('hdr-count').textContent=n+' '+fw;
 }
 
 function toggleFavsOnly(){
@@ -671,7 +815,7 @@ function toggleFavsOnly(){
   document.getElementById('btn-favs').classList.toggle('on',favsOnly);
   applyFilter(currentFilter);
   if(currentTab==='list') renderList();
-  showToast(favsOnly?'❤️ מועדפים בלבד':'🏟️ כל המגרשים');
+  showToast(favsOnly?t('favs_only'):t('all_fields'));
 }
 
 // ─────────────────────────────────────────────
@@ -686,7 +830,7 @@ function renderList(){
   });
 
   if(!visible.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">🏟️</div><div class="empty-title">אין מגרשים</div><div class="empty-sub">נסה להוריד את הפילטר</div></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🏟️</div><div class="empty-title">${t('empty_title')}</div><div class="empty-sub">${t('empty_sub')}</div></div>`;
     return;
   }
 
@@ -723,60 +867,65 @@ function openSheet(f){
   const isFav=favs[id];
   const isChecked=checkins[id];
   const ps=players[id]||[];
-  const t=f.tags;
+  const tg=f.tags; // use tg to avoid shadowing t()
+
+  // pick name based on lang
+  const dispName=(currentLang==='en'&&tg['name:en'])?tg['name:en']:
+                 (tg['name:he']||tg.name||m.label);
+  const sportLabel=currentLang==='en'?(m.labelEn||m.label):m.label;
 
   const rows=[];
   if(f.city) rows.push(['📍',f.city]);
-  if(t.surface) rows.push(['🌱',surfaceLabel(t.surface)]);
-  if(t.lit) rows.push(['💡',t.lit==='yes'?'יש תאורה ✅':'ללא תאורה']);
-  if(t.access) rows.push(['🔓',accessLabel(t.access)]);
-  if(t.fee) rows.push(['💰',t.fee==='yes'?'בתשלום':'חינם 🆓']);
-  if(t.opening_hours) rows.push(['🕒',t.opening_hours]);
-  if(t.operator) rows.push(['🏢',t.operator]);
-  if(t.phone||t['contact:phone']) rows.push(['📞',`<a href="tel:${t.phone||t['contact:phone']}">${t.phone||t['contact:phone']}</a>`]);
+  if(tg.surface) rows.push(['🌱',surfaceLabel(tg.surface)]);
+  if(tg.lit) rows.push(['💡',tg.lit==='yes'?t('lit_yes'):t('lit_no')]);
+  if(tg.access) rows.push(['🔓',accessLabel(tg.access)]);
+  if(tg.fee) rows.push(['💰',tg.fee==='yes'?t('paid'):t('free')]);
+  if(tg.opening_hours) rows.push(['🕒',tg.opening_hours]);
+  if(tg.operator) rows.push(['🏢',tg.operator]);
+  if(tg.phone||tg['contact:phone']) rows.push(['📞',`<a href="tel:${tg.phone||tg['contact:phone']}">${tg.phone||tg['contact:phone']}</a>`]);
 
   document.getElementById('sheet-inner').innerHTML=`
     <div class="sh-hero" style="background:${m.bg}">${m.emoji}</div>
     <div class="sh-body">
-      <div class="sh-name">${f.name}</div>
-      <span class="sh-sport" style="background:${m.color}22;color:${m.color};border:.5px solid ${m.color}44">${m.emoji} ${m.label}</span>
+      <div class="sh-name">${dispName}</div>
+      <span class="sh-sport" style="background:${m.color}22;color:${m.color};border:.5px solid ${m.color}44">${m.emoji} ${sportLabel}</span>
 
       <div class="sh-section">
-        <div class="sh-section-title">דירוג שלך</div>
+        <div class="sh-section-title">${t('sec_rating')}</div>
         <div class="sh-stars" id="stars-row">
-          ${[1,2,3,4,5].map(n=>`<span class="sh-star${n<=r?' on':''}" data-n="${n}" onclick="setRating('${id}',${n})"">⭐</span>`).join('')}
+          ${[1,2,3,4,5].map(n=>`<span class="sh-star${n<=r?' on':''}" data-n="${n}" onclick="setRating('${id}',${n})">⭐</span>`).join('')}
         </div>
       </div>
 
       ${rows.length?`<div class="sh-section">
-        <div class="sh-section-title">פרטים</div>
+        <div class="sh-section-title">${t('sec_details')}</div>
         ${rows.map(([ic,v])=>`<div class="sh-row"><span class="sh-row-icon">${ic}</span><span class="sh-row-val">${v}</span></div>`).join('')}
       </div>`:''}
 
       <div class="sh-section">
-        <div class="sh-section-title">ניווט</div>
+        <div class="sh-section-title">${t('sec_nav')}</div>
         <div class="nav-btns">
-          <a class="nav-btn nav-btn-waze" href="https://waze.com/ul?ll=${f.lat},${f.lng}&navigate=yes" target="_blank" onclick="haptic('medium')">🚗 Waze</a>
-          <a class="nav-btn nav-btn-gmap" href="https://maps.google.com/?q=${f.lat},${f.lng}" target="_blank" onclick="haptic('medium')">🗺️ Google Maps</a>
+          <a class="nav-btn nav-btn-waze" href="https://waze.com/ul?ll=${f.lat},${f.lng}&navigate=yes" target="_blank" onclick="haptic('medium')">${t('waze')}</a>
+          <a class="nav-btn nav-btn-gmap" href="https://maps.google.com/?q=${f.lat},${f.lng}" target="_blank" onclick="haptic('medium')">${t('gmap')}</a>
         </div>
       </div>
 
       <div class="sh-section">
-        <div class="sh-section-title">שחקנים (${ps.length})</div>
+        <div class="sh-section-title">${t('sec_players')} (${ps.length})</div>
         <div class="players" id="players-row">
           ${ps.map(p=>`<div class="player-chip" onclick="removePlayer('${id}','${p.name}')">
             <div class="player-av" style="background:${p.color}">${p.initials}</div>
             <div><div class="player-name">${p.name}</div><div class="player-since">${p.since}</div></div>
           </div>`).join('')}
-          <button class="add-player" onclick="addPlayerPrompt('${id}')">+ הוסף שחקן</button>
+          <button class="add-player" onclick="addPlayerPrompt('${id}')">${t('add_player')}</button>
         </div>
       </div>
 
       <button class="checkin-btn${isChecked?' checked':''}" id="checkin-btn" onclick="doCheckin('${id}')">
-        ${isChecked?'✅ צ׳ק-אין בוצע':'📍 צ׳ק-אין'}
+        ${isChecked?t('checkin_done_btn'):t('checkin_btn')}
       </button>
       <button class="fav-btn${isFav?' on':''}" id="fav-btn" onclick="toggleFav('${id}')">
-        ${isFav?'❤️ הסר ממועדפים':'🤍 הוסף למועדפים'}
+        ${isFav?t('fav_rem_btn'):t('fav_add_btn')}
       </button>
     </div>`;
 
@@ -801,7 +950,7 @@ function setRating(id,n){
     const v=+s.dataset.n;
     s.classList.toggle('on',v<=n);
   });
-  showToast('⭐ דירוג נשמר: '+n+'/5');
+  showToast(t('rating_saved',n));
 }
 
 function toggleFav(id){
@@ -810,31 +959,32 @@ function toggleFav(id){
   save();
   const on=!!favs[id];
   const b=document.getElementById('fav-btn');
-  if(b){b.className='fav-btn'+(on?' on':'');b.innerHTML=on?'❤️ הסר ממועדפים':'🤍 הוסף למועדפים'}
+  if(b){b.className='fav-btn'+(on?' on':'');b.innerHTML=on?t('fav_rem_btn'):t('fav_add_btn')}
   const li=document.getElementById('fav-li-'+id);
   if(li) li.textContent=on?'❤️':'🤍';
-  showToast(on?'❤️ נוסף למועדפים':'💔 הוסר ממועדפים');
+  showToast(on?t('fav_add'):t('fav_rem'));
 }
 
 function doCheckin(id){
   haptic('success');
   checkins[id]=Date.now();save();
   const b=document.getElementById('checkin-btn');
-  if(b){b.className='checkin-btn checked';b.innerHTML='✅ צ׳ק-אין בוצע'}
-  showToast('🎉 צ׳ק-אין!');
+  if(b){b.className='checkin-btn checked';b.innerHTML=t('checkin_done_btn')}
+  showToast(t('checkin_done'));
   // confetti burst
   burst();
 }
 
 function addPlayerPrompt(id){
   haptic('light');
-  const name=prompt('שם השחקן:');
+  const name=prompt(t('player_prompt'));
   if(!name||!name.trim()) return;
   if(!players[id]) players[id]=[];
   const colors=['#30d158','#0a84ff','#bf5af2','#ff9f0a','#ff453a','#ffd60a','#5ac8fa'];
   const color=colors[players[id].length%colors.length];
   const initials=name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  const since=new Date().toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+  const locale=currentLang==='he'?'he-IL':'en-US';
+  const since=new Date().toLocaleDateString(locale,{day:'2-digit',month:'2-digit'});
   players[id].push({name:name.trim(),initials,color,since});
   save();
   const row=document.getElementById('players-row');
@@ -844,11 +994,11 @@ function addPlayerPrompt(id){
     chip.innerHTML=`<div class="player-av" style="background:${color}">${initials}</div><div><div class="player-name">${name.trim()}</div><div class="player-since">${since}</div></div>`;
     row.insertBefore(chip,row.lastElementChild);
   }
-  showToast('👤 '+name.trim()+' נוסף!');
+  showToast(t('player_added',name.trim()));
 }
 
 function removePlayer(id,name){
-  if(!confirm('הסר '+name+'?')) return;
+  if(!confirm(t('remove_player_confirm',name))) return;
   players[id]=(players[id]||[]).filter(p=>p.name!==name);
   save();
   openSheet(allFields.find(f=>f.id===id));
@@ -859,9 +1009,9 @@ function removePlayer(id,name){
 // ─────────────────────────────────────────────
 let userMarker=null;
 function locateMe(){
-  if(!navigator.geolocation){showToast('⚠️ מיקום לא זמין');return}
+  if(!navigator.geolocation){showToast(t('locate_na'));return}
   haptic('light');
-  showToast('📍 מאתר מיקום...');
+  showToast(t('locating'));
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude:lat,longitude:lng}=pos.coords;
     if(userMarker) map.removeLayer(userMarker);
@@ -871,8 +1021,8 @@ function locateMe(){
     ]).addTo(map);
     map.setView([lat,lng],15);
     haptic('success');
-    showToast('✅ מיקום נמצא!');
-  },()=>{showToast('❌ לא ניתן לאתר')});
+    showToast(t('located'));
+  },()=>{showToast(t('locate_err'))});
 }
 
 // ─────────────────────────────────────────────
@@ -949,8 +1099,16 @@ function burst(){
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
-function surfaceLabel(s){return({grass:'דשא 🌿',artificial_turf:'דשא סינטטי',asphalt:'אספלט',concrete:'בטון',sand:'חול 🏖️',clay:'חימר',tartan:'טרטן',rubber:'גומי'})[s]||s}
-function accessLabel(a){return({yes:'ציבורי ✅',public:'ציבורי ✅',private:'פרטי 🔒',permissive:'ברשות',customers:'לקוחות בלבד'})[a]||a}
+function surfaceLabel(s){
+  const he={grass:'דשא 🌿',artificial_turf:'דשא סינטטי',asphalt:'אספלט',concrete:'בטון',sand:'חול 🏖️',clay:'חימר',tartan:'טרטן',rubber:'גומי'};
+  const en={grass:'Grass 🌿',artificial_turf:'Artificial Turf',asphalt:'Asphalt',concrete:'Concrete',sand:'Sand 🏖️',clay:'Clay',tartan:'Tartan',rubber:'Rubber'};
+  return (currentLang==='en'?en:he)[s]||s;
+}
+function accessLabel(a){
+  const he={yes:'ציבורי ✅',public:'ציבורי ✅',private:'פרטי 🔒',permissive:'ברשות',customers:'לקוחות בלבד'};
+  const en={yes:'Public ✅',public:'Public ✅',private:'Private 🔒',permissive:'Permitted',customers:'Customers only'};
+  return (currentLang==='en'?en:he)[a]||a;
+}
 
 function haptic(type){
   if(navigator.vibrate){
@@ -968,6 +1126,10 @@ function showToast(msg,ms=2600){
 // ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
+// Apply saved language on load
+setLang(currentLang);
+// update load-area button text
+document.getElementById('load-area-btn').innerHTML=t('load_area');
 loadFields();
 </script>
 </body>
