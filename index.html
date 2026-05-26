@@ -138,9 +138,12 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .snum{font-size:20px;font-weight:700;line-height:1;letter-spacing:-.5px}
 .slbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
 
-.water-row{display:flex;gap:7px;flex-wrap:wrap}
-.wbtn{width:100%;aspect-ratio:1;border-radius:10px;border:1.5px solid var(--border2);background:transparent;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;min-height:32px}
-.wbtn.on{border-color:var(--blue);background:rgba(10,132,255,.15);filter:drop-shadow(0 0 4px rgba(10,132,255,.35))}
+.water-row{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap}
+.wbtn{width:32px;height:54px;border-radius:6px 6px 12px 12px;border:1.5px solid var(--border2);background:transparent;font-size:20px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;transition:.25s;position:relative;overflow:hidden}
+.wbtn::before{content:'';position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(180deg,rgba(10,132,255,.5),rgba(10,132,255,.85));transition:.3s cubic-bezier(.34,1.56,.64,1);border-radius:0 0 10px 10px}
+.wbtn.on{border-color:var(--blue)}
+.wbtn.on::before{height:65%}
+.wbtn.on::after{content:'💧';position:absolute;top:4px;font-size:14px}
 
 .navbar{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 20px;z-index:100;overflow-x:auto}
 .nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;font-family:inherit;padding:3px 6px;white-space:nowrap;min-width:46px;transition:.2s}
@@ -580,8 +583,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
         <div style="font-size:13px;font-weight:800;color:var(--blue)">💧 מים יומיים</div>
         <div style="font-size:12px;color:var(--muted)" id="water-lbl"></div>
       </div>
-      <!-- כוסות גדולות ויזואליות -->
-      <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:10px" id="water-row"></div>
+      <!-- כוסות ויזואליות — עמודות מים -->
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px" id="water-row"></div>
       <!-- פס התקדמות -->
       <div style="height:6px;background:var(--border);border-radius:10px;overflow:hidden">
         <div id="water-prog-bar" style="height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:10px;transition:.4s;width:0%"></div>
@@ -1379,7 +1382,7 @@ function renderHome(){
   document.getElementById('s-water').textContent=S.waterCups+'/8';
   document.getElementById('s-steps').textContent=S.steps.toLocaleString();
   const wr=document.getElementById('water-row');wr.innerHTML='';
-  for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbtn'+(i<S.waterCups?' on':'');b.textContent=i<S.waterCups?'💧':'○';b.onclick=()=>{S.waterCups=i<S.waterCups?i:i+1;save();if(S.waterCups>=8)showEncourageCard('water');renderAll();};wr.appendChild(b);}
+  for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbtn'+(i<S.waterCups?' on':'');b.setAttribute('title','כוס '+(i+1));b.onclick=()=>{S.waterCups=i<S.waterCups?i:i+1;save();if(S.waterCups>=8)showEncourageCard('water');renderAll();};wr.appendChild(b);}
   document.getElementById('water-lbl').textContent=S.waterCups>=8?'🎉 כל הכבוד!':'עוד '+(8-S.waterCups)+' כוסות';
   const wpb=document.getElementById('water-prog-bar');if(wpb)wpb.style.width=(S.waterCups/8*100)+'%';
   const wpl=document.getElementById('water-pct-lbl');if(wpl)wpl.textContent=S.waterCups>=8?'✅ יעד יומי הושג!':S.waterCups===0?'לא שתית עדיין — קדימה! 💧':S.waterCups+' מתוך 8 כוסות ('+Math.round(S.waterCups/8*100)+'%)';
@@ -1424,6 +1427,7 @@ function renderFoodPrefsDisplay(){
 function renderFoodPrefChips(containerId,opts,selected,category){
   const el=document.getElementById(containerId);if(!el)return;
   el.innerHTML='';
+  // אפשרויות מוגדרות מראש
   opts.forEach(opt=>{
     const sel=(selected||[]).includes(opt);
     const b=document.createElement('button');
@@ -1437,6 +1441,37 @@ function renderFoodPrefChips(containerId,opts,selected,category){
     };
     el.appendChild(b);
   });
+  // פריטים מותאמים אישית (שנוספו ע״י המשתמש)
+  const customItems=(S.foodPrefs?.[category]||[]).filter(v=>!opts.includes(v));
+  customItems.forEach(val=>{
+    const wrap=document.createElement('span');wrap.style.cssText='display:inline-flex;align-items:center;gap:3px';
+    const b=document.createElement('button');
+    b.style.cssText='padding:5px 8px 5px 11px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent-s);font-size:12px;cursor:pointer;color:var(--text);font-family:inherit';
+    b.textContent=val;
+    const x=document.createElement('button');
+    x.style.cssText='border:none;background:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0 4px;font-family:inherit';
+    x.textContent='✕';
+    x.onclick=()=>{
+      if(!S.foodPrefs)return;
+      const arr=S.foodPrefs[category];const idx=arr.indexOf(val);
+      if(idx>=0)arr.splice(idx,1);
+      save();renderFoodPrefChips(containerId,opts,S.foodPrefs[category],category);renderFoodPrefsDisplay();
+    };
+    wrap.appendChild(b);wrap.appendChild(x);el.appendChild(wrap);
+  });
+  // כפתור "אחר..."
+  const addBtn=document.createElement('button');
+  addBtn.style.cssText='padding:5px 11px;border-radius:20px;border:1.5px dashed var(--border2);background:transparent;font-size:12px;cursor:pointer;color:var(--muted);font-family:inherit;transition:.15s';
+  addBtn.textContent='＋ אחר...';
+  addBtn.onclick=()=>{
+    const val=prompt('הכנס ערך מותאם אישית:');
+    if(!val||!val.trim())return;
+    if(!S.foodPrefs)S.foodPrefs={allergies:[],dislikes:[],likes:[],notes:''};
+    const arr=S.foodPrefs[category];
+    if(!arr.includes(val.trim()))arr.push(val.trim());
+    save();renderFoodPrefChips(containerId,opts,S.foodPrefs[category],category);renderFoodPrefsDisplay();
+  };
+  el.appendChild(addBtn);
 }
 function toggleFoodPrefsForm(){
   const form=document.getElementById('food-prefs-form');
