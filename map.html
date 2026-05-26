@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ארנה">
 <title>ארנה 🏟️</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="leaflet.css"/>
+<script src="leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1124,12 +1124,122 @@ function showToast(msg,ms=2600){
 }
 
 // ─────────────────────────────────────────────
+//  SEED DATA – real Israeli sports fields
+//  shown immediately while API loads
+// ─────────────────────────────────────────────
+const SEED_IL = [
+  // ── תל אביב ──
+  {id:'s1', name:'אצטדיון בלומפילד',     nameEn:'Bloomfield Stadium',      lat:32.0627,lng:34.7660,sport:'soccer'},
+  {id:'s2', name:'מגרש כדורסל גורדון',   nameEn:'Gordon Basketball Court', lat:32.0870,lng:34.7762,sport:'basketball'},
+  {id:'s3', name:'מגרשי טניס הירקון',    nameEn:'Hayarkon Tennis Courts',  lat:32.1012,lng:34.8002,sport:'tennis'},
+  {id:'s4', name:'מגרש כדורגל לוינסקי',  nameEn:'Levinski Soccer Field',   lat:32.0553,lng:34.7732,sport:'soccer'},
+  {id:'s5', name:'מגרש כדורעף גורדון',   nameEn:'Gordon Beach Volleyball', lat:32.0872,lng:34.7741,sport:'volleyball'},
+  {id:'s6', name:'מגרש כדורסל נורדאו',   nameEn:'Nordau Basketball',       lat:32.0935,lng:34.7808,sport:'basketball'},
+  {id:'s7', name:'מגרש פוטסל הירקון',    nameEn:'Yarkon Futsal',           lat:32.1050,lng:34.8120,sport:'futsal'},
+  {id:'s8', name:'מגרש כדורגל ביאליק',   nameEn:'Bialik Soccer',           lat:32.0850,lng:34.7950,sport:'soccer'},
+  {id:'s9', name:'מגרש טניס רמת אביב',   nameEn:'Ramat Aviv Tennis',       lat:32.1150,lng:34.8050,sport:'tennis'},
+  {id:'s10',name:'מגרש כדורסל פלורנטין', nameEn:'Florentin Basketball',    lat:32.0590,lng:34.7670,sport:'basketball'},
+  // ── ירושלים ──
+  {id:'s11',name:'אצטדיון טדי',           nameEn:'Teddy Stadium',           lat:31.7714,lng:35.1883,sport:'soccer'},
+  {id:'s12',name:'ארנה ירושלים',          nameEn:'Jerusalem Arena',         lat:31.7840,lng:35.2170,sport:'basketball'},
+  {id:'s13',name:'מגרשי טניס גן סאקר',   nameEn:'Sacher Park Tennis',      lat:31.7780,lng:35.2020,sport:'tennis'},
+  {id:'s14',name:'מגרש כדורגל מלחה',     nameEn:'Malcha Soccer Field',     lat:31.7550,lng:35.1900,sport:'soccer'},
+  {id:'s15',name:'מגרש כדורסל רמות',     nameEn:'Ramot Basketball',        lat:31.8250,lng:35.1880,sport:'basketball'},
+  {id:'s16',name:'מגרש כדורגל קטמון',    nameEn:'Katamon Soccer',          lat:31.7630,lng:35.2050,sport:'soccer'},
+  // ── חיפה ──
+  {id:'s17',name:'אצטדיון סמי עופר',     nameEn:'Sammy Ofer Stadium',      lat:32.8200,lng:34.9880,sport:'soccer'},
+  {id:'s18',name:'מגרש כדורסל כרמל',     nameEn:'Carmel Basketball',       lat:32.8050,lng:34.9890,sport:'basketball'},
+  {id:'s19',name:'מגרשי טניס חיפה',      nameEn:'Haifa Tennis Center',     lat:32.8120,lng:34.9970,sport:'tennis'},
+  {id:'s20',name:'מגרש כדורגל קרית חיים',nameEn:'Kiryat Haim Soccer',     lat:32.8470,lng:35.0600,sport:'soccer'},
+  {id:'s21',name:'מגרש כדורעף בת גלים',  nameEn:'Bat Galim Volleyball',    lat:32.8280,lng:34.9720,sport:'volleyball'},
+  // ── באר שבע ──
+  {id:'s22',name:'אצטדיון טרנר',         nameEn:'Turner Stadium',          lat:31.2440,lng:34.8100,sport:'soccer'},
+  {id:'s23',name:'מגרש כדורסל נגב',      nameEn:'Negev Basketball Court',  lat:31.2520,lng:34.7970,sport:'basketball'},
+  {id:'s24',name:'מגרשי טניס באר שבע',   nameEn:'Beer Sheva Tennis',       lat:31.2600,lng:34.8050,sport:'tennis'},
+  {id:'s25',name:'מגרש כדורגל דרום',     nameEn:'South Soccer Field',      lat:31.2350,lng:34.8200,sport:'soccer'},
+  // ── ראשון לציון ──
+  {id:'s26',name:'אצטדיון ראשון לציון',  nameEn:'Rishon LeZion Stadium',   lat:31.9612,lng:34.8017,sport:'soccer'},
+  {id:'s27',name:'מגרש כדורסל ראשון',    nameEn:'Rishon Basketball',       lat:31.9680,lng:34.8050,sport:'basketball'},
+  {id:'s28',name:'מגרש כדורגל נחשון',    nameEn:'Nachshon Soccer',         lat:31.9520,lng:34.7980,sport:'soccer'},
+  // ── פתח תקוה ──
+  {id:'s29',name:'אצטדיון הטוטו',        nameEn:'HaToto Stadium',          lat:32.0850,lng:34.8880,sport:'soccer'},
+  {id:'s30',name:'מגרש כדורסל פ"ת',      nameEn:'Petah Tikva Basketball',  lat:32.0920,lng:34.8820,sport:'basketball'},
+  // ── נתניה ──
+  {id:'s31',name:'אצטדיון עירוני נתניה', nameEn:'Netanya Municipal Stadium',lat:32.3200,lng:34.8600,sport:'soccer'},
+  {id:'s32',name:'מגרש כדורסל נתניה',    nameEn:'Netanya Basketball',       lat:32.3280,lng:34.8570,sport:'basketball'},
+  {id:'s33',name:'מגרשי טניס נתניה',     nameEn:'Netanya Tennis',           lat:32.3350,lng:34.8520,sport:'tennis'},
+  // ── אשדוד ──
+  {id:'s34',name:'אצטדיון אשדוד',        nameEn:'Ashdod Stadium',          lat:31.8100,lng:34.6560,sport:'soccer'},
+  {id:'s35',name:'מגרש כדורסל אשדוד',    nameEn:'Ashdod Basketball',       lat:31.8150,lng:34.6500,sport:'basketball'},
+  // ── רמת גן ──
+  {id:'s36',name:'אצטדיון רמת גן',       nameEn:'Ramat Gan National Stadium',lat:32.0740,lng:34.8270,sport:'soccer'},
+  {id:'s37',name:'מגרש כדורסל גבעתיים',  nameEn:'Givatayim Basketball',    lat:32.0720,lng:34.8140,sport:'basketball'},
+  // ── הרצליה ──
+  {id:'s38',name:'מגרש כדורגל הרצליה',   nameEn:'Herzliya Soccer Field',   lat:32.1640,lng:34.8430,sport:'soccer'},
+  {id:'s39',name:'מגרשי טניס הרצליה',    nameEn:'Herzliya Tennis Club',    lat:32.1680,lng:34.8350,sport:'tennis'},
+  // ── רחובות ──
+  {id:'s40',name:'מגרש כדורגל רחובות',   nameEn:'Rehovot Soccer',          lat:31.8930,lng:34.8140,sport:'soccer'},
+  {id:'s41',name:'מגרש כדורסל רחובות',   nameEn:'Rehovot Basketball',      lat:31.8980,lng:34.8080,sport:'basketball'},
+  // ── עפולה ──
+  {id:'s42',name:'אצטדיון עפולה',        nameEn:'Afula Stadium',           lat:32.6060,lng:35.2900,sport:'soccer'},
+  // ── נצרת ──
+  {id:'s43',name:'מגרש כדורגל נצרת',     nameEn:'Nazareth Soccer Field',   lat:32.7040,lng:35.2990,sport:'soccer'},
+  {id:'s44',name:'מגרש כדורסל נצרת',     nameEn:'Nazareth Basketball',     lat:32.7010,lng:35.3020,sport:'basketball'},
+  // ── אשקלון ──
+  {id:'s45',name:'מגרש כדורגל אשקלון',   nameEn:'Ashkelon Soccer',         lat:31.6688,lng:34.5742,sport:'soccer'},
+  // ── כפר סבא ──
+  {id:'s46',name:'מגרש כדורגל כ"ס',      nameEn:'Kfar Saba Soccer',        lat:32.1762,lng:34.9077,sport:'soccer'},
+  // ── מגרשי חוף ──
+  {id:'s47',name:'כדורעף חוף תל אביב',   nameEn:'Tel Aviv Beach Volleyball',lat:32.0780,lng:34.7650,sport:'volleyball'},
+  {id:'s48',name:'כדורעף חוף נתניה',     nameEn:'Netanya Beach Volleyball', lat:32.3300,lng:34.8520,sport:'volleyball'},
+  {id:'s49',name:'כדורעף חוף חיפה',      nameEn:'Haifa Beach Volleyball',   lat:32.8190,lng:34.9680,sport:'volleyball'},
+  // ── מגרשי פאדל ──
+  {id:'s50',name:'מגרשי פאדל תל אביב',   nameEn:'Tel Aviv Padel',           lat:32.0990,lng:34.8080,sport:'padel'},
+  {id:'s51',name:'מגרשי פאדל ירושלים',   nameEn:'Jerusalem Padel',          lat:31.7900,lng:35.2100,sport:'padel'},
+  {id:'s52',name:'מגרשי פאדל חיפה',      nameEn:'Haifa Padel',              lat:32.8100,lng:35.0100,sport:'padel'},
+  // ── מגרשי כדוריד ──
+  {id:'s53',name:'אולם כדוריד ראשון',    nameEn:'Rishon Handball Hall',     lat:31.9640,lng:34.8010,sport:'handball'},
+  {id:'s54',name:'אולם כדוריד ת"א',      nameEn:'Tel Aviv Handball',        lat:32.0750,lng:34.7900,sport:'handball'},
+  // ── אתלטיקה ──
+  {id:'s55',name:'מסלול אתלטיקה ת"א',    nameEn:'Tel Aviv Athletics Track', lat:32.1020,lng:34.7970,sport:'athletics'},
+  {id:'s56',name:'מסלול אתלטיקה ירושלים',nameEn:'Jerusalem Athletics Track',lat:31.7850,lng:35.2150,sport:'athletics'},
+  // ── בריכות שחייה ──
+  {id:'s57',name:'בריכת גורדון',         nameEn:'Gordon Pool',              lat:32.0880,lng:34.7760,sport:'swimming'},
+  {id:'s58',name:'בריכת ירושלים',        nameEn:'Jerusalem Pool',           lat:31.7760,lng:35.1990,sport:'swimming'},
+  {id:'s59',name:'בריכת חיפה',           nameEn:'Haifa Pool',               lat:32.8090,lng:34.9920,sport:'swimming'},
+  // ── רב תכליתי ──
+  {id:'s60',name:'מתחם ספורט הירקון',    nameEn:'Yarkon Sports Complex',    lat:32.1080,lng:34.8090,sport:'multi'},
+  {id:'s61',name:'מתחם ספורט ירושלים',   nameEn:'Jerusalem Sports Center',  lat:31.7900,lng:35.2050,sport:'multi'},
+  {id:'s62',name:'מתחם ספורט חיפה',      nameEn:'Haifa Sports Center',      lat:32.8140,lng:35.0000,sport:'multi'},
+  {id:'s63',name:'מתחם ספורט ב"ש',       nameEn:'Beer Sheva Sports Center', lat:31.2480,lng:34.7990,sport:'multi'},
+];
+
+function loadSeedData(){
+  const els = SEED_IL.map(s=>({
+    type:'node',
+    id: s.id,
+    lat: s.lat,
+    lon: s.lng,
+    tags:{
+      name: s.name,
+      'name:en': s.nameEn,
+      sport: s.sport,
+      access:'yes',
+      leisure:'pitch',
+    }
+  }));
+  processFields(els, false);
+}
+
+// ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
 // Apply saved language on load
 setLang(currentLang);
 // update load-area button text
 document.getElementById('load-area-btn').innerHTML=t('load_area');
+// Show seed data immediately, then load live
+loadSeedData();
 loadFields();
 </script>
 </body>
