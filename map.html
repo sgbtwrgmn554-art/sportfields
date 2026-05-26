@@ -237,13 +237,30 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 <!-- FILTER PILLS -->
 <div class="pills" id="pills">
-  <button class="pill on" data-sport="all" onclick="setFilter('all',this)">🏟️ הכל</button>
-  <button class="pill" data-sport="soccer" onclick="setFilter('soccer',this)">⚽ כדורגל</button>
-  <button class="pill" data-sport="basketball" onclick="setFilter('basketball',this)">🏀 כדורסל</button>
-  <button class="pill" data-sport="tennis" onclick="setFilter('tennis',this)">🎾 טניס</button>
-  <button class="pill" data-sport="volleyball" onclick="setFilter('volleyball',this)">🏐 כדורעף</button>
-  <button class="pill" data-sport="futsal" onclick="setFilter('futsal',this)">🥅 פוטסל</button>
-  <button class="pill" data-sport="multi" onclick="setFilter('multi',this)">🏃 רב תכליתי</button>
+  <button class="pill on" data-sport="all"        onclick="setFilter('all',this)">🏟️ הכל</button>
+  <button class="pill" data-sport="soccer"        onclick="setFilter('soccer',this)">⚽ כדורגל</button>
+  <button class="pill" data-sport="basketball"    onclick="setFilter('basketball',this)">🏀 כדורסל</button>
+  <button class="pill" data-sport="racket"        onclick="setFilter('racket',this)">🎾 מחבט</button>
+  <button class="pill" data-sport="volleyball"    onclick="setFilter('volleyball',this)">🏐 כדורעף</button>
+  <button class="pill" data-sport="handball"      onclick="setFilter('handball',this)">🤾 כדוריד</button>
+  <button class="pill" data-sport="fitness"       onclick="setFilter('fitness',this)">💪 כושר</button>
+  <button class="pill" data-sport="rugby"         onclick="setFilter('rugby',this)">🏉 רוגבי</button>
+  <button class="pill" data-sport="baseball"      onclick="setFilter('baseball',this)">⚾ בייסבול</button>
+  <button class="pill" data-sport="cricket"       onclick="setFilter('cricket',this)">🏏 קריקט</button>
+  <button class="pill" data-sport="swimming"      onclick="setFilter('swimming',this)">🏊 שחייה</button>
+  <button class="pill" data-sport="athletics"     onclick="setFilter('athletics',this)">🏃 אתלטיקה</button>
+  <button class="pill" data-sport="golf"          onclick="setFilter('golf',this)">⛳ גולף</button>
+  <button class="pill" data-sport="wheels"        onclick="setFilter('wheels',this)">🛹 גלגלים</button>
+  <button class="pill" data-sport="equestrian"    onclick="setFilter('equestrian',this)">🏇 רכיבה</button>
+  <button class="pill" data-sport="archery"       onclick="setFilter('archery',this)">🏹 קשתות</button>
+  <button class="pill" data-sport="ice_hockey"    onclick="setFilter('ice_hockey',this)">🏒 הוקי קרח</button>
+  <button class="pill" data-sport="american_football" onclick="setFilter('american_football',this)">🏈 פוטבול</button>
+  <button class="pill" data-sport="field_hockey"  onclick="setFilter('field_hockey',this)">🏑 הוקי שדה</button>
+  <button class="pill" data-sport="lacrosse"      onclick="setFilter('lacrosse',this)">🥍 לקרוס</button>
+  <button class="pill" data-sport="disc_golf"     onclick="setFilter('disc_golf',this)">🥏 פריסבי</button>
+  <button class="pill" data-sport="boules"        onclick="setFilter('boules',this)">🎳 פטנק</button>
+  <button class="pill" data-sport="multi"         onclick="setFilter('multi',this)">🏟️ רב תכליתי</button>
+  <button class="pill" data-sport="other"         onclick="setFilter('other',this)">🎯 אחר</button>
 </div>
 
 <!-- MAP VIEW -->
@@ -278,40 +295,98 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 //  CONSTANTS & DATA
 // ─────────────────────────────────────────────
 const SPORT_META = {
-  soccer:     {label:'כדורגל',emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
-  basketball: {label:'כדורסל',emoji:'🏀',color:'#ff9f0a',bg:'#1a110a'},
-  tennis:     {label:'טניס',  emoji:'🎾',color:'#ffd60a',bg:'#1a180a'},
-  volleyball: {label:'כדורעף',emoji:'🏐',color:'#0a84ff',bg:'#0a0f1a'},
-  futsal:     {label:'פוטסל', emoji:'🥅',color:'#30d158',bg:'#0a1a0f'},
-  padel:      {label:'פאדל',  emoji:'🏓',color:'#5ac8fa',bg:'#0a1418'},
-  handball:   {label:'כדוריד',emoji:'🤾',color:'#ff6b35',bg:'#1a0e09'},
-  multi:      {label:'רב תכליתי',emoji:'🏃',color:'#bf5af2',bg:'#120a1a'},
-  other:      {label:'ספורט', emoji:'🎯',color:'#636366',bg:'#111113'},
+  // ⚽ כדורגל ושטח
+  soccer:        {label:'כדורגל',      emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  football:      {label:'כדורגל',      emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  futsal:        {label:'פוטסל',       emoji:'🥅',color:'#2ecc71',bg:'#092b15'},
+  rugby:         {label:'רוגבי',       emoji:'🏉',color:'#8e5cf6',bg:'#13093d'},
+  rugby_league:  {label:'רוגבי ליג',   emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  rugby_union:   {label:'רוגבי יוניון',emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  field_hockey:  {label:'הוקי שדה',    emoji:'🏑',color:'#1abc9c',bg:'#09241f'},
+  american_football:{label:'פוטבול אמריקאי',emoji:'🏈',color:'#e67e22',bg:'#2b1608'},
+  australian_football:{label:'פוטבול אוסטרלי',emoji:'🏈',color:'#d35400',bg:'#2b1608'},
+  // 🏀 מגרשי כדור
+  basketball:    {label:'כדורסל',      emoji:'🏀',color:'#ff9f0a',bg:'#1a110a'},
+  volleyball:    {label:'כדורעף',      emoji:'🏐',color:'#0a84ff',bg:'#0a0f1a'},
+  handball:      {label:'כדוריד',      emoji:'🤾',color:'#ff6b35',bg:'#1a0e09'},
+  baseball:      {label:'בייסבול',     emoji:'⚾',color:'#e74c3c',bg:'#1f0909'},
+  softball:      {label:'סופטבול',     emoji:'🥎',color:'#f39c12',bg:'#1f1509'},
+  cricket:       {label:'קריקט',       emoji:'🏏',color:'#27ae60',bg:'#091a0f'},
+  lacrosse:      {label:'לקרוס',       emoji:'🥍',color:'#16a085',bg:'#091918'},
+  netball:       {label:'נטבול',       emoji:'🏐',color:'#9b59b6',bg:'#160b20'},
+  // 🎾 מחבט
+  tennis:        {label:'טניס',        emoji:'🎾',color:'#ffd60a',bg:'#1a180a'},
+  padel:         {label:'פאדל',        emoji:'🎾',color:'#5ac8fa',bg:'#0a1418'},
+  badminton:     {label:'בדמינטון',    emoji:'🏸',color:'#e91e63',bg:'#1f0912'},
+  squash:        {label:'סקווש',       emoji:'🎾',color:'#ff5722',bg:'#1f0d09'},
+  table_tennis:  {label:'פינג פונג',   emoji:'🏓',color:'#00bcd4',bg:'#091a1f'},
+  racquetball:   {label:'רקטבול',      emoji:'🎾',color:'#ff4081',bg:'#1f0912'},
+  pickleball:    {label:'פיקלבול',     emoji:'🏓',color:'#76ff03',bg:'#0f1f03'},
+  // 🏃 ריצה וכושר
+  athletics:     {label:'אתלטיקה',     emoji:'🏃',color:'#ff453a',bg:'#1f0909'},
+  running:       {label:'ריצה',        emoji:'🏃',color:'#ff6b6b',bg:'#1f0909'},
+  fitness:       {label:'כושר',        emoji:'💪',color:'#30d158',bg:'#0a1a0f'},
+  gymnastics:    {label:'התעמלות',     emoji:'🤸',color:'#ff2d55',bg:'#1f0912'},
+  yoga:          {label:'יוגה',        emoji:'🧘',color:'#af52de',bg:'#160b20'},
+  martial_arts:  {label:'אומנויות לחימה',emoji:'🥋',color:'#ff3b30',bg:'#1f0909'},
+  boxing:        {label:'איגרוף',      emoji:'🥊',color:'#ff3b30',bg:'#1f0909'},
+  wrestling:     {label:'היאבקות',     emoji:'🤼',color:'#ff6b35',bg:'#1f0d09'},
+  // 🚴 פנאי ואחר
+  swimming:      {label:'שחייה',       emoji:'🏊',color:'#0a84ff',bg:'#0a0f1a'},
+  cycling:       {label:'אופניים',     emoji:'🚴',color:'#34c759',bg:'#0a1a0f'},
+  skateboard:    {label:'סקייטבורד',   emoji:'🛹',color:'#ff9500',bg:'#1a1209'},
+  roller_skating:{label:'החלקה',       emoji:'🛼',color:'#5ac8fa',bg:'#0a1418'},
+  ice_hockey:    {label:'הוקי קרח',    emoji:'🏒',color:'#64d2ff',bg:'#091418'},
+  equestrian:    {label:'רכיבה על סוסים',emoji:'🏇',color:'#a2845e',bg:'#1a1209'},
+  archery:       {label:'קשתות',       emoji:'🏹',color:'#ff9f0a',bg:'#1a110a'},
+  golf:          {label:'גולף',        emoji:'⛳',color:'#34c759',bg:'#0a1a0f'},
+  disc_golf:     {label:'פריסבי גולף', emoji:'🥏',color:'#5e5ce6',bg:'#0e0e20'},
+  bowls:         {label:'בולינג דשא',  emoji:'🎳',color:'#aeaeb2',bg:'#111113'},
+  boules:        {label:'פטנק',        emoji:'🎳',color:'#636366',bg:'#111113'},
+  // 🏟️ כללי
+  multi:         {label:'רב תכליתי',   emoji:'🏟️',color:'#bf5af2',bg:'#120a1a'},
+  other:         {label:'ספורט',       emoji:'🎯',color:'#636366',bg:'#111113'},
 };
 
 function getSportKey(tags){
   if(!tags) return 'other';
   const raw=(tags.sport||'').toLowerCase().split(';')[0].trim();
-  if(['soccer','football'].includes(raw)) return 'soccer';
-  if(raw==='basketball') return 'basketball';
-  if(raw==='tennis') return 'tennis';
-  if(raw==='volleyball') return 'volleyball';
-  if(raw==='futsal') return 'futsal';
-  if(raw==='padel') return 'padel';
-  if(raw==='handball') return 'handball';
-  if(['multi','multi-sport','multisport'].includes(raw)) return 'multi';
-  const n=(tags.name||tags['name:he']||'').toLowerCase();
-  if(n.includes('כדורגל')||n.includes('footbal')||n.includes('soccer')) return 'soccer';
+  // direct match
+  if(SPORT_META[raw]) return raw;
+  // aliases
+  if(raw==='football') return 'soccer';
+  if(['multi','multi-sport','multisport','various'].includes(raw)) return 'multi';
+  if(raw==='running') return 'athletics';
+  if(['boules','petanque','bocce'].includes(raw)) return 'boules';
+  if(['rugby_league','rugby_union'].includes(raw)) return 'rugby';
+  // name guessing (Hebrew + English)
+  const n=(tags.name||tags['name:he']||tags['name:en']||'').toLowerCase();
+  if(n.includes('כדורגל')||n.includes('soccer')||n.includes('football')) return 'soccer';
   if(n.includes('כדורסל')||n.includes('basket')) return 'basketball';
   if(n.includes('טניס')||n.includes('tennis')) return 'tennis';
   if(n.includes('כדורעף')||n.includes('volley')) return 'volleyball';
   if(n.includes('פוטסל')||n.includes('futsal')) return 'futsal';
-  if(raw) return (SPORT_META[raw]?raw:'other');
+  if(n.includes('כדוריד')||n.includes('handball')) return 'handball';
+  if(n.includes('פאדל')||n.includes('padel')) return 'padel';
+  if(n.includes('בדמינטון')||n.includes('badminton')) return 'badminton';
+  if(n.includes('פינג')||n.includes('table_tennis')||n.includes('ping')) return 'table_tennis';
+  if(n.includes('כושר')||n.includes('fitness')||n.includes('gym')) return 'fitness';
+  if(n.includes('התעמלות')||n.includes('gymnastics')) return 'gymnastics';
+  if(n.includes('שחייה')||n.includes('swim')||n.includes('בריכה')) return 'swimming';
+  if(n.includes('אתלט')||n.includes('athletics')||n.includes('track')) return 'athletics';
+  if(n.includes('גולף')||n.includes('golf')) return 'golf';
+  if(n.includes('אופנ')||n.includes('cycl')||n.includes('bike')) return 'cycling';
+  if(n.includes('סקייט')||n.includes('skate')) return 'skateboard';
+  if(raw) return 'other';
   return 'other';
 }
 function getFilterGroup(k){
-  if(['soccer','football'].includes(k)) return 'soccer';
+  if(['soccer','football','futsal'].includes(k)) return 'soccer';
   if(['multi','multisport'].includes(k)) return 'multi';
+  if(['rugby','rugby_league','rugby_union'].includes(k)) return 'rugby';
+  if(['tennis','padel','squash','badminton','table_tennis','racquetball','pickleball'].includes(k)) return 'racket';
+  if(['athletics','running','fitness','gymnastics','yoga','martial_arts','boxing','wrestling'].includes(k)) return 'fitness';
+  if(['cycling','skateboard','roller_skating'].includes(k)) return 'wheels';
   return k;
 }
 
@@ -458,10 +533,12 @@ function setFilter(sport,el){
 
 function applyFilter(sport){
   markerLayer.clearLayers();
+  let n=0;
   allMarkers.forEach(m=>{
     const show=(sport==='all'||m._f.fg===sport||m._f.sk===sport)&&(!favsOnly||favs[m._f.id]);
-    if(show) markerLayer.addLayer(m);
+    if(show){markerLayer.addLayer(m);n++;}
   });
+  document.getElementById('hdr-count').textContent=n+' מגרשים';
 }
 
 function toggleFavsOnly(){
