@@ -1,4 +1,4 @@
-const CACHE = 'dad-fit-v2';
+const CACHE = 'voice-tasks-v1';
 const FILES = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -26,11 +26,11 @@ self.addEventListener('fetch', e => {
 // ── Push notification handler ──────────────────────────────────────
 self.addEventListener('push', e => {
   let data = {
-    title: '💪 כושר',
-    body: 'זמן לאמן! 5 דקות זה מספיק 🔥',
+    title: '🎙️ תזכורת משימה',
+    body: 'יש לך משימה ממתינה',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: 'reminder',
+    tag: 'task-reminder',
   };
 
   if (e.data) {
@@ -42,38 +42,58 @@ self.addEventListener('push', e => {
     }
   }
 
-  const options = {
-    body: data.body,
-    icon: data.icon,
-    badge: data.badge,
-    tag: data.tag,
-    dir: 'rtl',
-    lang: 'he',
-    requireInteraction: false,
-    data: { url: self.registration.scope },
-  };
-
-  e.waitUntil(self.registration.showNotification(data.title, options));
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      tag: data.tag,
+      dir: 'rtl',
+      lang: 'he',
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      actions: [
+        { action: 'done', title: '✅ הושלם' },
+        { action: 'snooze', title: '⏰ דחה שעה' },
+      ],
+      data: data.data || { url: self.registration.scope },
+    })
+  );
 });
 
 // ── Notification click handler ─────────────────────────────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-
   const targetUrl = (e.notification.data && e.notification.data.url) || self.registration.scope;
 
+  if (e.action === 'done') {
+    // Mark task as done via API (fire and forget)
+    const taskId = e.notification.data?.taskId;
+    if (taskId) {
+      // Post a message to the client to handle the completion
+      clients.matchAll({ type: 'window' }).then(ws => {
+        ws.forEach(w => w.postMessage({ type: 'TASK_DONE', taskId }));
+      });
+    }
+    return;
+  }
+
+  if (e.action === 'snooze') {
+    const taskId = e.notification.data?.taskId;
+    if (taskId) {
+      clients.matchAll({ type: 'window' }).then(ws => {
+        ws.forEach(w => w.postMessage({ type: 'TASK_SNOOZE', taskId }));
+      });
+    }
+    return;
+  }
+
   e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // If the app is already open, focus it
-      for (const client of windowClients) {
-        if (client.url === targetUrl && 'focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
+      for (const w of ws) {
+        if (w.url === targetUrl && 'focus' in w) return w.focus();
       }
-      // Otherwise open a new window
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });
