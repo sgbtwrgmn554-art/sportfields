@@ -2,12 +2,8 @@
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api/$1" }],
   "crons": [
     {
-      "path": "/api/task-cron",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/morning-brief",
-      "schedule": "0 6 * * *"
+      "path": "/api/cron",
+      "schedule": "0 * * * *"
     }
   ]
 }

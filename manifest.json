@@ -1,35 +1,26 @@
 {
-  "name": "משימות קוליות — AI Task Manager",
-  "short_name": "משימות",
-  "description": "מנהל משימות חכם עם הקלטה קולית, ניתוח AI ותזכורות חכמות",
-  "start_url": "/",
+  "name": "כושר לאבא 💪",
+  "short_name": "כושר לאבא",
+  "description": "אפליקציית כושר ותזונה לאבא",
+  "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#0f1117",
+  "theme_color": "#f97316",
   "orientation": "portrait",
   "lang": "he",
   "dir": "rtl",
-  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "הקלט משימה",
-      "short_name": "הקלטה",
-      "description": "הקלט משימה קולית חדשה",
-      "url": "/"
     }
   ]
 }

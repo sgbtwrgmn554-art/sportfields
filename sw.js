@@ -1,8 +1,12 @@
-const CACHE = 'voice-tasks-v2';
-const FILES = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'dad-fit-v5';
+const FILES = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(FILES))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -14,79 +18,62 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // API calls – always network
-  if (e.request.url.includes('/api/')) {
-    e.respondWith(fetch(e.request));
-    return;
-  }
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
-});
-
-// ── Push handler ──────────────────────────────────────────────────
-self.addEventListener('push', e => {
-  let data = {
-    title: '🎙️ תזכורת משימה',
-    body: 'יש לך משימה ממתינה',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: 'task',
-    data: { url: self.registration.scope },
-  };
-
-  if (e.data) {
-    try { Object.assign(data, e.data.json()); }
-    catch { data.body = e.data.text() || data.body; }
-  }
-
-  // Priority-based vibration patterns
-  const VIBRATE = {
-    1: [300, 100, 300, 100, 300], // Critical
-    2: [200, 100, 200],           // Important
-    3: [150, 100, 150],           // Normal
-    4: [100],                     // Low
-    5: [100],                     // None
-  };
-  const vib = VIBRATE[data.data?.priority] || VIBRATE[3];
-
-  e.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon,
-      badge: data.badge,
-      tag: data.tag,
-      dir: 'rtl',
-      lang: 'he',
-      requireInteraction: data.data?.priority <= 2,
-      vibrate: vib,
-      actions: [
-        { action: 'complete', title: '✅ הושלם' },
-        { action: 'snooze',   title: '⏰ דחה שעה' },
-      ],
-      data: data.data || { url: self.registration.scope },
-    })
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
 
-// ── Notification click ─────────────────────────────────────────────
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const { taskId, userId, url } = e.notification.data || {};
-  const targetUrl = url || self.registration.scope;
-
-  const broadcastAction = (type) => {
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(ws => ws.forEach(w => w.postMessage({ type, taskId, userId })));
+// ── Push notification handler ──────────────────────────────────────
+self.addEventListener('push', e => {
+  let data = {
+    title: '💪 כושר',
+    body: 'זמן לאמן! 5 דקות זה מספיק 🔥',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: 'reminder',
   };
 
-  if (e.action === 'complete') { broadcastAction('TASK_COMPLETE'); return; }
-  if (e.action === 'snooze')   { broadcastAction('TASK_SNOOZE');   return; }
+  if (e.data) {
+    try {
+      const parsed = e.data.json();
+      data = { ...data, ...parsed };
+    } catch (_) {
+      data.body = e.data.text() || data.body;
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    tag: data.tag,
+    dir: 'rtl',
+    lang: 'he',
+    requireInteraction: false,
+    data: { url: self.registration.scope },
+  };
+
+  e.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// ── Notification click handler ─────────────────────────────────────
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+
+  const targetUrl = (e.notification.data && e.notification.data.url) || self.registration.scope;
 
   e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
-      for (const w of ws) {
-        if ('focus' in w) { w.focus(); w.postMessage({ type: 'OPEN_TASK', taskId }); return; }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // If the app is already open, focus it
+      for (const client of windowClients) {
+        if (client.url === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
       }
-      if (clients.openWindow) return clients.openWindow(targetUrl);
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });
