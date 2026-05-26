@@ -1,4 +1,4 @@
-const CACHE = 'dad-fit-v2';
+const CACHE = 'dad-fit-v3';
 const FILES = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
