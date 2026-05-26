@@ -138,12 +138,24 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .snum{font-size:20px;font-weight:700;line-height:1;letter-spacing:-.5px}
 .slbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
 
-.water-row{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap}
-.wbtn{width:32px;height:54px;border-radius:6px 6px 12px 12px;border:1.5px solid var(--border2);background:transparent;font-size:20px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;transition:.25s;position:relative;overflow:hidden}
-.wbtn::before{content:'';position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(180deg,rgba(10,132,255,.5),rgba(10,132,255,.85));transition:.3s cubic-bezier(.34,1.56,.64,1);border-radius:0 0 10px 10px}
-.wbtn.on{border-color:var(--blue)}
-.wbtn.on::before{height:65%}
-.wbtn.on::after{content:'💧';position:absolute;top:4px;font-size:14px}
+/* ── Water Glass ── */
+.water-glass-outer{position:relative;width:100%;height:110px;cursor:pointer;user-select:none}
+.water-glass{position:relative;width:100%;height:100%;border-radius:12px 12px 36px 36px;border:1.5px solid rgba(150,210,255,.18);background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.01) 100%);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.2),0 8px 32px rgba(10,132,255,.08)}
+.water-fill{position:absolute;bottom:0;left:0;right:0;transition:height .6s cubic-bezier(.34,1.2,.64,1);background:linear-gradient(180deg,rgba(10,132,255,.55) 0%,rgba(10,132,255,.82) 60%,rgba(0,90,200,.9) 100%)}
+.water-wave-wrap{position:absolute;top:-18px;left:-5%;width:110%;pointer-events:none}
+.water-wave-wrap svg{width:100%;display:block}
+@keyframes waveMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.wave-anim{animation:waveMove 3s linear infinite}
+.wave-anim2{animation:waveMove 4.5s linear infinite reverse;opacity:.5}
+.water-shine{position:absolute;top:8px;left:8%;width:18%;height:35%;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);pointer-events:none}
+.water-shine2{position:absolute;top:14px;left:30%;width:8%;height:20%;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
+.water-tap-zones{position:absolute;inset:0;display:flex}
+.water-zone{flex:1;height:100%}
+.water-cup-marks{position:absolute;top:0;bottom:0;right:10px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none}
+.water-cup-mark{width:6px;height:1px;background:rgba(255,255,255,.15);border-radius:1px}
+body.light-mode .water-glass{border-color:rgba(10,132,255,.2);background:linear-gradient(180deg,rgba(10,132,255,.04),rgba(255,255,255,.6));box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 4px 16px rgba(10,132,255,.1)}
+body.light-mode .water-fill{background:linear-gradient(180deg,rgba(10,132,255,.4),rgba(10,132,255,.7))}
+body.light-mode .water-shine{background:linear-gradient(135deg,rgba(255,255,255,.6),transparent)}
 
 .navbar{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 20px;z-index:100;overflow-x:auto}
 .nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;font-family:inherit;padding:3px 6px;white-space:nowrap;min-width:46px;transition:.2s}
@@ -576,20 +588,48 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
     </div>
   </div>
 
-  <!-- מעקב מים — עיצוב חדש -->
+  <!-- מעקב מים — כוס זכוכית -->
   <div style="margin:12px 16px 0">
-    <div class="card" style="margin:0;overflow:hidden">
+    <div class="card" style="margin:0;padding:14px 16px 16px">
+      <!-- כותרת -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--blue)">💧 מים יומיים</div>
-        <div style="font-size:12px;color:var(--muted)" id="water-lbl"></div>
+        <div style="font-size:15px;font-weight:900;color:var(--blue);display:flex;align-items:center;gap:6px">
+          💧 <span style="background:linear-gradient(90deg,#0a84ff,#5ac8fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">מים יומיים</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);font-weight:600" id="water-lbl"></div>
       </div>
-      <!-- כוסות ויזואליות — עמודות מים -->
-      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px" id="water-row"></div>
-      <!-- פס התקדמות -->
-      <div style="height:6px;background:var(--border);border-radius:10px;overflow:hidden">
-        <div id="water-prog-bar" style="height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:10px;transition:.4s;width:0%"></div>
+
+      <!-- כוס זכוכית -->
+      <div class="water-glass-outer" id="water-glass-outer">
+        <div class="water-glass">
+          <!-- מילוי מים -->
+          <div class="water-fill" id="water-fill" style="height:0%">
+            <!-- גלים -->
+            <div class="water-wave-wrap">
+              <svg viewBox="0 0 200 20" preserveAspectRatio="none" style="height:20px">
+                <g class="wave-anim">
+                  <path d="M0 10 C20 0,40 20,60 10 C80 0,100 20,120 10 C140 0,160 20,180 10 C200 0,220 20,240 10 C260 0,280 20,300 10 C320 0,340 20,360 10 L360 20 L0 20Z" fill="rgba(255,255,255,0.25)"/>
+                </g>
+                <g class="wave-anim2">
+                  <path d="M0 12 C25 2,50 22,75 12 C100 2,125 22,150 12 C175 2,200 22,225 12 C250 2,275 22,300 12 C325 2,350 22,375 12 L375 20 L0 20Z" fill="rgba(255,255,255,0.15)"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <!-- ברק זכוכית -->
+          <div class="water-shine"></div>
+          <div class="water-shine2"></div>
+          <!-- סימוני כוסות בצד -->
+          <div class="water-cup-marks" id="water-cup-marks"></div>
+          <!-- אזורי לחיצה (8 שכבות) -->
+          <div class="water-tap-zones" id="water-tap-zones"></div>
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center" id="water-pct-lbl"></div>
+
+      <!-- טקסט מתחת -->
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center" id="water-pct-lbl"></div>
+      <!-- נקודות כוסות -->
+      <div style="display:flex;justify-content:center;gap:5px;margin-top:8px" id="water-dots"></div>
     </div>
   </div>
 
@@ -1381,11 +1421,22 @@ function renderHome(){
   document.getElementById('s-prot').textContent=getTotalProt()+'g';
   document.getElementById('s-water').textContent=S.waterCups+'/8';
   document.getElementById('s-steps').textContent=S.steps.toLocaleString();
-  const wr=document.getElementById('water-row');wr.innerHTML='';
-  for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbtn'+(i<S.waterCups?' on':'');b.setAttribute('title','כוס '+(i+1));b.onclick=()=>{S.waterCups=i<S.waterCups?i:i+1;save();if(S.waterCups>=8)showEncourageCard('water');renderAll();};wr.appendChild(b);}
+  // ── כוס מים ──
   document.getElementById('water-lbl').textContent=S.waterCups>=8?'🎉 כל הכבוד!':'עוד '+(8-S.waterCups)+' כוסות';
-  const wpb=document.getElementById('water-prog-bar');if(wpb)wpb.style.width=(S.waterCups/8*100)+'%';
-  const wpl=document.getElementById('water-pct-lbl');if(wpl)wpl.textContent=S.waterCups>=8?'✅ יעד יומי הושג!':S.waterCups===0?'לא שתית עדיין — קדימה! 💧':S.waterCups+' מתוך 8 כוסות ('+Math.round(S.waterCups/8*100)+'%)';
+  // מילוי הכוס
+  const wf=document.getElementById('water-fill');
+  if(wf)wf.style.height=Math.max(0,S.waterCups/8*100)+'%';
+  // נקודות כוסות בתחתית
+  const wdots=document.getElementById('water-dots');
+  if(wdots){wdots.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.style.cssText='width:'+(i<S.waterCups?'14px':'7px')+';height:7px;border-radius:4px;background:'+(i<S.waterCups?'var(--blue)':'var(--border2)')+';transition:.3s';wdots.appendChild(d);}}
+  // סימוני כוסות בצד הכוס
+  const marks=document.getElementById('water-cup-marks');
+  if(marks){marks.innerHTML='';for(let i=0;i<7;i++){const m=document.createElement('div');m.className='water-cup-mark';marks.appendChild(m);}}
+  // אזורי לחיצה — 8 שכבות אופקיות, מלמטה למעלה
+  const tz=document.getElementById('water-tap-zones');
+  if(tz){tz.innerHTML='';tz.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column-reverse';for(let i=0;i<8;i++){const z=document.createElement('div');z.style.cssText='flex:1;width:100%';z.onclick=(e)=>{e.stopPropagation();const newCups=i+1;S.waterCups=S.waterCups===newCups?i:newCups;save();swMsg({type:'UPDATE_WATER',cups:S.waterCups});if(S.waterCups>=8)showEncourageCard('water');renderAll();};tz.appendChild(z);}}
+  const wpl=document.getElementById('water-pct-lbl');
+  if(wpl)wpl.textContent=S.waterCups>=8?'✅ יעד יומי הושג! כל הכבוד 🎉':S.waterCups===0?'לא שתית עדיין — לחץ על הכוס 💧':'שתית '+S.waterCups+' מתוך 8 כוסות · '+Math.round(S.waterCups/8*100)+'%';
   document.getElementById('daily-tip').textContent=TIPS[S.tipIdx%TIPS.length];
 }
 
