@@ -457,6 +457,60 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 select.inp option{background:#1c1c1e}
 input[type="datetime-local"].inp::-webkit-calendar-picker-indicator{filter:invert(.6)}
 input[type="time"].time-inp::-webkit-calendar-picker-indicator{display:none}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT MODE
+══════════════════════════════════════════════════════════════ */
+body.light-mode{
+  --bg:#f2f2f7;--bg2:#fff;--card:#fff;--card2:#f2f2f7;--card3:#e5e5ea;
+  --border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);
+  --text:#1c1c1e;--text2:rgba(44,44,46,.78);--muted:rgba(44,44,46,.45);
+}
+body.light-mode .hdr,body.light-mode .nav{background:rgba(242,242,247,.96)}
+body.light-mode .sheet{background:#f2f2f7}
+body.light-mode .overlay{background:rgba(0,0,0,.4)}
+body.light-mode .task-card{background:#fff}
+body.light-mode .search-inp{background:#fff;color:var(--text)}
+body.light-mode .mic-btn{background:linear-gradient(145deg,#e5e7ef,#d0d5e2)}
+body.light-mode .transcript-ta{background:#f7f7f9;color:var(--text)}
+body.light-mode .onboard{background:#f2f2f7}
+body.light-mode .ob-step{background:#fff}
+body.light-mode select.inp option{background:#fff}
+body.light-mode .sort-sel{background:#fff;color:var(--text)}
+body.light-mode .sort-sel option{background:#fff}
+body.light-mode input[type="datetime-local"].inp::-webkit-calendar-picker-indicator{filter:none}
+body.light-mode input[type="time"].time-inp{color:var(--text)}
+body.light-mode .p-btn{background:#fff;color:var(--muted)}
+body.light-mode .cat-btn{background:#fff;color:var(--muted)}
+body.light-mode .filter-chip{background:transparent}
+body.light-mode .task-wrap .task-actions-bg .task-action-left{background:var(--green)}
+body.light-mode .settings-group{background:#fff}
+
+/* ══════════════════════════════════════════════════════════════
+   MORNING BRIEFING CARD
+══════════════════════════════════════════════════════════════ */
+.brief-card{background:linear-gradient(135deg,rgba(10,132,255,.08),rgba(48,209,88,.06));
+  border:1px solid rgba(10,132,255,.2);border-radius:var(--r);
+  margin:8px 16px 4px;padding:14px 16px;overflow:hidden;transition:.3s}
+.brief-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.brief-greeting{font-size:15px;font-weight:800;color:var(--text)}
+.brief-dismiss{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 2px;line-height:1}
+.brief-items{display:flex;flex-direction:column;gap:6px}
+.brief-item{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:7px}
+.brief-item.urgent{color:var(--red);font-weight:700}
+.brief-item.overdue{color:var(--orange);font-weight:700}
+.brief-item.ok{color:var(--green);font-weight:700}
+.brief-top{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px;
+  background:var(--card);border-radius:var(--r3);cursor:pointer;
+  font-size:14px;font-weight:700;color:var(--text);border:1px solid var(--border)}
+.brief-top:active{opacity:.7}
+
+/* ══════════════════════════════════════════════════════════════
+   SHARE ROW (WhatsApp / GCal)
+══════════════════════════════════════════════════════════════ */
+.share-row{display:flex;gap:8px}
+.share-row .btn{font-size:13px;padding:10px 12px}
+.divider{height:1px;background:var(--border);margin:6px 0}
 </style>
 </head>
 <body>
@@ -515,6 +569,15 @@ input[type="time"].time-inp::-webkit-calendar-picker-indicator{display:none}
           <div class="qr-title">הקלט משימה חדשה</div>
           <div class="qr-sub">לחץ ואמור את המשימה שלך</div>
         </div>
+      </div>
+
+      <!-- Morning Briefing Card -->
+      <div class="brief-card" id="briefing-card" style="display:none">
+        <div class="brief-header">
+          <span class="brief-greeting" id="brief-greeting">🌅 בוקר טוב</span>
+          <button class="brief-dismiss" onclick="document.getElementById('briefing-card').style.display='none'" aria-label="סגור">×</button>
+        </div>
+        <div class="brief-items" id="brief-items"></div>
       </div>
 
       <!-- Urgent section -->
@@ -774,6 +837,21 @@ input[type="time"].time-inp::-webkit-calendar-picker-indicator{display:none}
           </div>
         </div>
 
+        <!-- Appearance -->
+        <div class="section-hdr"><span>🎨 מראה</span></div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="sr-icon" id="theme-icon">🌙</div>
+            <div class="sr-body">
+              <div class="sr-label" id="theme-label">מצב לילה</div>
+              <div class="sr-sub">עיצוב כהה לעיניים</div>
+            </div>
+            <div class="sr-right">
+              <label class="toggle"><input type="checkbox" id="s-theme" onchange="toggleTheme()"><div class="toggle-track"></div></label>
+            </div>
+          </div>
+        </div>
+
         <!-- Notifications -->
         <div class="section-hdr"><span>🔔 התראות</span></div>
         <div class="settings-group">
@@ -806,8 +884,9 @@ input[type="time"].time-inp::-webkit-calendar-picker-indicator{display:none}
         </div>
 
         <!-- Save button -->
-        <div style="padding:8px 16px">
+        <div style="padding:8px 16px;display:flex;flex-direction:column;gap:10px">
           <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 שמור הגדרות</button>
+          <button class="btn btn-ghost btn-full" onclick="exportTasks()">📤 ייצוא כל המשימות</button>
         </div>
 
         <!-- iOS install tip -->
@@ -951,6 +1030,9 @@ const S = {
    INIT
 ════════════════════════════════════════════════════════════════ */
 async function init() {
+  // Apply saved theme immediately (before anything renders)
+  initTheme();
+
   // User ID
   let uid = localStorage.getItem('vt_uid');
   if (!uid) { uid = genId(); localStorage.setItem('vt_uid', uid); }
@@ -1426,6 +1508,9 @@ function renderDashboard() {
   document.getElementById('s-today').textContent = allToday.length;
   document.getElementById('s-wait').textContent = allWait.length;
   document.getElementById('s-done').textContent = allDone.length;
+
+  // Render morning briefing
+  renderBriefing();
 }
 
 function updateSummary() { renderDashboard(); }
@@ -1627,10 +1712,17 @@ function openDetail(taskId) {
     <button class="btn ${isDone?'btn-ghost':'btn-accent'} btn-full" onclick="updateTask('${taskId}',{status:'${isDone?'active':'completed'}'});closeSheet()">
       ${isDone ? '↩️ פתח מחדש' : '✅ סמן כהושלם'}
     </button>
-    <button class="btn ${isHold?'btn-ghost':'btn-ghost'} btn-full" onclick="updateTask('${taskId}',{status:'${isHold?'active':'on_hold}'});closeSheet()">
+    <button class="btn btn-ghost btn-full" onclick="updateTask('${taskId}',{status:'${isHold?'active':'on_hold}'});closeSheet()">
       ${isHold ? '▶️ חזור לפעיל' : '⏳ העבר להמתנה'}
     </button>
     <button class="btn btn-ghost btn-full" onclick="snoozeTask('${taskId}',60);closeSheet()">⏰ דחה שעה</button>
+    <div class="divider"></div>
+    <div class="share-row">
+      <button class="btn btn-ghost" style="flex:1" onclick="shareWhatsApp('${taskId}')">💬 WhatsApp</button>
+      ${task.reminderTime ? `<button class="btn btn-ghost" style="flex:1" onclick="addToGCal('${taskId}')">📅 יומן</button>` : ''}
+      <button class="btn btn-ghost" style="flex:1" onclick="copyTask('${taskId}')">📋 העתק</button>
+    </div>
+    <div class="divider"></div>
     <button class="btn btn-red btn-full" onclick="deleteTask('${taskId}');closeSheet()">🗑️ מחק משימה</button>
   `;
 
@@ -1725,7 +1817,13 @@ function loadSettingsUI() {
   document.getElementById('s-end').value = S.profile.activeEnd || '19:00';
   document.getElementById('s-priority').value = S.profile.defaultPriority || 3;
   document.getElementById('s-notif').checked = !!S.pushSub;
-  document.getElementById('notif-status-text').textContent = S.pushSub ? 'פעיל' : 'לא פעיל';
+  document.getElementById('notif-status-text').textContent = S.pushSub ? '✅ פעיל' : 'לא פעיל';
+
+  // Theme
+  const isLight = document.body.classList.contains('light-mode');
+  const thCb = document.getElementById('s-theme');
+  if (thCb) thCb.checked = isLight;
+  updateThemeUI(isLight);
 
   // Stats
   loadStats();
@@ -1938,6 +2036,185 @@ function toast(msg, type='') {
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   THEME — LIGHT / DARK MODE
+════════════════════════════════════════════════════════════════ */
+function initTheme() {
+  const saved = localStorage.getItem('vt_theme');
+  const isLight = saved === 'light';
+  document.body.classList.toggle('light-mode', isLight);
+  const cb = document.getElementById('s-theme');
+  if (cb) cb.checked = isLight;
+  updateThemeUI(isLight);
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('vt_theme', isLight ? 'light' : 'dark');
+  const cb = document.getElementById('s-theme');
+  if (cb) cb.checked = isLight;
+  updateThemeUI(isLight);
+  // Fix select backgrounds for light mode
+  document.querySelectorAll('select.inp option, .sort-sel option').forEach(o => {
+    o.style.background = isLight ? '#fff' : '#1c1c1e';
+  });
+}
+
+function updateThemeUI(isLight) {
+  const icon = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  if (icon)  icon.textContent  = isLight ? '☀️' : '🌙';
+  if (label) label.textContent = isLight ? 'מצב יום' : 'מצב לילה';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   WHATSAPP SHARE
+════════════════════════════════════════════════════════════════ */
+function shareWhatsApp(taskId) {
+  const t = S.tasks.find(x => x.taskId === taskId);
+  if (!t) return;
+  const { label } = fmtTime(t.reminderTime);
+  const p   = P_LABELS[t.priority] || '';
+  const cat = CAT_LABEL[t.category] || t.category || '';
+  let msg = `📋 *${t.cleanTitle}*`;
+  if (t.reminderTime) msg += `\n⏰ ${label}`;
+  msg += `\n${p} | ${cat}`;
+  if (t.waitingFor) msg += `\n⏳ ממתין ל${t.waitingFor}`;
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  closeSheet();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   GOOGLE CALENDAR
+════════════════════════════════════════════════════════════════ */
+function addToGCal(taskId) {
+  const t = S.tasks.find(x => x.taskId === taskId);
+  if (!t) return;
+  if (!t.reminderTime) { toast('אין תאריך למשימה', 'err'); return; }
+  const start = new Date(t.reminderTime);
+  const end   = new Date(start.getTime() + 3600000); // +1 hour
+  const fmt   = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const params = new URLSearchParams({
+    action:  'TEMPLATE',
+    text:    t.cleanTitle,
+    dates:   `${fmt(start)}/${fmt(end)}`,
+    details: t.rawText || t.cleanTitle,
+  });
+  window.open(`https://calendar.google.com/calendar/render?${params}`, '_blank');
+  closeSheet();
+  toast('📅 נפתח יומן Google', 'ok');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   COPY TASK
+════════════════════════════════════════════════════════════════ */
+function copyTask(taskId) {
+  const t = S.tasks.find(x => x.taskId === taskId);
+  if (!t) return;
+  const { label } = fmtTime(t.reminderTime);
+  const lines = [
+    `📋 ${t.cleanTitle}`,
+    t.reminderTime ? `⏰ ${label}` : null,
+    `${P_LABELS[t.priority] || ''} | ${CAT_LABEL[t.category] || t.category}`,
+    t.waitingFor ? `⏳ ממתין ל${t.waitingFor}` : null,
+  ].filter(Boolean);
+  const text = lines.join('\n');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => { toast('📋 הועתק!', 'ok'); closeSheet(); });
+  } else {
+    const el = Object.assign(document.createElement('textarea'), { value: text });
+    document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+    toast('📋 הועתק!', 'ok'); closeSheet();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EXPORT ALL TASKS
+════════════════════════════════════════════════════════════════ */
+function exportTasks() {
+  const tasks = S.tasks.filter(t => t.status !== 'cancelled');
+  if (!tasks.length) { toast('אין משימות לייצוא', 'err'); return; }
+  const lines = tasks.map(t => {
+    const { label } = fmtTime(t.reminderTime);
+    const st  = STATUS_LABEL[t.status] || t.status;
+    const p   = P_LABELS[t.priority] || '';
+    const cat = CAT_LABEL[t.category] || t.category || '';
+    let line = `[${st}] ${p} — ${t.cleanTitle}`;
+    if (t.reminderTime) line += ` | ⏰ ${label}`;
+    if (t.waitingFor)   line += ` | ⏳ ${t.waitingFor}`;
+    if (cat)            line += ` | ${cat}`;
+    return line;
+  });
+  const header = `📋 המשימות שלי — ${new Date().toLocaleDateString('he-IL', {timeZone:'Asia/Jerusalem'})}\n${'─'.repeat(40)}\n`;
+  const text = header + lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: 'המשימות שלי', text }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('📤 הועתק ללוח!', 'ok'));
+  } else {
+    toast('לא נתמך בדפדפן זה', 'err');
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MORNING BRIEFING (Dashboard Card)
+════════════════════════════════════════════════════════════════ */
+function renderBriefing() {
+  const card = document.getElementById('briefing-card');
+  if (!card) return;
+
+  // Get Israel time
+  const israelStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem', hour12: false });
+  const israelNow = new Date(israelStr);
+  const h = israelNow.getHours();
+
+  // Show only during active hours
+  if (h < 7 || h >= 21) { card.style.display = 'none'; return; }
+
+  const active = S.tasks.filter(t => t.status === 'active');
+  const onHold = S.tasks.filter(t => t.status === 'on_hold');
+  if (!active.length && !onHold.length) { card.style.display = 'none'; return; }
+
+  // Today boundaries (Israel)
+  const todayStart = new Date(israelStr); todayStart.setHours(0, 0, 0, 0);
+  const todayEnd   = new Date(todayStart.getTime() + 86400000);
+  const nowMs      = Date.now();
+
+  const urgent  = active.filter(t => t.priority <= 2);
+  const overdue = active.filter(t => t.reminderTime && new Date(t.reminderTime) < new Date());
+  const todayTasks = active.filter(t => {
+    if (!t.reminderTime) return false;
+    const rt = new Date(t.reminderTime).getTime();
+    return rt >= todayStart.getTime() && rt < todayEnd.getTime() && rt >= nowMs;
+  });
+
+  // Time-based greeting
+  const greeting = h < 12 ? `🌅 בוקר טוב${S.profile.name ? ', ' + S.profile.name : ''}!`
+                 : h < 17 ? `☀️ צהריים טובים${S.profile.name ? ', ' + S.profile.name : ''}!`
+                 :           `🌆 ערב טוב${S.profile.name ? ', ' + S.profile.name : ''}!`;
+
+  let items = '';
+  if (overdue.length)    items += `<div class="brief-item overdue">⚠️ ${overdue.length} משימות שחלף מועדן</div>`;
+  if (urgent.length)     items += `<div class="brief-item urgent">🔴 ${urgent.length} משימות דחופות</div>`;
+  if (todayTasks.length) items += `<div class="brief-item">📅 ${todayTasks.length} משימות להיום</div>`;
+  if (onHold.length)     items += `<div class="brief-item">⏳ ${onHold.length} ממתין לתשובה</div>`;
+  if (!items)            items  = `<div class="brief-item ok">✅ הכל בסדר — אין משימות דחופות!</div>`;
+
+  // Show most urgent task
+  const top = urgent[0] || overdue[0] || todayTasks[0];
+  const topHtml = top
+    ? `<div class="brief-top" onclick="openDetail('${top.taskId}')">
+        <span class="p-dot p${top.priority}-dot"></span>
+        <span style="flex:1">${escH(top.cleanTitle)}</span>
+        <span style="color:var(--muted);font-size:16px">›</span>
+       </div>` : '';
+
+  document.getElementById('brief-greeting').textContent = greeting;
+  document.getElementById('brief-items').innerHTML = items + topHtml;
+  card.style.display = 'block';
 }
 
 /* ════════════════════════════════════════════════════════════════
