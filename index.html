@@ -3,426 +3,955 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#050c1a">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="משימות קוליות">
+<meta name="apple-mobile-web-app-title" content="משימות">
 <link rel="manifest" href="manifest.json">
 <title>משימות קוליות 🎙️</title>
-<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════════════════════════════
+   RESET & VARIABLES
+══════════════════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#050c1a;
-  --bg2:#0a1428;
-  --card:#0f1e38;
-  --card2:#162544;
-  --border:#1e3050;
-  --accent:#00d4aa;
-  --accent2:#00b894;
-  --accent-glow:rgba(0,212,170,.18);
-  --blue:#0088ff;
-  --blue-glow:rgba(0,136,255,.15);
-  --red:#ff4757;
-  --yellow:#ffd32a;
-  --text:#f0f4ff;
-  --text2:rgba(200,215,255,.75);
-  --muted:rgba(200,215,255,.4);
-  --r:16px;
-  --r2:12px;
+  /* Backgrounds */
+  --bg:#000000;--bg2:#0d0d0f;--card:#1c1c1e;--card2:#2c2c2e;--card3:#3a3a3c;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  /* Text */
+  --text:#ffffff;--text2:rgba(235,235,245,.75);--muted:rgba(235,235,245,.38);
+  /* Priority colors */
+  --p1:#ff453a;--p1-bg:rgba(255,69,58,.12);--p1-border:rgba(255,69,58,.3);
+  --p2:#ff9f0a;--p2-bg:rgba(255,159,10,.12);--p2-border:rgba(255,159,10,.3);
+  --p3:#0a84ff;--p3-bg:rgba(10,132,255,.12);--p3-border:rgba(10,132,255,.3);
+  --p4:#30d158;--p4-bg:rgba(48,209,88,.12);--p4-border:rgba(48,209,88,.3);
+  --p5:#8e8e93;--p5-bg:rgba(142,142,147,.1);--p5-border:rgba(142,142,147,.2);
+  /* System colors */
+  --green:#30d158;--red:#ff453a;--orange:#ff9f0a;--blue:#0a84ff;
+  --purple:#bf5af2;--cyan:#5ac8fa;--yellow:#ffd60a;
+  /* UI */
+  --r:16px;--r2:12px;--r3:10px;
+  /* Safe areas */
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Assistant',system-ui,-apple-system,sans-serif;overflow-x:hidden}
 
-/* ── Layout ── */
-#app{display:flex;flex-direction:column;height:100dvh;height:100vh;max-width:480px;margin:0 auto}
-.header{
-  padding:env(safe-area-inset-top,16px) 20px 14px;
-  padding-top:calc(env(safe-area-inset-top,0px) + 16px);
-  background:rgba(5,12,26,.9);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:'Assistant',-apple-system,system-ui,sans-serif;
+  overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════════════ */
+#app{display:flex;flex-direction:column;height:100dvh;height:100vh;max-width:480px;margin:0 auto;position:relative}
+
+/* Header */
+.hdr{
+  padding:calc(var(--sat) + 12px) 16px 12px;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;
+  position:relative;z-index:10;flex-shrink:0;
 }
-.header-title{display:flex;align-items:center;gap:10px}
-.header-title .logo{font-size:26px;line-height:1}
-.header-title h1{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.header-btn{background:var(--card);border:1px solid var(--border);color:var(--text2);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:.2s}
-.header-btn:active{transform:scale(.92);background:var(--card2)}
-.header-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.hdr-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.hdr-logo{font-size:24px;line-height:1;flex-shrink:0}
+.hdr-text{min-width:0}
+.hdr-title{font-size:18px;font-weight:800;letter-spacing:-.3px;line-height:1}
+.hdr-sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:1px}
+.hdr-actions{display:flex;gap:8px;flex-shrink:0}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:.2s;color:var(--text2)}
+.icon-btn:active{transform:scale(.9);background:var(--card2)}
+.icon-btn.on{border-color:var(--green);color:var(--green);background:rgba(48,209,88,.12)}
 
-.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 80px}
+/* Search bar */
+.search-bar{padding:0 16px 10px;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0}
+.search-inp{
+  width:100%;padding:10px 14px 10px 36px;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--r2);color:var(--text);
+  font-family:inherit;font-size:15px;outline:none;transition:.2s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(235,235,245,.38)' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  direction:rtl;
+}
+.search-inp:focus{border-color:var(--blue);background-color:var(--card)}
+.search-inp::placeholder{color:var(--muted)}
 
-/* ── Bottom Nav ── */
+/* Content */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.content::-webkit-scrollbar{display:none}
+
+/* Bottom nav */
 .nav{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;
-  background:rgba(5,12,26,.95);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
+  flex-shrink:0;display:flex;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);
-  display:flex;
-  padding-bottom:env(safe-area-inset-bottom,0);
-  z-index:100;
+  padding-bottom:var(--sab);
+  position:relative;z-index:10;
 }
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;transition:.2s;border:none;background:none}
-.nav-btn .nav-icon{font-size:22px;line-height:1}
-.nav-btn.active{color:var(--accent)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 0;border:none;background:none;color:var(--muted);
+  font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:.3px;text-transform:uppercase}
+.nav-btn .nav-icon{font-size:21px;line-height:1;transition:.15s}
+.nav-btn.active{color:var(--blue)}
+.nav-btn.active .nav-icon{transform:scale(1.1)}
 .nav-btn:active{opacity:.7}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;
+  background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:800;
+  min-width:16px;height:16px;padding:0 4px;margin-top:-2px}
 
-/* ── Cards ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin:12px 16px}
-.card-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+/* ══════════════════════════════════════════════════════════════
+   COMMON COMPONENTS
+══════════════════════════════════════════════════════════════ */
+.section-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 16px 8px;font-size:13px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;
+}
+.section-count{font-size:12px;font-weight:700;color:var(--muted);
+  background:var(--card2);border-radius:8px;padding:2px 7px}
 
-/* ── Record tab ── */
-.record-section{padding:24px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin:0 16px 10px}
+.card-inner{padding:14px 16px}
 
-/* Mic button */
-.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 0}
-.mic-btn{
-  width:120px;height:120px;border-radius:50%;
-  background:linear-gradient(135deg,#0a2040,#0f2a50);
-  border:2px solid var(--border);
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:44px;
-  transition:.25s;
-  position:relative;
-  box-shadow:0 0 0 0 var(--accent-glow);
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:12px 18px;border-radius:var(--r2);font-family:inherit;font-size:15px;
+  font-weight:700;border:none;cursor:pointer;transition:.18s;letter-spacing:.2px;
+  -webkit-user-select:none;user-select:none}
+.btn:active{transform:scale(.95);opacity:.82}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-accent{background:var(--green);color:#000}
+.btn-full{width:100%}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-red{background:rgba(255,69,58,.15);color:var(--red);border:1px solid var(--p1-border)}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:var(--r3)}
+.btn:disabled{opacity:.35;pointer-events:none}
+
+/* Input */
+.inp{width:100%;padding:13px 14px;background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--text);font-family:inherit;font-size:16px;
+  outline:none;transition:.2s}
+.inp:focus{border-color:var(--blue);background:var(--card)}
+.inp::placeholder{color:var(--muted)}
+.inp-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:6px}
+.inp-group{margin-bottom:14px}
+
+/* ══════════════════════════════════════════════════════════════
+   PRIORITY SYSTEM
+══════════════════════════════════════════════════════════════ */
+.p-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.p1-dot{background:var(--p1)}
+.p2-dot{background:var(--p2)}
+.p3-dot{background:var(--p3)}
+.p4-dot{background:var(--p4)}
+.p5-dot{background:var(--p5)}
+
+.p-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;
+  border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px}
+.p1-pill{background:var(--p1-bg);border:1px solid var(--p1-border);color:var(--p1)}
+.p2-pill{background:var(--p2-bg);border:1px solid var(--p2-border);color:var(--p2)}
+.p3-pill{background:var(--p3-bg);border:1px solid var(--p3-border);color:var(--p3)}
+.p4-pill{background:var(--p4-bg);border:1px solid var(--p4-border);color:var(--p4)}
+.p5-pill{background:var(--p5-bg);border:1px solid var(--p5-border);color:var(--p5)}
+
+/* Priority selector */
+.p-selector{display:flex;gap:6px;flex-wrap:wrap}
+.p-btn{flex:1;min-width:52px;padding:9px 4px;border-radius:var(--r3);
+  font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;
+  border:1.5px solid var(--border2);background:var(--card2);color:var(--muted);text-align:center}
+.p-btn:active{transform:scale(.93)}
+.p-btn[data-p="1"].sel{border-color:var(--p1);background:var(--p1-bg);color:var(--p1)}
+.p-btn[data-p="2"].sel{border-color:var(--p2);background:var(--p2-bg);color:var(--p2)}
+.p-btn[data-p="3"].sel{border-color:var(--p3);background:var(--p3-bg);color:var(--p3)}
+.p-btn[data-p="4"].sel{border-color:var(--p4);background:var(--p4-bg);color:var(--p4)}
+.p-btn[data-p="5"].sel{border-color:var(--p5);background:var(--p5-bg);color:var(--p5)}
+
+/* ══════════════════════════════════════════════════════════════
+   CATEGORY SYSTEM
+══════════════════════════════════════════════════════════════ */
+.cat-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;
+  border-radius:20px;font-size:11px;font-weight:700;background:var(--card2);
+  border:1px solid var(--border2);color:var(--muted)}
+.cat-work{background:rgba(10,132,255,.1);border-color:rgba(10,132,255,.3);color:var(--blue)}
+.cat-personal{background:rgba(191,90,242,.1);border-color:rgba(191,90,242,.3);color:var(--purple)}
+.cat-clients{background:rgba(255,159,10,.1);border-color:rgba(255,159,10,.3);color:var(--orange)}
+.cat-study{background:rgba(48,209,88,.1);border-color:rgba(48,209,88,.3);color:var(--green)}
+.cat-admin{background:rgba(90,200,250,.1);border-color:rgba(90,200,250,.3);color:var(--cyan)}
+
+/* Category selector */
+.cat-selector{display:flex;gap:6px;flex-wrap:wrap}
+.cat-btn{padding:8px 10px;border-radius:var(--r3);font-family:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;transition:.18s;border:1.5px solid var(--border2);background:var(--card2);color:var(--muted)}
+.cat-btn:active{transform:scale(.93)}
+.cat-btn.sel.work{border-color:var(--blue);background:rgba(10,132,255,.12);color:var(--blue)}
+.cat-btn.sel.personal{border-color:var(--purple);background:rgba(191,90,242,.12);color:var(--purple)}
+.cat-btn.sel.clients{border-color:var(--orange);background:rgba(255,159,10,.12);color:var(--orange)}
+.cat-btn.sel.study{border-color:var(--green);background:rgba(48,209,88,.12);color:var(--green)}
+.cat-btn.sel.admin{border-color:var(--cyan);background:rgba(90,200,250,.12);color:var(--cyan)}
+
+/* ══════════════════════════════════════════════════════════════
+   TASK CARD
+══════════════════════════════════════════════════════════════ */
+.task-wrap{position:relative;overflow:hidden;border-radius:var(--r);margin:0 16px 8px}
+.task-actions-bg{position:absolute;inset:0;display:flex;align-items:stretch;
+  border-radius:var(--r);overflow:hidden;pointer-events:none}
+.task-action-left{flex:1;background:var(--green);display:flex;align-items:center;justify-content:flex-end;padding-right:20px;color:#000;font-size:20px;font-weight:800;opacity:0;transition:.2s}
+.task-action-right{flex:1;background:var(--orange);display:flex;align-items:center;justify-content:flex-start;padding-left:20px;color:#000;font-size:20px;font-weight:800;opacity:0;transition:.2s}
+
+.task-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  display:flex;align-items:stretch;gap:0;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;position:relative;z-index:1;
   -webkit-user-select:none;user-select:none;
 }
-.mic-btn:active{transform:scale(.94)}
+.task-card.done{opacity:.45}
+.task-card:active{transform:scale(.98)}
+.task-card.p1-card{border-color:var(--p1-border)}
+.task-card.p2-card{border-color:var(--p2-border)}
+
+.task-stripe{width:4px;border-radius:var(--r) 0 0 var(--r);flex-shrink:0}
+.p1-stripe{background:var(--p1)}
+.p2-stripe{background:var(--p2)}
+.p3-stripe{background:var(--p3)}
+.p4-stripe{background:var(--p4)}
+.p5-stripe{background:var(--p5)}
+
+.task-body{flex:1;padding:13px 10px 13px 0;min-width:0}
+.task-title{font-size:15px;font-weight:700;line-height:1.3;color:var(--text);word-break:break-word}
+.task-done .task-title{text-decoration:line-through;color:var(--muted)}
+.task-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;align-items:center}
+.task-time-tag{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px}
+.task-time-tag.soon{color:var(--yellow)}
+.task-time-tag.overdue{color:var(--red)}
+.task-waiting{font-size:11px;color:var(--orange);display:flex;align-items:center;gap:3px}
+
+.task-right{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:13px 12px 13px 8px;gap:8px;flex-shrink:0}
+.check-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);
+  background:none;display:flex;align-items:center;justify-content:center;
+  font-size:13px;cursor:pointer;transition:.2s;flex-shrink:0}
+.check-btn.done{border-color:var(--green);background:var(--green);color:#000}
+.check-btn:active{transform:scale(.85)}
+.task-notif{font-size:10px;color:var(--muted);text-align:center;line-height:1.2}
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD TAB
+══════════════════════════════════════════════════════════════ */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px 8px}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:12px 8px;text-align:center;cursor:pointer;transition:.18s}
+.sum-card:active{transform:scale(.95)}
+.sum-num{font-size:24px;font-weight:900;line-height:1}
+.sum-label{font-size:10px;font-weight:700;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.sum-urgent .sum-num{color:var(--red)}
+.sum-today  .sum-num{color:var(--blue)}
+.sum-wait   .sum-num{color:var(--orange)}
+.sum-done   .sum-num{color:var(--green)}
+
+/* Quick rec button */
+.quick-rec{
+  margin:8px 16px 2px;padding:15px;border-radius:var(--r);
+  background:linear-gradient(135deg,rgba(10,132,255,.15),rgba(48,209,88,.1));
+  border:1px dashed rgba(10,132,255,.35);
+  display:flex;align-items:center;gap:12px;cursor:pointer;transition:.18s;
+}
+.quick-rec:active{transform:scale(.97);opacity:.8}
+.qr-icon{font-size:30px;line-height:1}
+.qr-text .qr-title{font-size:15px;font-weight:700}
+.qr-text .qr-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ══════════════════════════════════════════════════════════════
+   RECORD TAB
+══════════════════════════════════════════════════════════════ */
+.rec-wrap{padding:24px 16px}
+.mic-center{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0 20px}
+.mic-btn{
+  width:116px;height:116px;border-radius:50%;
+  background:linear-gradient(145deg,#0f1520,#1a2535);
+  border:2px solid var(--border2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:46px;
+  transition:.25s;position:relative;-webkit-user-select:none;user-select:none;
+}
+.mic-btn:active{transform:scale(.93)}
 .mic-btn.recording{
-  background:linear-gradient(135deg,#001a10,#00291a);
-  border-color:var(--accent);
-  box-shadow:0 0 0 16px var(--accent-glow),0 0 40px var(--accent-glow);
-  animation:pulse 1.4s ease-in-out infinite;
+  border-color:var(--red);
+  box-shadow:0 0 0 14px rgba(255,69,58,.08),0 0 40px rgba(255,69,58,.2);
+  animation:mic-pulse 1.5s ease-in-out infinite;
 }
 .mic-btn.processing{
   border-color:var(--blue);
-  box-shadow:0 0 0 10px var(--blue-glow);
-  animation:spin-border 1.5s linear infinite;
+  box-shadow:0 0 0 10px rgba(10,132,255,.1),0 0 30px rgba(10,132,255,.15);
 }
-@keyframes pulse{0%,100%{box-shadow:0 0 0 14px var(--accent-glow),0 0 30px var(--accent-glow)}50%{box-shadow:0 0 0 22px rgba(0,212,170,.08),0 0 50px var(--accent-glow)}}
-@keyframes spin-border{0%{border-color:var(--blue);box-shadow:0 0 0 8px var(--blue-glow)}50%{border-color:var(--accent);box-shadow:0 0 0 8px var(--accent-glow)}100%{border-color:var(--blue);box-shadow:0 0 0 8px var(--blue-glow)}}
+@keyframes mic-pulse{
+  0%,100%{box-shadow:0 0 0 12px rgba(255,69,58,.08),0 0 30px rgba(255,69,58,.15)}
+  50%{box-shadow:0 0 0 20px rgba(255,69,58,.04),0 0 50px rgba(255,69,58,.1)}
+}
+.mic-waves{position:absolute;inset:-20px;border-radius:50%;pointer-events:none}
+.mic-waves span{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--red);opacity:0;animation:mwave 2s ease-out infinite}
+.mic-waves span:nth-child(2){animation-delay:.6s}
+.mic-waves span:nth-child(3){animation-delay:1.2s}
+@keyframes mwave{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.5);opacity:0}}
 
-.mic-status{font-size:15px;font-weight:600;color:var(--text2);text-align:center}
-.mic-status.rec{color:var(--accent)}
+.mic-status{font-size:15px;font-weight:700;color:var(--text2);text-align:center}
+.mic-status.rec{color:var(--red)}
 .mic-status.proc{color:var(--blue)}
+.mic-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:4px;line-height:1.5}
 
-/* Transcript */
-.transcript-box{margin:0 16px}
-.transcript-area{
-  width:100%;min-height:90px;padding:14px;
-  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
-  color:var(--text);font-family:inherit;font-size:16px;line-height:1.5;
-  resize:none;outline:none;
-  transition:.2s;
+.transcript-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.transcript-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.transcript-ta{
+  width:100%;min-height:80px;padding:10px 12px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:var(--r3);
+  color:var(--text);font-family:inherit;font-size:15px;line-height:1.5;
+  resize:none;outline:none;transition:.2s;
 }
-.transcript-area:focus{border-color:var(--accent)}
-.transcript-area::placeholder{color:var(--muted)}
-.btn-row{display:flex;gap:10px;margin-top:10px}
-.btn{
-  flex:1;padding:13px;border-radius:var(--r2);
-  font-family:inherit;font-size:15px;font-weight:700;
-  border:none;cursor:pointer;transition:.2s;
-  -webkit-user-select:none;user-select:none;
-}
-.btn:active{transform:scale(.96);opacity:.85}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#00a080);color:#000}
-.btn-secondary{background:var(--card2);color:var(--text2);border:1px solid var(--border)}
-.btn-danger{background:rgba(255,71,87,.15);color:var(--red);border:1px solid rgba(255,71,87,.3)}
-.btn:disabled{opacity:.4;pointer-events:none}
+.transcript-ta:focus{border-color:var(--blue)}
+.transcript-ta::placeholder{color:var(--muted)}
 
-/* Task preview */
-.task-preview{margin:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
-.preview-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.inp{
-  width:100%;padding:12px 14px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);
-  color:var(--text);font-family:inherit;font-size:16px;
-  outline:none;transition:.2s;margin-bottom:12px;
-}
-.inp:focus{border-color:var(--accent)}
-input[type="datetime-local"].inp::-webkit-calendar-picker-indicator{filter:invert(.7)}
-.time-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--accent-glow);border:1px solid rgba(0,212,170,.3);
-  border-radius:20px;padding:6px 12px;font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;
-}
-.save-btn{width:100%;padding:15px;border-radius:var(--r2);background:linear-gradient(135deg,var(--accent),#00a080);color:#000;font-family:inherit;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:.2s;letter-spacing:.3px}
-.save-btn:active{transform:scale(.97)}
-.save-btn:disabled{opacity:.4;pointer-events:none}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.form-card-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px;
+  display:flex;align-items:center;gap:6px}
 
-/* ── Tasks tab ── */
-.tasks-section{padding:16px}
-.filter-row{display:flex;gap:8px;margin-bottom:16px}
-.pill{
-  padding:8px 16px;border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;
-  border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:.2s;
-}
-.pill.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
-.pill:active{transform:scale(.95)}
+/* ══════════════════════════════════════════════════════════════
+   TASKS TAB
+══════════════════════════════════════════════════════════════ */
+.filter-scroll{display:flex;gap:7px;padding:12px 16px;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0}
+.filter-scroll::-webkit-scrollbar{display:none}
+.filter-chip{white-space:nowrap;padding:7px 14px;border-radius:20px;font-family:inherit;
+  font-size:13px;font-weight:700;border:1.5px solid var(--border2);background:transparent;
+  color:var(--muted);cursor:pointer;transition:.18s;flex-shrink:0}
+.filter-chip.active{border-color:var(--blue);color:var(--blue);background:rgba(10,132,255,.1)}
+.filter-chip:active{transform:scale(.93)}
 
-/* Task card */
-.task-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:15px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;
-  transition:.25s;
-}
-.task-card.done{opacity:.5}
-.task-card.done .task-title{text-decoration:line-through;color:var(--muted)}
-.check-btn{
-  width:26px;height:26px;min-width:26px;border-radius:50%;
-  border:2px solid var(--border);background:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:12px;
-  transition:.2s;margin-top:1px;
-}
-.check-btn.done{border-color:var(--accent);background:var(--accent);color:#000}
-.task-body{flex:1;min-width:0}
-.task-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
-.task-time{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
-.task-time.soon{color:var(--yellow)}
-.task-time.overdue{color:var(--red)}
-.task-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;transition:.2s;border-radius:8px}
-.task-del:active{color:var(--red);background:rgba(255,71,87,.1)}
+/* Sort row */
+.sort-row{display:flex;align-items:center;justify-content:flex-end;padding:0 16px 8px;gap:8px}
+.sort-label{font-size:12px;color:var(--muted)}
+.sort-sel{background:var(--card2);border:1px solid var(--border);color:var(--text2);
+  font-family:inherit;font-size:12px;padding:5px 8px;border-radius:8px;outline:none}
+.sort-sel option{background:#1c1c1e}
 
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state .es-icon{font-size:52px;margin-bottom:12px}
-.empty-state p{font-size:15px;line-height:1.6}
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS TAB
+══════════════════════════════════════════════════════════════ */
+.settings-section{padding:0 0 24px}
+.settings-group{margin:0 16px 10px;background:var(--card);border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;padding:14px 16px;gap:12px;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.sr-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.sr-body{flex:1;min-width:0}
+.sr-label{font-size:15px;font-weight:600}
+.sr-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.sr-right{flex-shrink:0;color:var(--muted);font-size:14px;display:flex;align-items:center;gap:6px}
 
-/* ── Toast ── */
+/* Toggle */
+.toggle{position:relative;width:50px;height:28px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--card3);border-radius:14px;cursor:pointer;transition:.3s}
+.toggle input:checked + .toggle-track{background:var(--green)}
+.toggle-track::after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;
+  background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle input:checked + .toggle-track::after{transform:translateX(22px)}
+
+/* Time input */
+.time-inp{background:transparent;border:none;color:var(--text2);font-family:inherit;
+  font-size:15px;font-weight:600;outline:none;text-align:left;width:60px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px}
+.stat-item{background:var(--card2);border-radius:var(--r2);padding:12px;text-align:center}
+.stat-num{font-size:28px;font-weight:900;color:var(--blue)}
+.stat-lab{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ══════════════════════════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════════════════════════ */
+.empty{text-align:center;padding:50px 24px}
+.empty-icon{font-size:54px;margin-bottom:14px}
+.empty-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL / BOTTOM SHEET
+══════════════════════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  opacity:0;pointer-events:none;transition:.25s;backdrop-filter:blur(4px)}
+.overlay.show{opacity:1;pointer-events:all}
+
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:480px;z-index:201;
+  background:var(--bg2);border-radius:24px 24px 0 0;border:1px solid var(--border2);
+  border-bottom:none;transition:.3s cubic-bezier(.34,1.56,.64,1);
+  max-height:92dvh;max-height:92vh;overflow-y:auto;
+  padding-bottom:calc(var(--sab) + 16px);
+}
+.sheet.show{transform:translateX(-50%) translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--card3);border-radius:2px;margin:12px auto 18px}
+.sheet-title{font-size:18px;font-weight:800;padding:0 20px 16px;border-bottom:1px solid var(--border)}
+.sheet-body{padding:16px 20px}
+.sheet-actions{padding:16px 20px 0;display:flex;flex-direction:column;gap:10px}
+
+/* Task detail */
+.detail-field{margin-bottom:16px}
+.detail-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.detail-val{font-size:15px;color:var(--text2);line-height:1.4}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
 .toast{
-  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:12px 20px;font-size:14px;font-weight:600;color:var(--text);
-  white-space:nowrap;opacity:0;transition:.3s;z-index:999;
-  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  position:fixed;bottom:calc(var(--sab) + 90px);left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:var(--card2);border:1px solid var(--border2);border-radius:14px;
+  padding:11px 20px;font-size:14px;font-weight:600;color:var(--text);
+  opacity:0;transition:.3s;z-index:500;white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);pointer-events:none;
   max-width:90vw;white-space:normal;text-align:center;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:var(--accent);color:var(--accent)}
-.toast.error{border-color:var(--red);color:var(--red)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.warn{border-color:var(--orange);color:var(--orange)}
 
-/* ── Onboard ── */
+/* ══════════════════════════════════════════════════════════════
+   ONBOARD
+══════════════════════════════════════════════════════════════ */
 .onboard{
-  position:fixed;inset:0;background:rgba(5,12,26,.97);z-index:500;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px;text-align:center;gap:20px;
+  position:fixed;inset:0;background:var(--bg);z-index:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:calc(var(--sat) + 40px) 24px calc(var(--sab) + 24px);
+  overflow-y:auto;
 }
-.onboard h2{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.onboard p{font-size:15px;color:var(--text2);line-height:1.7;max-width:320px}
-.onboard .big-icon{font-size:72px;line-height:1}
-.steps{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px;text-align:right}
-.step{display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:13px}
-.step-num{width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--blue));color:#000;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
-.step-text{font-size:14px;color:var(--text2);line-height:1.4}
-.onboard .btn-primary{width:100%;max-width:340px;padding:16px;font-size:16px;font-family:inherit;font-weight:800;border:none;cursor:pointer;border-radius:var(--r2)}
+.ob-icon{font-size:76px;line-height:1;margin-bottom:16px;text-align:center}
+.ob-title{font-size:28px;font-weight:900;letter-spacing:-.5px;text-align:center;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ob-sub{font-size:15px;color:var(--text2);line-height:1.6;text-align:center;max-width:320px;margin-bottom:28px}
+.ob-steps{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;margin-bottom:28px}
+.ob-step{display:flex;align-items:flex-start;gap:14px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r2);padding:14px}
+.ob-num{width:28px;height:28px;min-width:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:#000;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+.ob-text{font-size:13px;color:var(--text2);line-height:1.5}
+.ob-text strong{color:var(--text)}
 
-/* ── Loader ── */
-.spinner{display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+/* ══════════════════════════════════════════════════════════════
+   SPINNER
+══════════════════════════════════════════════════════════════ */
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.25);
+  border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Scrollbar ── */
-.content::-webkit-scrollbar{display:none}
-
-/* ── Ripple wave for recording ── */
-.mic-waves{position:absolute;inset:0;border-radius:50%;pointer-events:none}
-.mic-waves span{position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:wave 2s ease-out infinite}
-.mic-waves span:nth-child(2){animation-delay:.5s}
-.mic-waves span:nth-child(3){animation-delay:1s}
-@keyframes wave{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.8);opacity:0}}
+/* select */
+select.inp option{background:#1c1c1e}
+input[type="datetime-local"].inp::-webkit-calendar-picker-indicator{filter:invert(.6)}
+input[type="time"].time-inp::-webkit-calendar-picker-indicator{display:none}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-title">
-      <div class="logo">🎙️</div>
-      <h1>משימות קוליות</h1>
+  <!-- ── Header ── -->
+  <header class="hdr" id="hdr">
+    <div class="hdr-left">
+      <div class="hdr-logo">🎙️</div>
+      <div class="hdr-text">
+        <div class="hdr-title" id="hdr-title">משימות קוליות</div>
+        <div class="hdr-sub" id="hdr-sub">טוען...</div>
+      </div>
     </div>
-    <button class="header-btn" id="notif-btn" title="התראות" aria-label="הפעל התראות">🔔</button>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="notif-btn" title="התראות" aria-label="התראות">🔕</button>
+      <button class="icon-btn" id="search-btn" title="חיפוש" aria-label="חיפוש">🔍</button>
+    </div>
   </header>
 
-  <!-- Content -->
+  <!-- Search (hidden by default) -->
+  <div class="search-bar" id="search-bar" style="display:none">
+    <input class="search-inp" id="search-inp" type="search" placeholder="חפש משימה..." autocomplete="off">
+  </div>
+
+  <!-- ── Content ── -->
   <main class="content" id="content">
 
-    <!-- ═══ Tab: Record ═══ -->
-    <div id="tab-record">
+    <!-- ═══ Dashboard Tab ═══ -->
+    <div id="tab-dash">
 
-      <!-- Mic section -->
-      <div class="mic-wrap">
-        <button class="mic-btn" id="mic-btn" aria-label="הקלטה">
-          <div class="mic-waves" id="mic-waves" style="display:none">
-            <span></span><span></span><span></span>
+      <!-- Summary row -->
+      <div class="summary-row">
+        <div class="sum-card sum-urgent" onclick="filterQuick('urgent')">
+          <div class="sum-num" id="s-urgent">0</div>
+          <div class="sum-label">דחוף</div>
+        </div>
+        <div class="sum-card sum-today" onclick="filterQuick('today')">
+          <div class="sum-num" id="s-today">0</div>
+          <div class="sum-label">היום</div>
+        </div>
+        <div class="sum-card sum-wait" onclick="filterQuick('wait')">
+          <div class="sum-num" id="s-wait">0</div>
+          <div class="sum-label">ממתין</div>
+        </div>
+        <div class="sum-card sum-done" onclick="filterQuick('done')">
+          <div class="sum-num" id="s-done">0</div>
+          <div class="sum-label">הושלם</div>
+        </div>
+      </div>
+
+      <!-- Quick record -->
+      <div class="quick-rec" onclick="switchTab('record')">
+        <div class="qr-icon">🎙️</div>
+        <div class="qr-text">
+          <div class="qr-title">הקלט משימה חדשה</div>
+          <div class="qr-sub">לחץ ואמור את המשימה שלך</div>
+        </div>
+      </div>
+
+      <!-- Urgent section -->
+      <div id="sec-urgent" style="display:none">
+        <div class="section-hdr">
+          <span>🔴 דחוף עכשיו</span>
+          <span class="section-count" id="cnt-urgent"></span>
+        </div>
+        <div id="list-urgent"></div>
+      </div>
+
+      <!-- Today section -->
+      <div id="sec-today" style="display:none">
+        <div class="section-hdr">
+          <span>📅 להיום</span>
+          <span class="section-count" id="cnt-today"></span>
+        </div>
+        <div id="list-today"></div>
+      </div>
+
+      <!-- Week section -->
+      <div id="sec-week" style="display:none">
+        <div class="section-hdr">
+          <span>📆 השבוע</span>
+          <span class="section-count" id="cnt-week"></span>
+        </div>
+        <div id="list-week"></div>
+      </div>
+
+      <!-- Waiting section -->
+      <div id="sec-wait" style="display:none">
+        <div class="section-hdr">
+          <span>⏳ ממתין לתשובה</span>
+          <span class="section-count" id="cnt-wait"></span>
+        </div>
+        <div id="list-wait"></div>
+      </div>
+
+      <!-- Future/Later -->
+      <div id="sec-later" style="display:none">
+        <div class="section-hdr">
+          <span>🗓️ עתידי</span>
+          <span class="section-count" id="cnt-later"></span>
+        </div>
+        <div id="list-later"></div>
+      </div>
+
+      <div id="dash-empty" class="empty" style="display:none">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">כל המשימות הושלמו!</div>
+        <div class="empty-sub">הקלט משימה חדשה<br>ותקבל תזכורת בזמן</div>
+      </div>
+
+    </div>
+
+    <!-- ═══ Record Tab ═══ -->
+    <div id="tab-record" style="display:none">
+      <div class="rec-wrap">
+
+        <!-- Mic area -->
+        <div class="mic-center">
+          <button class="mic-btn" id="mic-btn" aria-label="הקלטה">
+            <div class="mic-waves" id="mic-waves" style="display:none"><span></span><span></span><span></span></div>
+            <span id="mic-icon">🎙️</span>
+          </button>
+          <div>
+            <p class="mic-status" id="mic-status">לחץ להתחלת הקלטה</p>
+            <p class="mic-hint" id="mic-hint">או הקלד ידנית בתיבה למטה</p>
           </div>
-          <span id="mic-icon">🎙️</span>
-        </button>
-        <p class="mic-status" id="mic-status">לחץ להתחלת הקלטה</p>
-      </div>
-
-      <!-- Transcript -->
-      <div class="transcript-box" id="transcript-box" style="display:none">
-        <div class="card-title" style="margin:0 0 8px;padding:0">מה אמרת:</div>
-        <textarea class="transcript-area" id="transcript" placeholder="הטקסט יופיע כאן בזמן אמת..."></textarea>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="parse-btn">🤖 נתח עם AI</button>
-          <button class="btn btn-secondary" id="clear-btn">🗑️ נקה</button>
         </div>
-      </div>
 
-      <!-- Task preview -->
-      <div class="task-preview" id="task-preview" style="display:none">
-        <div class="preview-label">📋 פרטי המשימה</div>
-        <input class="inp" id="task-title-inp" type="text" placeholder="כותרת המשימה..." />
-
-        <div class="preview-label">⏰ זמן תזכורת</div>
-        <div class="time-badge" id="time-badge" style="display:none">
-          <span>⏰</span>
-          <span id="time-badge-text"></span>
+        <!-- Transcript -->
+        <div class="transcript-card" id="transcript-card">
+          <div class="transcript-label">📝 מה אמרת</div>
+          <textarea class="transcript-ta" id="transcript" rows="3"
+            placeholder="&#x27F5; לחץ על המיקרופון ואמור משימה כמו:&#10;• &quot;תזכירי לי מחר ב-10 להתקשר לדנה&quot;&#10;• &quot;דחוף לשלוח המצגת עד יום שישי&quot;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-primary" id="parse-btn" style="flex:1">🤖 נתח עם AI</button>
+            <button class="btn btn-ghost btn-sm" id="clear-btn">🗑️</button>
+          </div>
         </div>
-        <input class="inp" id="task-time-inp" type="datetime-local" />
 
-        <button class="save-btn" id="save-btn">✅ שמור משימה</button>
+        <!-- Task form (shown after parsing) -->
+        <div id="task-form" style="display:none">
+
+          <!-- Title -->
+          <div class="form-card">
+            <div class="form-card-title">📋 פרטי המשימה</div>
+            <div class="inp-group">
+              <div class="inp-label">כותרת</div>
+              <input class="inp" id="f-title" type="text" placeholder="מה צריך לעשות?" maxlength="200">
+            </div>
+            <div class="inp-group">
+              <div class="inp-label">⏰ זמן תזכורת</div>
+              <input class="inp" id="f-time" type="datetime-local">
+              <div style="font-size:11px;color:var(--muted);margin-top:5px" id="f-time-note"></div>
+            </div>
+          </div>
+
+          <!-- Priority -->
+          <div class="form-card">
+            <div class="form-card-title">🎯 עדיפות</div>
+            <div class="p-selector">
+              <button class="p-btn" data-p="1">🔴<br>קריטי</button>
+              <button class="p-btn" data-p="2">🟠<br>חשוב</button>
+              <button class="p-btn sel" data-p="3">🔵<br>רגיל</button>
+              <button class="p-btn" data-p="4">🟢<br>נמוך</button>
+              <button class="p-btn" data-p="5">⚪<br>ללא</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px" id="p-hint">תזכורת אחת ביום</div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-card">
+            <div class="form-card-title">🏷️ קטגוריה</div>
+            <div class="cat-selector">
+              <button class="cat-btn sel work" data-c="work">💼 עבודה</button>
+              <button class="cat-btn" data-c="personal">👤 אישי</button>
+              <button class="cat-btn" data-c="clients">🤝 לקוחות</button>
+              <button class="cat-btn" data-c="study">📚 לימודים</button>
+              <button class="cat-btn" data-c="admin">📋 בירוקרטיה</button>
+            </div>
+          </div>
+
+          <!-- Advanced -->
+          <div class="form-card">
+            <div class="form-card-title">⚙️ הגדרות מתקדמות</div>
+
+            <div class="inp-group">
+              <div class="inp-label">ממתין ל...</div>
+              <input class="inp" id="f-waiting" type="text" placeholder="שם אדם / גורם (אופציונלי)">
+            </div>
+
+            <div class="inp-group">
+              <div class="inp-label">תדירות תזכורות (דקות)</div>
+              <select class="inp" id="f-repeat">
+                <option value="">ברירת מחדל לפי עדיפות</option>
+                <option value="15">כל 15 דקות</option>
+                <option value="30">כל 30 דקות</option>
+                <option value="60">כל שעה</option>
+                <option value="180">כל 3 שעות</option>
+                <option value="360">כל 6 שעות</option>
+                <option value="720">כל 12 שעות</option>
+                <option value="1440">פעם ביום</option>
+                <option value="2880">כל יומיים</option>
+              </select>
+            </div>
+
+            <div class="inp-group">
+              <div class="inp-label">מקסימום תזכורות</div>
+              <input class="inp" id="f-maxnotif" type="number" min="1" max="50" placeholder="ללא מגבלה">
+            </div>
+
+            <div class="inp-group" style="margin-bottom:0">
+              <div class="inp-label">תפוגה</div>
+              <input class="inp" id="f-expires" type="datetime-local">
+            </div>
+          </div>
+
+          <!-- Save -->
+          <button class="btn btn-accent btn-full" id="save-btn" style="margin-bottom:24px">✅ שמור משימה</button>
+        </div>
+
       </div>
+    </div>
 
-      <!-- Tip -->
-      <div style="padding:12px 16px 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.5" id="tip">
-        💡 דוגמה: "תזכירי לי מחר ב-10 לקרוא את הדוח"
-      </div>
-
-    </div><!-- /tab-record -->
-
-    <!-- ═══ Tab: Tasks ═══ -->
+    <!-- ═══ Tasks Tab ═══ -->
     <div id="tab-tasks" style="display:none">
-      <div class="tasks-section">
-        <div class="filter-row">
-          <button class="pill active" data-filter="pending">⏳ ממתין</button>
-          <button class="pill" data-filter="done">✅ הושלם</button>
-          <button class="pill" data-filter="all">📋 הכל</button>
-        </div>
-        <div id="task-list">
-          <div class="empty-state">
-            <div class="es-icon">🎙️</div>
-            <p>עדיין אין משימות.<br>הקלט משימה קולית בטאב ההקלטה!</p>
+
+      <!-- Filters -->
+      <div class="filter-scroll" id="filter-scroll">
+        <button class="filter-chip active" data-f="all">📋 הכל</button>
+        <button class="filter-chip" data-f="active">🔵 פעיל</button>
+        <button class="filter-chip" data-f="on_hold">⏳ ממתין</button>
+        <button class="filter-chip" data-f="completed">✅ הושלם</button>
+        <button class="filter-chip" data-f="p1">🔴 קריטי</button>
+        <button class="filter-chip" data-f="p2">🟠 חשוב</button>
+        <button class="filter-chip" data-f="work">💼 עבודה</button>
+        <button class="filter-chip" data-f="personal">👤 אישי</button>
+        <button class="filter-chip" data-f="clients">🤝 לקוחות</button>
+      </div>
+
+      <!-- Sort -->
+      <div class="sort-row">
+        <span class="sort-label">מיון:</span>
+        <select class="sort-sel" id="sort-sel">
+          <option value="priority">עדיפות</option>
+          <option value="time">זמן</option>
+          <option value="created">נוצר</option>
+          <option value="title">שם</option>
+        </select>
+      </div>
+
+      <div id="task-list"></div>
+    </div>
+
+    <!-- ═══ Settings Tab ═══ -->
+    <div id="tab-settings" style="display:none">
+      <div class="settings-section" style="padding-top:16px">
+
+        <!-- Profile -->
+        <div class="section-hdr"><span>👤 פרופיל</span></div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="sr-icon">😊</div>
+            <div class="sr-body">
+              <div class="sr-label">השם שלי</div>
+            </div>
+            <div class="sr-right">
+              <input id="s-name" style="background:transparent;border:none;color:var(--text2);font-family:inherit;font-size:14px;text-align:left;width:110px;outline:none" placeholder="הזן שם..." maxlength="30">
+            </div>
           </div>
         </div>
+
+        <!-- Active hours -->
+        <div class="section-hdr"><span>⏰ שעות פעילות</span></div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="sr-icon">🌅</div>
+            <div class="sr-body">
+              <div class="sr-label">תחילת יום</div>
+              <div class="sr-sub">התראות לא ינתנו לפני שעה זו</div>
+            </div>
+            <div class="sr-right">
+              <input class="time-inp" type="time" id="s-start" value="08:00">
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="sr-icon">🌆</div>
+            <div class="sr-body">
+              <div class="sr-label">סיום יום</div>
+              <div class="sr-sub">התראות לא ינתנו אחרי שעה זו</div>
+            </div>
+            <div class="sr-right">
+              <input class="time-inp" type="time" id="s-end" value="19:00">
+            </div>
+          </div>
+        </div>
+
+        <!-- Defaults -->
+        <div class="section-hdr"><span>🎯 ברירות מחדל</span></div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="sr-icon">⭐</div>
+            <div class="sr-body">
+              <div class="sr-label">עדיפות ברירת מחדל</div>
+            </div>
+            <div class="sr-right">
+              <select class="sort-sel" id="s-priority" style="font-size:13px">
+                <option value="1">🔴 קריטי</option>
+                <option value="2">🟠 חשוב</option>
+                <option value="3" selected>🔵 רגיל</option>
+                <option value="4">🟢 נמוך</option>
+                <option value="5">⚪ ללא</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="section-hdr"><span>🔔 התראות</span></div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="sr-icon">📳</div>
+            <div class="sr-body">
+              <div class="sr-label">Push Notifications</div>
+              <div class="sr-sub" id="notif-status-text">לא פעיל</div>
+            </div>
+            <div class="sr-right">
+              <label class="toggle"><input type="checkbox" id="s-notif" onchange="toggleNotifFromSettings()"><div class="toggle-track"></div></label>
+            </div>
+          </div>
+          <div class="settings-row" id="ios-tip" style="display:none">
+            <div class="sr-icon">📱</div>
+            <div class="sr-body">
+              <div class="sr-label">iPhone – הוסף למסך הבית</div>
+              <div class="sr-sub">Safari → שתף → הוסף למסך הבית – לאחר מכן הפעל שוב</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="section-hdr"><span>📊 סטטיסטיקות</span></div>
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-item"><div class="stat-num" id="st-total">0</div><div class="stat-lab">סה"כ משימות</div></div>
+          <div class="stat-item"><div class="stat-num" id="st-active">0</div><div class="stat-lab">פעילות</div></div>
+          <div class="stat-item"><div class="stat-num" id="st-done">0</div><div class="stat-lab">הושלמו</div></div>
+          <div class="stat-item"><div class="stat-num" id="st-onhold">0</div><div class="stat-lab">ממתינות</div></div>
+        </div>
+
+        <!-- Save button -->
+        <div style="padding:8px 16px">
+          <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 שמור הגדרות</button>
+        </div>
+
+        <!-- iOS install tip -->
+        <div style="margin:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">📱 התקנה על iPhone</div>
+          <ol style="font-size:12px;color:var(--text2);line-height:2;padding-right:16px">
+            <li>פתח את הקישור ב-<strong>Safari</strong></li>
+            <li>לחץ על כפתור <strong>שיתוף</strong> ⬆️</li>
+            <li>בחר <strong>"הוסף למסך הבית"</strong></li>
+            <li>לחץ <strong>"הוסף"</strong></li>
+            <li>פתח מהאייקון ← הפעל התראות</li>
+          </ol>
+        </div>
+
       </div>
     </div>
 
   </main>
 
-  <!-- Bottom Nav -->
+  <!-- ── Bottom Nav ── -->
   <nav class="nav">
-    <button class="nav-btn active" id="nav-record" onclick="switchTab('record')">
-      <span class="nav-icon">🎙️</span>
-      <span>הקלטה</span>
+    <button class="nav-btn active" id="nav-dash" onclick="switchTab('dash')">
+      <span class="nav-icon">🏠</span><span>דאשבורד</span>
+    </button>
+    <button class="nav-btn" id="nav-record" onclick="switchTab('record')">
+      <span class="nav-icon">🎙️</span><span>הקלטה</span>
     </button>
     <button class="nav-btn" id="nav-tasks" onclick="switchTab('tasks')">
       <span class="nav-icon">📋</span>
-      <span id="tasks-count">משימות</span>
+      <span id="nav-tasks-label">משימות</span>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
+      <span class="nav-icon">⚙️</span><span>הגדרות</span>
     </button>
   </nav>
 
 </div><!-- /app -->
 
-<!-- Toast -->
+<!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<!-- Onboard -->
+<!-- ── Overlay ── -->
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+
+<!-- ── Task Detail Sheet ── -->
+<div class="sheet" id="detail-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="detail-title">פרטי משימה</div>
+  <div class="sheet-body" id="detail-body"></div>
+  <div class="sheet-actions" id="detail-actions"></div>
+</div>
+
+<!-- ── Onboard ── -->
 <div class="onboard" id="onboard" style="display:none">
-  <div class="big-icon">🎙️</div>
-  <h2>משימות קוליות</h2>
-  <p>הקלט משימות בקול, ה-AI יזהה מה ומתי, ותקבל תזכורת בדיוק בזמן – רק בין 08:00 ל-19:00.</p>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-text">לחץ על כפתור המיקרופון ואמור את המשימה שלך</div>
+  <div class="ob-icon">🎙️</div>
+  <h1 class="ob-title">משימות קוליות</h1>
+  <p class="ob-sub">מנהל משימות חכם — הקלט בקול, ה-AI מנתח, ותקבל תזכורות בדיוק בזמן.</p>
+  <div class="ob-steps">
+    <div class="ob-step">
+      <div class="ob-num">1</div>
+      <div class="ob-text">לחץ 🎙️ ואמור משימה בעברית — לדוגמה: <strong>"דחוף לשלוח המצגת מחר ב-9"</strong></div>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-text">ה-AI ינתח את הטקסט ויחלץ כותרת וזמן אוטומטית</div>
+    <div class="ob-step">
+      <div class="ob-num">2</div>
+      <div class="ob-text">ה-AI מנתח: <strong>כותרת, עדיפות, קטגוריה, זמן</strong> — הכל אוטומטי</div>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-text">תקבל התראה בדיוק בזמן – תמיד בין 8 בבוקר ל-7 בערב</div>
+    <div class="ob-step">
+      <div class="ob-num">3</div>
+      <div class="ob-text">תזכורות חכמות רק בין <strong>08:00 ל-19:00</strong> — לפי רמת דחיפות</div>
+    </div>
+    <div class="ob-step">
+      <div class="ob-num">4</div>
+      <div class="ob-text">הפעל <strong>"הוסף למסך הבית"</strong> ב-Safari לחוויה מלאה על iPhone</div>
     </div>
   </div>
-  <button class="btn btn-primary" onclick="closeOnboard()">🚀 בואו נתחיל!</button>
+  <button class="btn btn-accent btn-full" onclick="closeOnboard()" style="max-width:360px;padding:16px;font-size:16px">🚀 בואו נתחיל!</button>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════
-const STATE = {
+/* ════════════════════════════════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════════════════════════════════ */
+const P_LABELS  = {1:'🔴 קריטי',2:'🟠 חשוב',3:'🔵 רגיל',4:'🟢 נמוך',5:'⚪ ללא'};
+const P_HINTS   = {1:'תזכורת כל 15 דקות',2:'תזכורת כל שעה',3:'תזכורת פעם ביום',4:'תזכורת כל יומיים',5:'תזכורת אחת בלבד'};
+const P_INTS    = {1:15,2:60,3:1440,4:2880,5:null};
+const CAT_LABEL = {work:'💼 עבודה',personal:'👤 אישי',clients:'🤝 לקוחות',study:'📚 לימודים',admin:'📋 בירוקרטיה'};
+const CAT_CLS   = {work:'cat-work',personal:'cat-personal',clients:'cat-clients',study:'cat-study',admin:'cat-admin'};
+const STATUS_LABEL = {active:'פעיל',completed:'הושלם',on_hold:'ממתין',cancelled:'בוטל'};
+
+/* ════════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════════ */
+const S = {
   userId: null,
-  pushSub: null,
+  profile: { name:'', activeStart:'08:00', activeEnd:'19:00', defaultPriority:3 },
   tasks: [],
-  filter: 'pending',
-  isRecording: false,
-  isProcessing: false,
-  transcript: '',
-  parsedTask: null,
-  currentTab: 'record',
-  recognition: null,
+  pushSub: null,
+  currentTab: 'dash',
+  currentFilter: 'all',
+  currentSort: 'priority',
+  search: '',
+  rec: { active:false, transcript:'', parsed:null, recognition:null },
+  form: { priority:3, category:'work' },
+  detail: null,
 };
 
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════ */
 async function init() {
-  // Generate or restore userId
-  let uid = localStorage.getItem('vt_userId');
-  if (!uid) {
-    uid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-    localStorage.setItem('vt_userId', uid);
-  }
-  STATE.userId = uid;
+  // User ID
+  let uid = localStorage.getItem('vt_uid');
+  if (!uid) { uid = genId(); localStorage.setItem('vt_uid', uid); }
+  S.userId = uid;
 
-  // Show onboard if first time
+  // Load profile from localStorage first (fast)
+  const localProfile = localStorage.getItem('vt_profile');
+  if (localProfile) try { Object.assign(S.profile, JSON.parse(localProfile)); } catch {}
+
+  // Onboard?
   if (!localStorage.getItem('vt_onboarded')) {
     document.getElementById('onboard').style.display = 'flex';
   }
 
-  // Register service worker
+  // SW
   if ('serviceWorker' in navigator) {
     try {
       await navigator.serviceWorker.register('/sw.js');
-      navigator.serviceWorker.addEventListener('message', onSWMessage);
-    } catch(e) { console.warn('SW:', e); }
+      navigator.serviceWorker.addEventListener('message', onSWMsg);
+    } catch {}
   }
+
+  // Check existing push
+  await checkPush();
+
+  // Load profile from server
+  loadProfile();
 
   // Load tasks
   await loadTasks();
 
-  // Update notification button state
-  updateNotifBtn();
+  // Wire events
+  wireEvents();
 
-  // Wire up filter pills
-  document.querySelectorAll('.pill').forEach(p => {
-    p.addEventListener('click', () => {
-      document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
-      p.classList.add('active');
-      STATE.filter = p.dataset.filter;
-      renderTasks();
-    });
-  });
+  // Update UI
+  updateHeaderSub();
+  updateNotifUI();
 
-  // Wire up voice recording
-  setupVoice();
-
-  // Parse button
-  document.getElementById('parse-btn').addEventListener('click', parseTask);
-  document.getElementById('clear-btn').addEventListener('click', clearRecord);
-  document.getElementById('save-btn').addEventListener('click', saveTask);
-  document.getElementById('notif-btn').addEventListener('click', toggleNotifications);
-
-  // Fix datetime-local min to now (Israel time)
-  setDateTimeMin();
+  // Show iOS tip
+  if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone) {
+    document.getElementById('ios-tip').style.display = 'flex';
+  }
 }
 
 function closeOnboard() {
@@ -430,572 +959,936 @@ function closeOnboard() {
   localStorage.setItem('vt_onboarded', '1');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// TABS
-// ═══════════════════════════════════════════════════════════════
-function switchTab(tab) {
-  STATE.currentTab = tab;
-  document.getElementById('tab-record').style.display = tab === 'record' ? 'block' : 'none';
-  document.getElementById('tab-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
-  document.getElementById('nav-record').classList.toggle('active', tab === 'record');
-  document.getElementById('nav-tasks').classList.toggle('active', tab === 'tasks');
-  if (tab === 'tasks') loadTasks();
+/* ════════════════════════════════════════════════════════════════
+   EVENTS WIRING
+════════════════════════════════════════════════════════════════ */
+function wireEvents() {
+  // Mic
+  document.getElementById('mic-btn').addEventListener('click', toggleRec);
+  document.getElementById('parse-btn').addEventListener('click', parseTask);
+  document.getElementById('clear-btn').addEventListener('click', clearRec);
+  document.getElementById('save-btn').addEventListener('click', saveTask);
+
+  // Priority buttons
+  document.querySelectorAll('.p-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      S.form.priority = Number(btn.dataset.p);
+      document.getElementById('p-hint').textContent = P_HINTS[S.form.priority];
+    });
+  });
+
+  // Category buttons
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('sel','work','personal','clients','study','admin'));
+      btn.classList.add('sel', btn.dataset.c);
+      S.form.category = btn.dataset.c;
+    });
+  });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      S.currentFilter = c.dataset.f;
+      renderTaskList();
+    });
+  });
+
+  // Sort
+  document.getElementById('sort-sel').addEventListener('change', e => {
+    S.currentSort = e.target.value;
+    renderTaskList();
+  });
+
+  // Notif btn
+  document.getElementById('notif-btn').addEventListener('click', toggleNotif);
+
+  // Search
+  document.getElementById('search-btn').addEventListener('click', toggleSearch);
+  document.getElementById('search-inp').addEventListener('input', e => {
+    S.search = e.target.value.trim();
+    renderTaskList();
+    renderDashboard();
+  });
+
+  // Settings auto-save on blur
+  ['s-name','s-start','s-end'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', autoSaveProfile);
+  });
+  document.getElementById('s-priority')?.addEventListener('change', autoSaveProfile);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// VOICE RECORDING (Web Speech API)
-// ═══════════════════════════════════════════════════════════════
-function setupVoice() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const micBtn = document.getElementById('mic-btn');
+/* ════════════════════════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  S.currentTab = tab;
+  ['dash','record','tasks','settings'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? 'block' : 'none';
+    const nb = document.getElementById('nav-'+t);
+    if (nb) nb.classList.toggle('active', t === tab);
+  });
 
-  if (!SpeechRec) {
-    // Fallback: show text input
-    document.getElementById('mic-status').textContent = 'הקלדה ידנית';
-    document.getElementById('transcript-box').style.display = 'block';
-    document.getElementById('tip').style.display = 'none';
-    micBtn.style.display = 'none';
+  // Show search only on tasks
+  const showSearch = tab === 'tasks' || tab === 'dash';
+  if (!showSearch && document.getElementById('search-bar').style.display !== 'none') toggleSearch();
+
+  if (tab === 'tasks') renderTaskList();
+  if (tab === 'dash') renderDashboard();
+  if (tab === 'settings') loadSettingsUI();
+
+  // Scroll to top
+  document.getElementById('content').scrollTop = 0;
+}
+
+function filterQuick(type) {
+  switchTab('tasks');
+  const map = { urgent:'p1', today:'active', wait:'on_hold', done:'completed' };
+  const f = map[type] || 'all';
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.f === f);
+  });
+  S.currentFilter = f;
+  renderTaskList();
+}
+
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  const shown = bar.style.display !== 'none';
+  bar.style.display = shown ? 'none' : 'block';
+  if (!shown) {
+    document.getElementById('search-inp').focus();
+  } else {
+    S.search = '';
+    document.getElementById('search-inp').value = '';
+    renderTaskList();
+    renderDashboard();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   VOICE RECORDING
+════════════════════════════════════════════════════════════════ */
+function toggleRec() {
+  if (S.rec.active) stopRec();
+  else startRec();
+}
+
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    toast('הדפדפן לא תומך בהקלטה. הקלד ידנית למטה.','warn');
+    document.getElementById('mic-hint').textContent = 'הקלד ידנית בתיבה למטה';
     return;
   }
 
-  micBtn.addEventListener('click', toggleRecording);
-}
-
-function toggleRecording() {
-  if (STATE.isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-}
-
-function startRecording() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) return;
-
-  const rec = new SpeechRec();
+  const rec = new SR();
   rec.lang = 'he-IL';
   rec.continuous = false;
   rec.interimResults = true;
-  rec.maxAlternatives = 1;
+  S.rec.recognition = rec;
+  S.rec.active = true;
+  S.rec.transcript = '';
 
-  STATE.recognition = rec;
-  STATE.isRecording = true;
-  STATE.transcript = '';
+  setMicState('recording');
 
-  // UI feedback
-  const micBtn = document.getElementById('mic-btn');
-  micBtn.classList.add('recording');
-  document.getElementById('mic-icon').textContent = '⏹️';
-  document.getElementById('mic-status').textContent = 'מקליט... דבר עכשיו';
-  document.getElementById('mic-status').className = 'mic-status rec';
-  document.getElementById('mic-waves').style.display = 'block';
-  document.getElementById('tip').style.display = 'none';
-  document.getElementById('transcript-box').style.display = 'block';
-  document.getElementById('task-preview').style.display = 'none';
-  document.getElementById('transcript').value = '';
-  document.getElementById('transcript').placeholder = 'מקשיב...';
-
-  rec.onresult = (e) => {
-    let interim = '';
-    let final = '';
+  rec.onresult = e => {
+    let interim = '', final = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) final += t;
-      else interim += t;
+      if (e.results[i].isFinal) final += t; else interim += t;
     }
-    STATE.transcript = (STATE.transcript + final).trim();
-    document.getElementById('transcript').value = STATE.transcript + (interim ? ' ' + interim : '');
+    S.rec.transcript = (S.rec.transcript + final).trim();
+    document.getElementById('transcript').value =
+      S.rec.transcript + (interim ? ' '+interim : '');
   };
 
   rec.onend = () => {
-    const finalText = document.getElementById('transcript').value.trim();
-    STATE.transcript = finalText;
-    STATE.isRecording = false;
-    STATE.recognition = null;
-
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-icon').textContent = '🎙️';
-    document.getElementById('mic-waves').style.display = 'none';
-
-    if (finalText) {
+    const text = document.getElementById('transcript').value.trim();
+    S.rec.transcript = text;
+    S.rec.active = false;
+    S.rec.recognition = null;
+    if (text) {
+      setMicState('idle');
       document.getElementById('mic-status').textContent = 'הקלטה הסתיימה ✓';
-      document.getElementById('mic-status').className = 'mic-status';
-      document.getElementById('transcript').placeholder = 'ערוך את הטקסט אם צריך...';
     } else {
-      document.getElementById('mic-status').textContent = 'לא זוהה קול – נסה שוב';
-      document.getElementById('mic-status').className = 'mic-status';
-      document.getElementById('transcript-box').style.display = 'none';
-      document.getElementById('tip').style.display = 'block';
+      setMicState('idle');
+      document.getElementById('mic-status').textContent = 'לא זוהה קול — נסה שוב';
     }
   };
 
-  rec.onerror = (e) => {
-    STATE.isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-icon').textContent = '🎙️';
-    document.getElementById('mic-waves').style.display = 'none';
-    document.getElementById('mic-status').textContent = 'שגיאה: ' + e.error;
-    document.getElementById('mic-status').className = 'mic-status';
-    if (e.error === 'not-allowed') toast('❌ נא לאשר גישה למיקרופון בהגדרות', 'error');
+  rec.onerror = e => {
+    S.rec.active = false;
+    setMicState('idle');
+    if (e.error === 'not-allowed') toast('❌ נא לאשר גישה למיקרופון','err');
+    else toast('שגיאה: ' + e.error,'err');
   };
 
-  try {
-    rec.start();
-  } catch(e) {
-    toast('שגיאה בהפעלת המיקרופון', 'error');
-    STATE.isRecording = false;
+  try { rec.start(); } catch {
+    S.rec.active = false;
+    setMicState('idle');
+    toast('שגיאה בפתיחת המיקרופון','err');
   }
 }
 
-function stopRecording() {
-  if (STATE.recognition) {
-    STATE.recognition.stop();
-  }
+function stopRec() {
+  if (S.rec.recognition) S.rec.recognition.stop();
+  S.rec.active = false;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// AI PARSING
-// ═══════════════════════════════════════════════════════════════
+function setMicState(state) {
+  const btn = document.getElementById('mic-btn');
+  const icon = document.getElementById('mic-icon');
+  const status = document.getElementById('mic-status');
+  const waves = document.getElementById('mic-waves');
+
+  btn.className = 'mic-btn' + (state === 'recording' ? ' recording' : state === 'processing' ? ' processing' : '');
+  icon.textContent = state === 'recording' ? '⏹️' : state === 'processing' ? '🤖' : '🎙️';
+  waves.style.display = state === 'recording' ? 'block' : 'none';
+
+  status.className = 'mic-status' + (state === 'recording' ? ' rec' : state === 'processing' ? ' proc' : '');
+  status.textContent = {
+    recording: 'מקליט... לחץ לעצור',
+    processing: 'AI מנתח...',
+    idle: 'לחץ להתחלת הקלטה',
+  }[state] || '';
+}
+
+function clearRec() {
+  S.rec.transcript = '';
+  S.rec.parsed = null;
+  document.getElementById('transcript').value = '';
+  document.getElementById('task-form').style.display = 'none';
+  setMicState('idle');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   AI PARSING
+════════════════════════════════════════════════════════════════ */
 async function parseTask() {
   const text = document.getElementById('transcript').value.trim();
-  if (!text) { toast('אין טקסט לניתוח', 'error'); return; }
+  if (!text) { toast('אין טקסט לניתוח','err'); return; }
 
-  STATE.isProcessing = true;
-  const parseBtn = document.getElementById('parse-btn');
-  parseBtn.disabled = true;
-  parseBtn.innerHTML = '<span class="spinner"></span> מנתח...';
-  document.getElementById('mic-btn').classList.add('processing');
-  document.getElementById('mic-icon').textContent = '🤖';
-  document.getElementById('mic-status').textContent = 'ה-AI מנתח את המשימה...';
-  document.getElementById('mic-status').className = 'mic-status proc';
+  setMicState('processing');
+  document.getElementById('parse-btn').disabled = true;
+  document.getElementById('parse-btn').innerHTML = '<span class="spin"></span> מנתח...';
 
   try {
     const r = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'parse', userId: STATE.userId, text }),
-    });
-
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'שגיאה בניתוח');
-
-    STATE.parsedTask = data;
-    displayParsedTask(data, text);
-    toast('✨ המשימה נותחה בהצלחה!', 'success');
-  } catch(e) {
-    toast('❌ ' + e.message, 'error');
-    // Still show manual form
-    displayManualForm(text);
-  } finally {
-    STATE.isProcessing = false;
-    parseBtn.disabled = false;
-    parseBtn.innerHTML = '🤖 נתח עם AI';
-    document.getElementById('mic-btn').classList.remove('processing');
-    document.getElementById('mic-icon').textContent = '🎙️';
-    document.getElementById('mic-status').textContent = 'לחץ להתחלת הקלטה';
-    document.getElementById('mic-status').className = 'mic-status';
-  }
-}
-
-function displayParsedTask(data, rawText) {
-  document.getElementById('task-preview').style.display = 'block';
-  document.getElementById('task-title-inp').value = data.title || '';
-
-  if (data.reminderTime) {
-    // Show badge with Israel-formatted time
-    const dt = new Date(data.reminderTime);
-    const formatted = dt.toLocaleString('he-IL', {
-      timeZone: 'Asia/Jerusalem',
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    document.getElementById('time-badge-text').textContent = formatted;
-    document.getElementById('time-badge').style.display = 'inline-flex';
-
-    // Also set datetime-local input (local time)
-    const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
-    document.getElementById('task-time-inp').value = local.toISOString().slice(0, 16);
-  } else {
-    document.getElementById('time-badge').style.display = 'none';
-    setDateTimeMin();
-  }
-}
-
-function displayManualForm(text) {
-  document.getElementById('task-preview').style.display = 'block';
-  document.getElementById('task-title-inp').value = text.slice(0, 80);
-  document.getElementById('time-badge').style.display = 'none';
-  setDateTimeMin();
-}
-
-function setDateTimeMin() {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  const min = local.toISOString().slice(0, 16);
-  const inp = document.getElementById('task-time-inp');
-  inp.min = min;
-  if (!inp.value) {
-    // Default: tomorrow 09:00
-    const tomorrow = new Date(now.getTime() + 86400000);
-    tomorrow.setHours(9, 0, 0, 0);
-    const tLocal = new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60000);
-    inp.value = tLocal.toISOString().slice(0, 16);
-  }
-}
-
-function clearRecord() {
-  STATE.transcript = '';
-  STATE.parsedTask = null;
-  document.getElementById('transcript').value = '';
-  document.getElementById('transcript-box').style.display = 'none';
-  document.getElementById('task-preview').style.display = 'none';
-  document.getElementById('tip').style.display = 'block';
-  document.getElementById('mic-status').textContent = 'לחץ להתחלת הקלטה';
-  document.getElementById('mic-status').className = 'mic-status';
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SAVE TASK
-// ═══════════════════════════════════════════════════════════════
-async function saveTask() {
-  const title = document.getElementById('task-title-inp').value.trim();
-  if (!title) { toast('❌ נא להזין כותרת למשימה', 'error'); return; }
-
-  const timeVal = document.getElementById('task-time-inp').value;
-  const reminderTime = timeVal ? new Date(timeVal).toISOString() : null;
-
-  const saveBtn = document.getElementById('save-btn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'שומר...';
-
-  try {
-    const r = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        action: 'create',
-        userId: STATE.userId,
-        title,
-        rawText: STATE.transcript || title,
-        reminderTime,
+        action:'parse', userId:S.userId,
+        text,
+        activeStart: S.profile.activeStart,
+        activeEnd: S.profile.activeEnd,
       }),
     });
-
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'שגיאה בשמירה');
-
-    toast('✅ המשימה נשמרה!', 'success');
-    clearRecord();
-    STATE.tasks.unshift(data.task);
-    updateTaskCount();
-
-    // Switch to tasks tab after a moment
-    setTimeout(() => switchTab('tasks'), 1200);
+    if (!r.ok) throw new Error(data.error || 'שגיאה');
+    S.rec.parsed = data;
+    fillForm(data, text);
+    toast('✨ המשימה נותחה!','ok');
   } catch(e) {
-    toast('❌ ' + e.message, 'error');
+    toast('❌ ' + e.message,'err');
+    // Show form with manual input
+    fillForm({ cleanTitle: text, priority: S.profile.defaultPriority || 3, category:'work' }, text);
   } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = '✅ שמור משימה';
+    setMicState('idle');
+    document.getElementById('parse-btn').disabled = false;
+    document.getElementById('parse-btn').innerHTML = '🤖 נתח עם AI';
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// TASK LIST
-// ═══════════════════════════════════════════════════════════════
+function fillForm(data, rawText) {
+  document.getElementById('task-form').style.display = 'block';
+
+  document.getElementById('f-title').value = data.cleanTitle || rawText || '';
+
+  // Set priority
+  const p = data.priority || S.profile.defaultPriority || 3;
+  S.form.priority = p;
+  document.querySelectorAll('.p-btn').forEach(b => b.classList.toggle('sel', Number(b.dataset.p) === p));
+  document.getElementById('p-hint').textContent = P_HINTS[p];
+
+  // Set category
+  const cat = data.category || 'work';
+  S.form.category = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.remove('sel','work','personal','clients','study','admin');
+    if (b.dataset.c === cat) b.classList.add('sel', cat);
+  });
+
+  // Set time
+  if (data.reminderTime) {
+    const dt = new Date(data.reminderTime);
+    const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
+    document.getElementById('f-time').value = local.toISOString().slice(0,16);
+    const formatted = dt.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('f-time-note').textContent = `📅 ${formatted}`;
+  } else {
+    // Default: tomorrow 09:00
+    const tom = new Date(Date.now() + 86400000);
+    tom.setHours(9,0,0,0);
+    const local = new Date(tom.getTime() - tom.getTimezoneOffset() * 60000);
+    document.getElementById('f-time').value = local.toISOString().slice(0,16);
+    document.getElementById('f-time-note').textContent = 'זמן לא צוין — הגדרתי מחר ב-09:00';
+  }
+
+  // Waiting for
+  document.getElementById('f-waiting').value = data.waitingFor || '';
+
+  // Scroll to form
+  setTimeout(() => document.getElementById('task-form').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SAVE TASK
+════════════════════════════════════════════════════════════════ */
+async function saveTask() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('❌ נא להזין כותרת','err'); return; }
+
+  const timeVal = document.getElementById('f-time').value;
+  const expiresVal = document.getElementById('f-expires').value;
+  const maxN = document.getElementById('f-maxnotif').value;
+  const repeatVal = document.getElementById('f-repeat').value;
+  const waitingFor = document.getElementById('f-waiting').value.trim() || null;
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> שומר...';
+
+  try {
+    const r = await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action:'create', userId:S.userId,
+        rawText: S.rec.transcript || title,
+        cleanTitle: title,
+        priority: S.form.priority,
+        category: S.form.category,
+        reminderTime: timeVal ? new Date(timeVal).toISOString() : null,
+        repeatInterval: repeatVal ? Number(repeatVal) : undefined,
+        waitingFor,
+        maxNotifications: maxN ? Number(maxN) : null,
+        expiresAt: expiresVal ? new Date(expiresVal).toISOString() : null,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'שגיאה');
+
+    S.tasks.unshift(data.task);
+    updateSummary();
+    updateNavBadge();
+    toast('✅ המשימה נשמרה!','ok');
+    clearRec();
+    setTimeout(() => switchTab('dash'), 1000);
+  } catch(e) {
+    toast('❌ ' + e.message,'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✅ שמור משימה';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LOAD TASKS
+════════════════════════════════════════════════════════════════ */
 async function loadTasks() {
   try {
     const r = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list', userId: STATE.userId }),
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'list', userId:S.userId }),
     });
     const data = await r.json();
     if (r.ok) {
-      STATE.tasks = data.tasks || [];
-      renderTasks();
-      updateTaskCount();
+      S.tasks = data.tasks || [];
+      renderDashboard();
+      updateNavBadge();
+      updateSummary();
     }
-  } catch(e) {
-    console.warn('Load tasks:', e);
-  }
+  } catch {}
 }
 
-function renderTasks() {
+/* ════════════════════════════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════════════════════════════ */
+function renderDashboard() {
+  const now = Date.now();
+  const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+  const weekEnd = new Date(now + 7*86400000);
+
+  const tasks = filterSearch(S.tasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled'));
+
+  // Categorize
+  const urgent=[], today=[], week=[], wait=[], later=[];
+  for (const t of tasks) {
+    if (t.status === 'on_hold') { wait.push(t); continue; }
+    const rt = t.reminderTime ? new Date(t.reminderTime).getTime() : Infinity;
+    if (t.priority <= 2 || rt < now) urgent.push(t);
+    else if (rt <= todayEnd.getTime()) today.push(t);
+    else if (rt <= weekEnd.getTime()) week.push(t);
+    else later.push(t);
+  }
+
+  const showSection = (id, listId, countId, tasks) => {
+    document.getElementById(id).style.display = tasks.length ? 'block' : 'none';
+    if (tasks.length) {
+      document.getElementById(countId).textContent = tasks.length;
+      document.getElementById(listId).innerHTML = tasks.slice(0,8).map(t => taskCardHTML(t)).join('');
+      document.getElementById(listId).querySelectorAll('.task-card').forEach(el => wireTaskCard(el));
+    }
+  };
+
+  showSection('sec-urgent','list-urgent','cnt-urgent', urgent);
+  showSection('sec-today','list-today','cnt-today', today);
+  showSection('sec-week','list-week','cnt-week', week);
+  showSection('sec-wait','list-wait','cnt-wait', wait);
+  showSection('sec-later','list-later','cnt-later', later);
+
+  const hasAny = urgent.length || today.length || week.length || wait.length || later.length;
+  document.getElementById('dash-empty').style.display = hasAny ? 'none' : 'flex';
+
+  // Update summary numbers
+  const allActive = S.tasks.filter(t => t.status === 'active');
+  const allDone = S.tasks.filter(t => t.status === 'completed');
+  const allWait = S.tasks.filter(t => t.status === 'on_hold');
+  const allUrgent = S.tasks.filter(t => t.priority <= 2 && t.status === 'active');
+  const allToday = S.tasks.filter(t => {
+    if (t.status !== 'active') return false;
+    const rt = t.reminderTime ? new Date(t.reminderTime).getTime() : 0;
+    return rt >= now && rt <= todayEnd.getTime();
+  });
+
+  document.getElementById('s-urgent').textContent = allUrgent.length;
+  document.getElementById('s-today').textContent = allToday.length;
+  document.getElementById('s-wait').textContent = allWait.length;
+  document.getElementById('s-done').textContent = allDone.length;
+}
+
+function updateSummary() { renderDashboard(); }
+
+/* ════════════════════════════════════════════════════════════════
+   TASK LIST
+════════════════════════════════════════════════════════════════ */
+function renderTaskList() {
+  let tasks = filterSearch([...S.tasks]);
+
+  // Status/priority/category filter
+  const f = S.currentFilter;
+  if (f === 'active')    tasks = tasks.filter(t => t.status === 'active');
+  else if (f === 'on_hold')   tasks = tasks.filter(t => t.status === 'on_hold');
+  else if (f === 'completed') tasks = tasks.filter(t => t.status === 'completed');
+  else if (f === 'p1')   tasks = tasks.filter(t => t.priority === 1);
+  else if (f === 'p2')   tasks = tasks.filter(t => t.priority === 2);
+  else if (['work','personal','clients','study','admin'].includes(f))
+    tasks = tasks.filter(t => t.category === f);
+
+  // Sort
+  const now = Date.now();
+  const sortFns = {
+    priority: (a,b) => a.priority - b.priority || timeDiff(a,b),
+    time: (a,b) => timeDiff(a,b),
+    created: (a,b) => new Date(b.createdAt) - new Date(a.createdAt),
+    title: (a,b) => (a.cleanTitle||'').localeCompare(b.cleanTitle||'','he'),
+  };
+  tasks.sort(sortFns[S.currentSort] || sortFns.priority);
+
   const list = document.getElementById('task-list');
-  const filter = STATE.filter;
-  let tasks = STATE.tasks;
-
-  if (filter === 'pending') tasks = tasks.filter(t => t.status !== 'done');
-  else if (filter === 'done') tasks = tasks.filter(t => t.status === 'done');
-
   if (!tasks.length) {
-    const msgs = {
-      pending: { icon: '🎉', text: 'אין משימות פתוחות!<br>הקלט משימה חדשה.' },
-      done: { icon: '✅', text: 'אין משימות שהושלמו עדיין.' },
-      all: { icon: '🎙️', text: 'עדיין אין משימות.<br>הקלט משימה קולית!' },
-    };
-    const m = msgs[filter];
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">${m.icon}</div><p>${m.text}</p></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div>
+      <div class="empty-title">אין משימות</div>
+      <div class="empty-sub">שנה את הפילטר או הוסף משימה חדשה</div></div>`;
     return;
   }
 
-  list.innerHTML = tasks.map(task => {
-    const { icon, cls, label } = formatReminderTime(task.reminderTime);
-    const done = task.status === 'done';
-    return `
-      <div class="task-card ${done ? 'done' : ''}" id="tc-${task.taskId}">
-        <button class="check-btn ${done ? 'done' : ''}" onclick="toggleDone('${task.taskId}','${done ? 'pending' : 'done'}')" aria-label="${done ? 'פתח' : 'סמן כהושלם'}">
-          ${done ? '✓' : ''}
-        </button>
-        <div class="task-body">
-          <div class="task-title">${escHtml(task.title)}</div>
-          ${task.reminderTime ? `<div class="task-time ${cls}">${icon} ${label}${task.notified ? ' · נשלחה התראה' : ''}</div>` : ''}
+  list.innerHTML = tasks.map(t => taskCardHTML(t)).join('');
+  list.querySelectorAll('.task-card').forEach(el => wireTaskCard(el));
+}
+
+function timeDiff(a,b) {
+  const ta = a.reminderTime ? new Date(a.reminderTime).getTime() : Infinity;
+  const tb = b.reminderTime ? new Date(b.reminderTime).getTime() : Infinity;
+  return ta - tb;
+}
+
+function filterSearch(tasks) {
+  if (!S.search) return tasks;
+  const q = S.search.toLowerCase();
+  return tasks.filter(t =>
+    (t.cleanTitle||'').toLowerCase().includes(q) ||
+    (t.rawText||'').toLowerCase().includes(q) ||
+    (t.category||'').toLowerCase().includes(q)
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TASK CARD HTML
+════════════════════════════════════════════════════════════════ */
+function taskCardHTML(task) {
+  const p = task.priority || 3;
+  const done = task.status === 'completed';
+  const {icon:tIcon, cls:tCls, label:tLabel} = fmtTime(task.reminderTime);
+  const catCls = CAT_CLS[task.category] || '';
+  const catLabel = CAT_LABEL[task.category] || task.category || '';
+  const notifNote = task.notifiedCount > 0
+    ? `${task.notifiedCount}× נשלח` : '';
+
+  return `
+  <div class="task-wrap">
+    <div class="task-actions-bg">
+      <div class="task-action-left" id="al-${task.taskId}">✅</div>
+      <div class="task-action-right" id="ar-${task.taskId}">⏰</div>
+    </div>
+    <div class="task-card p${p}-card ${done?'done':''}" data-id="${task.taskId}" data-status="${task.status}">
+      <div class="task-stripe p${p}-stripe"></div>
+      <div class="task-body">
+        <div class="task-title">${escH(task.cleanTitle||'')}</div>
+        <div class="task-meta">
+          <span class="p-pill p${p}-pill">${P_LABELS[p]}</span>
+          <span class="cat-pill ${catCls}">${catLabel}</span>
+          ${task.reminderTime ? `<span class="task-time-tag ${tCls}">${tIcon} ${tLabel}</span>` : ''}
+          ${task.waitingFor ? `<span class="task-waiting">⏳ ${escH(task.waitingFor)}</span>` : ''}
+          ${notifNote ? `<span class="task-notif" style="font-size:10px;color:var(--muted)">${notifNote}</span>` : ''}
         </div>
-        <button class="task-del" onclick="deleteTask('${task.taskId}')" aria-label="מחק">×</button>
-      </div>`;
-  }).join('');
+      </div>
+      <div class="task-right">
+        <button class="check-btn ${done?'done':''}" data-id="${task.taskId}" aria-label="סמן">${done?'✓':''}</button>
+      </div>
+    </div>
+  </div>`;
 }
 
-function formatReminderTime(isoTime) {
-  if (!isoTime) return { icon: '', cls: '', label: '' };
-  const dt = new Date(isoTime);
-  const now = Date.now();
-  const diff = dt.getTime() - now;
+/* ════════════════════════════════════════════════════════════════
+   TASK CARD INTERACTIONS
+════════════════════════════════════════════════════════════════ */
+function wireTaskCard(cardEl) {
+  // Check button
+  const checkBtn = cardEl.querySelector('.check-btn');
+  if (checkBtn) {
+    checkBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = checkBtn.dataset.id;
+      const task = S.tasks.find(t => t.taskId === id);
+      if (!task) return;
+      const newStatus = task.status === 'completed' ? 'active' : 'completed';
+      updateTask(id, { status: newStatus });
+    });
+  }
 
-  const formatted = dt.toLocaleString('he-IL', {
-    timeZone: 'Asia/Jerusalem',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+  // Tap → detail sheet
+  const card = cardEl.querySelector('.task-card');
+  if (!card) return;
+  card.addEventListener('click', () => openDetail(card.dataset.id));
+
+  // Swipe to complete (left) or snooze (right)
+  let startX = 0, dx = 0, swiping = false;
+  const al = document.getElementById('al-' + card.dataset.id);
+  const ar = document.getElementById('ar-' + card.dataset.id);
+
+  card.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    dx = 0; swiping = false;
+  }, {passive:true});
+
+  card.addEventListener('touchmove', e => {
+    dx = e.touches[0].clientX - startX;
+    if (Math.abs(dx) > 8) swiping = true;
+    if (!swiping) return;
+    const clamped = Math.max(-100, Math.min(100, dx));
+    card.style.transform = `translateX(${clamped}px)`;
+    if (al) al.style.opacity = dx < -20 ? Math.min(1, (-dx-20)/60) : 0;
+    if (ar) ar.style.opacity = dx > 20  ? Math.min(1, (dx-20)/60)  : 0;
+  }, {passive:true});
+
+  card.addEventListener('touchend', () => {
+    card.style.transform = '';
+    if (al) al.style.opacity = 0;
+    if (ar) ar.style.opacity = 0;
+    if (!swiping) return;
+    if (dx < -70) updateTask(card.dataset.id, { status:'completed' }); // swipe left = done
+    if (dx > 70)  snoozeTask(card.dataset.id, 60); // swipe right = snooze 1h
   });
-
-  if (diff < 0) return { icon: '⏰', cls: 'overdue', label: formatted + ' (עבר)' };
-  if (diff < 3600000) return { icon: '🔔', cls: 'soon', label: formatted + ' (בקרוב!)' };
-  return { icon: '📅', cls: '', label: formatted };
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* ════════════════════════════════════════════════════════════════
+   TASK DETAIL SHEET
+════════════════════════════════════════════════════════════════ */
+function openDetail(taskId) {
+  const task = S.tasks.find(t => t.taskId === taskId);
+  if (!task) return;
+  S.detail = task;
+
+  document.getElementById('detail-title').textContent = task.cleanTitle || 'פרטי משימה';
+
+  const {icon, cls, label} = fmtTime(task.reminderTime);
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-field">
+      <div class="detail-label">עדיפות</div>
+      <div><span class="p-pill p${task.priority}-pill">${P_LABELS[task.priority]}</span></div>
+    </div>
+    <div class="detail-field">
+      <div class="detail-label">קטגוריה</div>
+      <div><span class="cat-pill ${CAT_CLS[task.category]||''}">${CAT_LABEL[task.category]||task.category}</span></div>
+    </div>
+    ${task.reminderTime?`<div class="detail-field">
+      <div class="detail-label">תזכורת</div>
+      <div class="detail-val ${cls}">${icon} ${label}</div>
+    </div>`:''}
+    ${task.waitingFor?`<div class="detail-field">
+      <div class="detail-label">ממתין ל</div>
+      <div class="detail-val">⏳ ${escH(task.waitingFor)}</div>
+    </div>`:''}
+    <div class="detail-field">
+      <div class="detail-label">סטטוס</div>
+      <div class="detail-val">${STATUS_LABEL[task.status]||task.status}</div>
+    </div>
+    ${task.notifiedCount>0?`<div class="detail-field">
+      <div class="detail-label">התראות שנשלחו</div>
+      <div class="detail-val">${task.notifiedCount}</div>
+    </div>`:''}
+    <div class="detail-field">
+      <div class="detail-label">נוצר</div>
+      <div class="detail-val">${fmtTime(task.createdAt).label}</div>
+    </div>
+    ${task.rawText&&task.rawText!==task.cleanTitle?`<div class="detail-field">
+      <div class="detail-label">טקסט מקורי</div>
+      <div class="detail-val" style="font-size:13px;font-style:italic">"${escH(task.rawText)}"</div>
+    </div>`:''}
+  `;
+
+  // Actions
+  const isDone = task.status === 'completed';
+  const isHold = task.status === 'on_hold';
+  document.getElementById('detail-actions').innerHTML = `
+    <button class="btn ${isDone?'btn-ghost':'btn-accent'} btn-full" onclick="updateTask('${taskId}',{status:'${isDone?'active':'completed'}'});closeSheet()">
+      ${isDone ? '↩️ פתח מחדש' : '✅ סמן כהושלם'}
+    </button>
+    <button class="btn ${isHold?'btn-ghost':'btn-ghost'} btn-full" onclick="updateTask('${taskId}',{status:'${isHold?'active':'on_hold}'});closeSheet()">
+      ${isHold ? '▶️ חזור לפעיל' : '⏳ העבר להמתנה'}
+    </button>
+    <button class="btn btn-ghost btn-full" onclick="snoozeTask('${taskId}',60);closeSheet()">⏰ דחה שעה</button>
+    <button class="btn btn-red btn-full" onclick="deleteTask('${taskId}');closeSheet()">🗑️ מחק משימה</button>
+  `;
+
+  showSheet('detail-sheet');
 }
 
-async function toggleDone(taskId, newStatus) {
-  // Optimistic update
-  const task = STATE.tasks.find(t => t.taskId === taskId);
-  if (task) task.status = newStatus;
-  renderTasks();
-  updateTaskCount();
+/* ════════════════════════════════════════════════════════════════
+   TASK CRUD
+════════════════════════════════════════════════════════════════ */
+async function updateTask(taskId, fields) {
+  // Optimistic
+  const idx = S.tasks.findIndex(t => t.taskId === taskId);
+  if (idx >= 0) {
+    Object.assign(S.tasks[idx], fields);
+    if (fields.status === 'completed') S.tasks[idx].completedAt = new Date().toISOString();
+    renderDashboard();
+    renderTaskList();
+    updateNavBadge();
+    if (fields.status === 'completed') toast('✅ כל הכבוד!','ok');
+  }
 
   try {
     await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', userId: STATE.userId, taskId, status: newStatus }),
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'update', userId:S.userId, taskId, ...fields }),
     });
-    if (newStatus === 'done') toast('✅ כל הכבוד!', 'success');
-  } catch(e) {
-    // Revert
-    if (task) task.status = newStatus === 'done' ? 'pending' : 'done';
-    renderTasks();
-    toast('❌ שגיאה בעדכון', 'error');
+  } catch {
+    toast('שגיאה בעדכון','err');
+    await loadTasks();
   }
+}
+
+async function snoozeTask(taskId, minutes = 60) {
+  try {
+    const r = await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'snooze', userId:S.userId, taskId, minutes }),
+    });
+    const data = await r.json();
+    if (data.snoozeUntil) {
+      const idx = S.tasks.findIndex(t => t.taskId === taskId);
+      if (idx >= 0) S.tasks[idx].snoozeUntil = data.snoozeUntil;
+    }
+    toast(`⏰ נדחה ל-${minutes} דקות`,'ok');
+  } catch { toast('שגיאה','err'); }
 }
 
 async function deleteTask(taskId) {
-  const idx = STATE.tasks.findIndex(t => t.taskId === taskId);
-  const task = STATE.tasks[idx];
+  const idx = S.tasks.findIndex(t => t.taskId === taskId);
+  const task = S.tasks[idx];
   if (!task) return;
+  S.tasks.splice(idx, 1);
+  renderDashboard(); renderTaskList(); updateNavBadge();
+  try {
+    await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'delete', userId:S.userId, taskId }),
+    });
+    toast('🗑️ נמחק','');
+  } catch {
+    S.tasks.splice(idx, 0, task);
+    renderDashboard(); renderTaskList();
+    toast('שגיאה במחיקה','err');
+  }
+}
 
-  // Optimistic
-  STATE.tasks.splice(idx, 1);
-  renderTasks();
-  updateTaskCount();
+/* ════════════════════════════════════════════════════════════════
+   PROFILE & SETTINGS
+════════════════════════════════════════════════════════════════ */
+async function loadProfile() {
+  try {
+    const r = await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'get-profile', userId:S.userId }),
+    });
+    const data = await r.json();
+    if (r.ok && data.profile) {
+      Object.assign(S.profile, data.profile);
+      localStorage.setItem('vt_profile', JSON.stringify(S.profile));
+      updateHeaderSub();
+    }
+  } catch {}
+}
+
+function loadSettingsUI() {
+  document.getElementById('s-name').value = S.profile.name || '';
+  document.getElementById('s-start').value = S.profile.activeStart || '08:00';
+  document.getElementById('s-end').value = S.profile.activeEnd || '19:00';
+  document.getElementById('s-priority').value = S.profile.defaultPriority || 3;
+  document.getElementById('s-notif').checked = !!S.pushSub;
+  document.getElementById('notif-status-text').textContent = S.pushSub ? 'פעיל' : 'לא פעיל';
+
+  // Stats
+  loadStats();
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'stats', userId:S.userId }),
+    });
+    const data = await r.json();
+    if (r.ok) {
+      document.getElementById('st-total').textContent = data.stats.total || 0;
+      document.getElementById('st-active').textContent = data.stats.active || 0;
+      document.getElementById('st-done').textContent = data.stats.completed || 0;
+      document.getElementById('st-onhold').textContent = data.stats.on_hold || 0;
+    }
+  } catch {}
+}
+
+async function saveSettings() {
+  const name = document.getElementById('s-name').value.trim();
+  const activeStart = document.getElementById('s-start').value;
+  const activeEnd = document.getElementById('s-end').value;
+  const defaultPriority = Number(document.getElementById('s-priority').value);
+
+  S.profile = { ...S.profile, name, activeStart, activeEnd, defaultPriority };
+  localStorage.setItem('vt_profile', JSON.stringify(S.profile));
+  updateHeaderSub();
 
   try {
     await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete', userId: STATE.userId, taskId }),
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'save-profile', userId:S.userId, name, activeStart, activeEnd, defaultPriority }),
     });
-    toast('🗑️ המשימה נמחקה', '');
-  } catch(e) {
-    STATE.tasks.splice(idx, 0, task);
-    renderTasks();
-    toast('❌ שגיאה במחיקה', 'error');
-  }
+    toast('💾 הגדרות נשמרו!','ok');
+  } catch { toast('שגיאה בשמירה','err'); }
 }
 
-function updateTaskCount() {
-  const pending = STATE.tasks.filter(t => t.status !== 'done').length;
-  document.getElementById('tasks-count').textContent = pending ? `משימות (${pending})` : 'משימות';
+function autoSaveProfile() { saveSettings(); }
+
+function updateHeaderSub() {
+  const name = S.profile.name;
+  document.getElementById('hdr-title').textContent = name ? `שלום, ${name}!` : 'משימות קוליות';
+  const active = S.tasks.filter(t => t.status === 'active').length;
+  document.getElementById('hdr-sub').textContent = active
+    ? `${active} משימות פעילות`
+    : 'כל המשימות הושלמו 🎉';
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PUSH NOTIFICATIONS
-// ═══════════════════════════════════════════════════════════════
-async function toggleNotifications() {
-  if (STATE.pushSub) {
-    await unsubscribePush();
-  } else {
-    await subscribePush();
-  }
-}
-
-async function subscribePush() {
-  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-    toast('הדפדפן לא תומך בהתראות', 'error');
-    return;
-  }
-
-  const perm = await Notification.requestPermission();
-  if (perm !== 'granted') {
-    toast('❌ ההתראות נחסמו – אפשר בהגדרות הדפדפן', 'error');
-    return;
-  }
-
-  try {
-    // Get VAPID public key
-    const keyRes = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'get-public-key' }),
-    });
-    const { publicKey } = await keyRes.json();
-    if (!publicKey) throw new Error('No VAPID key');
-
-    const sw = await navigator.serviceWorker.ready;
-    const sub = await sw.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
-
-    // Save subscription to server
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'subscribe',
-        profileId: STATE.userId,
-        subscription: sub.toJSON(),
-      }),
-    });
-
-    STATE.pushSub = sub;
-    updateNotifBtn();
-    toast('🔔 התראות הופעלו!', 'success');
-
-    // iOS tip
-    if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone) {
-      setTimeout(() => toast('📱 להתראות מלאות – הוסף לדף הבית מ-Safari', ''), 2000);
-    }
-  } catch(e) {
-    toast('❌ שגיאה בהפעלת התראות: ' + e.message, 'error');
-  }
-}
-
-async function unsubscribePush() {
-  try {
-    if (STATE.pushSub) await STATE.pushSub.unsubscribe();
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'unsubscribe', profileId: STATE.userId }),
-    });
-    STATE.pushSub = null;
-    updateNotifBtn();
-    toast('🔕 התראות כובו', '');
-  } catch(e) {
-    toast('❌ שגיאה בכיבוי התראות', 'error');
-  }
-}
-
-function updateNotifBtn() {
-  const btn = document.getElementById('notif-btn');
-  if (STATE.pushSub) {
-    btn.textContent = '🔔';
-    btn.classList.add('active');
-    btn.title = 'התראות פעילות – לחץ לכיבוי';
-  } else {
-    btn.textContent = '🔕';
-    btn.classList.remove('active');
-    btn.title = 'הפעל התראות';
-  }
-}
-
-async function checkExistingPush() {
+/* ════════════════════════════════════════════════════════════════
+   PUSH NOTIFICATIONS
+════════════════════════════════════════════════════════════════ */
+async function checkPush() {
   if (!('serviceWorker' in navigator)) return;
   try {
     const sw = await navigator.serviceWorker.ready;
     const sub = await sw.pushManager.getSubscription();
-    if (sub) STATE.pushSub = sub;
-    updateNotifBtn();
-  } catch(e) {}
+    S.pushSub = sub || null;
+    updateNotifUI();
+  } catch {}
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SERVICE WORKER MESSAGES
-// ═══════════════════════════════════════════════════════════════
-function onSWMessage(e) {
-  if (e.data?.type === 'TASK_DONE') {
-    toggleDone(e.data.taskId, 'done');
-  }
-  if (e.data?.type === 'TASK_SNOOZE') {
-    snoozeTask(e.data.taskId);
-  }
+async function toggleNotif() {
+  if (S.pushSub) await disablePush();
+  else await enablePush();
 }
 
-async function snoozeTask(taskId) {
-  // Snooze by 1 hour
-  const task = STATE.tasks.find(t => t.taskId === taskId);
-  if (!task || !task.reminderTime) return;
-  const newTime = new Date(new Date(task.reminderTime).getTime() + 3600000).toISOString();
+async function toggleNotifFromSettings() {
+  const on = document.getElementById('s-notif').checked;
+  if (on) await enablePush();
+  else await disablePush();
+}
+
+async function enablePush() {
+  if (!('Notification' in window)) { toast('הדפדפן לא תומך בהתראות','err'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    toast('❌ ההתראות נחסמו — אפשר בהגדרות','err');
+    document.getElementById('s-notif').checked = false;
+    return;
+  }
   try {
-    const r = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update', userId: STATE.userId, taskId, reminderTime: newTime }),
+    const kr = await fetch('/api/subscribe', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'get-public-key' }),
     });
-    const data = await r.json();
-    if (data.task) {
-      const idx = STATE.tasks.findIndex(t => t.taskId === taskId);
-      if (idx >= 0) STATE.tasks[idx] = data.task;
-      renderTasks();
+    const { publicKey } = await kr.json();
+    if (!publicKey) throw new Error('No key');
+    const sw = await navigator.serviceWorker.ready;
+    const sub = await sw.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey: urlB64ToU8(publicKey),
+    });
+    await fetch('/api/subscribe', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'subscribe', profileId:S.userId, subscription:sub.toJSON() }),
+    });
+    S.pushSub = sub;
+    updateNotifUI();
+    toast('🔔 התראות הופעלו!','ok');
+    if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone) {
+      setTimeout(() => toast('📱 לחוויה מלאה — הוסף למסך הבית','warn'), 2200);
     }
-    toast('⏰ נדחה לשעה הבאה', 'success');
-  } catch(e) {}
+  } catch(e) {
+    toast('שגיאה בהפעלת התראות: ' + e.message,'err');
+    document.getElementById('s-notif').checked = false;
+  }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// UTILITIES
-// ═══════════════════════════════════════════════════════════════
-function toast(msg, type = '') {
+async function disablePush() {
+  try {
+    if (S.pushSub) await S.pushSub.unsubscribe();
+    await fetch('/api/subscribe', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'unsubscribe', profileId:S.userId }),
+    });
+  } catch {}
+  S.pushSub = null;
+  updateNotifUI();
+  toast('🔕 התראות כובו','');
+}
+
+function updateNotifUI() {
+  const on = !!S.pushSub;
+  const btn = document.getElementById('notif-btn');
+  btn.textContent = on ? '🔔' : '🔕';
+  btn.classList.toggle('on', on);
+  const el = document.getElementById('s-notif');
+  if (el) el.checked = on;
+  const st = document.getElementById('notif-status-text');
+  if (st) st.textContent = on ? '✅ פעיל' : 'לא פעיל';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SW MESSAGES
+════════════════════════════════════════════════════════════════ */
+function onSWMsg(e) {
+  const { type, taskId } = e.data || {};
+  if (type === 'TASK_COMPLETE') updateTask(taskId, { status:'completed' });
+  if (type === 'TASK_SNOOZE')   snoozeTask(taskId, 60);
+  if (type === 'OPEN_TASK')     { switchTab('tasks'); openDetail(taskId); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SHEET HELPERS
+════════════════════════════════════════════════════════════════ */
+function showSheet(id) {
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById(id).classList.add('show');
+}
+function closeSheet() {
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   NAV BADGE
+════════════════════════════════════════════════════════════════ */
+function updateNavBadge() {
+  const pending = S.tasks.filter(t => t.status === 'active').length;
+  const label = document.getElementById('nav-tasks-label');
+  label.textContent = pending > 0 ? `משימות` : 'משימות';
+  // Could add badge element but keeping it simple
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FORMAT HELPERS
+════════════════════════════════════════════════════════════════ */
+function fmtTime(isoTime) {
+  if (!isoTime) return { icon:'', cls:'', label:'' };
+  const dt = new Date(isoTime);
+  const now = Date.now();
+  const diff = dt.getTime() - now;
+  const label = dt.toLocaleString('he-IL', {
+    timeZone:'Asia/Jerusalem', weekday:'short',
+    day:'numeric', month:'short', hour:'2-digit', minute:'2-digit',
+  });
+  if (diff < 0) return { icon:'⚠️', cls:'overdue', label: label + ' (עבר!)' };
+  if (diff < 2 * 3600000) return { icon:'🔔', cls:'soon', label };
+  return { icon:'📅', cls:'', label };
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function genId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function urlB64ToU8(b64) {
+  const p = '='.repeat((4 - b64.length%4)%4);
+  const b = (b64+p).replace(/-/g,'+').replace(/_/g,'/');
+  const r = atob(b);
+  return Uint8Array.from([...r].map(c => c.charCodeAt(0)));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════════════ */
+function toast(msg, type='') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className = 'toast' + (type ? ' ' + type : '');
+  el.className = 'toast' + (type ? ' '+type : '');
   el.classList.add('show');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 3200);
+  el._t = setTimeout(() => el.classList.remove('show'), 3400);
 }
 
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-}
-
-// ═══════════════════════════════════════════════════════════════
-// START
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', async () => {
-  await checkExistingPush();
-  await init();
-});
+/* ════════════════════════════════════════════════════════════════
+   START
+════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
