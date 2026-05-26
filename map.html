@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="leaflet.css"/>
 <script src="leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -177,7 +179,7 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 /* ── LOCATE ── */
 .locate-btn{
-  position:fixed;bottom:28px;right:16px;z-index:500;
+  position:fixed;bottom:72px;right:16px;z-index:500;
   width:50px;height:50px;border-radius:50%;
   background:rgba(0,0,0,.88);backdrop-filter:blur(16px);
   border:.5px solid var(--border2);color:var(--blue);
@@ -216,7 +218,7 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 /* ── LOAD AREA BTN ── */
 .load-area-btn{
-  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:600;
+  position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:600;
   background:var(--blue);color:#fff;border:none;border-radius:24px;
   padding:11px 22px;font-size:14px;font-weight:800;font-family:inherit;
   cursor:pointer;box-shadow:0 4px 20px rgba(10,132,255,.4);
@@ -231,6 +233,33 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 .empty-icon{font-size:56px;margin-bottom:12px}
 .empty-title{font-size:18px;font-weight:800;margin-bottom:6px}
 .empty-sub{font-size:14px;color:var(--muted);font-weight:600}
+
+/* ── ADS ── */
+.ad-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:700;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(16px);
+  border-top:.5px solid var(--border);
+  padding:6px 12px max(8px,env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:center;
+  min-height:56px;
+}
+.ad-banner ins{display:block;width:100%;max-width:360px}
+.ad-banner-label{
+  position:absolute;top:4px;left:8px;
+  font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;
+  text-transform:uppercase;
+}
+.ad-inline{
+  margin:8px 16px;border-radius:12px;overflow:hidden;
+  border:.5px solid var(--border);background:var(--card);
+  min-height:100px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.ad-inline ins{display:block;width:100%}
+.ad-inline-label{
+  position:absolute;top:6px;right:8px;
+  font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;
+}
 
 /* ── LEAFLET OVERRIDES ── */
 .leaflet-popup-content-wrapper{background:var(--card)!important;color:var(--text)!important;border:.5px solid var(--border)!important;border-radius:14px!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important}
@@ -307,6 +336,17 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- AD BANNER (bottom) -->
+<div class="ad-banner" id="ad-banner">
+  <span class="ad-banner-label">פרסומת</span>
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+    data-ad-slot="1234567890"
+    data-ad-format="horizontal"
+    data-full-width-responsive="true"></ins>
+</div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -748,9 +788,10 @@ function processFields(els,append=false){
     const tags=el.tags||{};
     const sk=getSportKey(tags);
     const meta=SPORT_META[sk]||SPORT_META.other;
-    const name=tags['name:en']||tags['name:he']||tags.name||(meta.label);
+    const nameHe=tags['name:he']||tags.name||meta.label;
+    const nameEn=tags['name:en']||tags.name||meta.labelEn||meta.label;
     const city=tags['addr:city']||tags['addr:town']||tags['addr:state']||'';
-    const f={id,name,sk,meta,city,tags,lat,lng,fg:getFilterGroup(sk)};
+    const f={id,name:nameHe,nameEn,sk,meta,city,tags,lat,lng,fg:getFilterGroup(sk)};
     allFields.push(f);
     existingIds.add(id);
     added++;
@@ -834,17 +875,30 @@ function renderList(){
     return;
   }
 
+  const AD_EVERY = 8; // show ad every N items
+  const adHtml = `<div class="ad-inline">
+    <span class="ad-inline-label">פרסומת</span>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+      data-ad-slot="0987654321"
+      data-ad-format="fluid"
+      data-ad-layout-key="-fb+5w+4e-db+86"></ins>
+  </div>`;
+
   el.innerHTML=visible.slice(0,120).map((f,i)=>{
     const m=f.meta;
     const r=ratings[f.id]||0;
     const stars=r?'⭐'.repeat(r):'';
     const isFav=favs[f.id];
+    const dispName=currentLang==='en'?(f.nameEn||f.name):f.name;
+    const sportLabel=currentLang==='en'?(m.labelEn||m.label):m.label;
     return `<div class="list-item" onclick="openSheet(allFields[${allFields.indexOf(f)}])" style="animation-delay:${Math.min(i*0.03,.5)}s">
       <div class="li-icon" style="background:${m.bg}">${m.emoji}</div>
       <div class="li-info">
-        <div class="li-name">${f.name}</div>
+        <div class="li-name">${dispName}</div>
         <div class="li-sub">
-          <span class="li-badge" style="background:${m.color}22;color:${m.color}">${m.label}</span>
+          <span class="li-badge" style="background:${m.color}22;color:${m.color}">${sportLabel}</span>
           ${f.city?`<span>${f.city}</span>`:''}
         </div>
       </div>
@@ -852,8 +906,15 @@ function renderList(){
         <div class="li-fav" onclick="event.stopPropagation();toggleFav('${f.id}')" id="fav-li-${f.id}">${isFav?'❤️':'🤍'}</div>
         ${stars?`<div class="li-stars">${stars}</div>`:''}
       </div>
-    </div>`;
+    </div>${(i+1)%AD_EVERY===0?adHtml:''}`;
   }).join('');
+
+  // push adsense for inline ads
+  try{
+    document.querySelectorAll('.ad-inline .adsbygoogle').forEach(()=>{
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    });
+  }catch(e){}
 }
 
 // ─────────────────────────────────────────────
@@ -1238,6 +1299,8 @@ function loadSeedData(){
 setLang(currentLang);
 // update load-area button text
 document.getElementById('load-area-btn').innerHTML=t('load_area');
+// Init AdSense banner
+try{ (adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
 // Show seed data immediately, then load live
 loadSeedData();
 loadFields();
