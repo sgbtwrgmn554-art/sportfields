@@ -196,6 +196,27 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+/* ── COUNTRY SWITCHER ── */
+.country-bar{display:flex;gap:6px;padding:0 0 10px}
+.country-btn{
+  flex:1;padding:7px 0;border-radius:12px;font-size:13px;font-weight:800;
+  border:.5px solid var(--border);background:var(--card2);color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.country-btn.on{background:var(--green-s);border-color:var(--green);color:var(--green)}
+
+/* ── LOAD AREA BTN ── */
+.load-area-btn{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:600;
+  background:var(--blue);color:#fff;border:none;border-radius:24px;
+  padding:11px 22px;font-size:14px;font-weight:800;font-family:inherit;
+  cursor:pointer;box-shadow:0 4px 20px rgba(10,132,255,.4);
+  display:none;align-items:center;gap:8px;white-space:nowrap;
+  transition:.2s cubic-bezier(.34,1.2,.64,1);
+}
+.load-area-btn.show{display:flex}
+.load-area-btn:active{transform:translateX(-50%) scale(.95)}
+
 /* ── EMPTY ── */
 .empty{padding:60px 24px;text-align:center}
 .empty-icon{font-size:56px;margin-bottom:12px}
@@ -228,6 +249,11 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
       <button class="hdr-btn" id="btn-favs" onclick="toggleFavsOnly()">❤️ מועדפים</button>
       <button class="hdr-btn" onclick="locateMe()">📍</button>
     </div>
+  </div>
+  <!-- COUNTRY BAR -->
+  <div class="country-bar">
+    <button class="country-btn on" id="cbtn-il" onclick="switchCountry('il')">🇮🇱 ישראל</button>
+    <button class="country-btn"   id="cbtn-us" onclick="switchCountry('us')">🇺🇸 ארצות הברית</button>
   </div>
   <div class="tabs">
     <div class="tab active" id="tab-map" onclick="switchTab('map')">🗺️ מפה</div>
@@ -275,6 +301,9 @@ html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;backgroun
 
 <!-- LOCATE -->
 <button class="locate-btn" id="locate-btn" onclick="locateMe()">📍</button>
+
+<!-- LOAD AREA (USA mode) -->
+<button class="load-area-btn" id="load-area-btn" onclick="loadAreaFields()">🔍 טען מגרשים באזור זה</button>
 
 <!-- PULL-TO-REFRESH -->
 <div class="ptr" id="ptr">🔄</div>
@@ -391,6 +420,28 @@ function getFilterGroup(k){
 }
 
 // ─────────────────────────────────────────────
+//  COUNTRIES CONFIG
+// ─────────────────────────────────────────────
+const COUNTRIES = {
+  il:{
+    id:'il', flag:'🇮🇱', name:'ישראל',
+    center:[31.5,34.9], zoom:9,
+    // bbox: south,west,north,east
+    bbox:[29.4,34.2,33.4,35.9],
+    fullLoad:true,   // load all at once (small country)
+    minZoomLoad:11,
+  },
+  us:{
+    id:'us', flag:'🇺🇸', name:'ארצות הברית',
+    center:[39.5,-98.5], zoom:5,
+    bbox:[24.5,-125.0,49.5,-66.9],
+    fullLoad:false,  // too big → load by viewport
+    minZoomLoad:12,  // must zoom to at least 12 to load
+  },
+};
+let currentCountry = 'il';
+
+// ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
 let allFields = [];
@@ -423,6 +474,19 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 
 markerLayer = L.layerGroup().addTo(map);
 
+// Show/hide "load area" button for USA based on zoom
+map.on('moveend zoomend', ()=>{
+  if(currentCountry!=='us') return;
+  const z=map.getZoom();
+  const btn=document.getElementById('load-area-btn');
+  if(z>=COUNTRIES.us.minZoomLoad){
+    btn.classList.add('show');
+    btn.innerHTML='🔍 טען מגרשים באזור זה';
+  } else {
+    btn.classList.remove('show');
+  }
+});
+
 // ─────────────────────────────────────────────
 //  HEADER HEIGHT → OFFSET PILLS & VIEWS
 // ─────────────────────────────────────────────
@@ -452,20 +516,70 @@ function switchTab(t){
 }
 
 // ─────────────────────────────────────────────
+//  COUNTRY SWITCH
+// ─────────────────────────────────────────────
+function switchCountry(id){
+  if(currentCountry===id) return;
+  currentCountry=id;
+  haptic('medium');
+  // update buttons
+  document.getElementById('cbtn-il').classList.toggle('on',id==='il');
+  document.getElementById('cbtn-us').classList.toggle('on',id==='us');
+  // clear fields
+  allFields=[];allMarkers=[];markerLayer.clearLayers();
+  document.getElementById('hdr-count').textContent='טוען...';
+  // fly to country
+  const c=COUNTRIES[id];
+  map.flyTo(c.center,c.zoom,{duration:1.2});
+  // hide USA load-area btn
+  document.getElementById('load-area-btn').classList.remove('show');
+  if(c.fullLoad){
+    loadFields();
+  } else {
+    showToast('🇺🇸 זום לאזור ולחץ "טען מגרשים"');
+    document.getElementById('hdr-count').textContent='בחר אזור';
+  }
+}
+
+// ─────────────────────────────────────────────
 //  OVERPASS FETCH
 // ─────────────────────────────────────────────
+function buildQuery(south,west,north,east){
+  const bb=`(${south},${west},${north},${east})`;
+  return `[out:json][timeout:60];(node["leisure"="pitch"]${bb};way["leisure"="pitch"]${bb};node["leisure"="sports_centre"]${bb};way["leisure"="sports_centre"]${bb};);out center tags;`;
+}
+
 async function loadFields(){
+  const c=COUNTRIES[currentCountry];
+  const [s,w,n,e]=c.bbox;
   showSkeleton();
-  const query=`[out:json][timeout:90];(node["leisure"="pitch"](29.4,34.2,33.4,35.9);way["leisure"="pitch"](29.4,34.2,33.4,35.9);node["leisure"="sports_centre"](29.4,34.2,33.4,35.9);way["leisure"="sports_centre"](29.4,34.2,33.4,35.9););out center tags;`;
+  await fetchAndProcess(s,w,n,e);
+}
+
+async function loadAreaFields(){
+  const btn=document.getElementById('load-area-btn');
+  btn.innerHTML='⏳ טוען...';
+  btn.style.pointerEvents='none';
+  const b=map.getBounds();
+  const s=b.getSouth().toFixed(4),w=b.getWest().toFixed(4);
+  const n=b.getNorth().toFixed(4),e=b.getEast().toFixed(4);
+  showSkeleton();
+  await fetchAndProcess(s,w,n,e,true); // append=true for USA
+  btn.innerHTML='🔍 טען מגרשים באזור זה';
+  btn.style.pointerEvents='auto';
+}
+
+async function fetchAndProcess(s,w,n,e,append=false){
+  const query=buildQuery(s,w,n,e);
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter',{
+    const r=await fetch('https://overpass-api.de/api/interpreter',{
       method:'POST',
       body:'data='+encodeURIComponent(query),
       headers:{'Content-Type':'application/x-www-form-urlencoded'}
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    processFields(d.elements||[]);
+    const d=await r.json();
+    processFields(d.elements||[],append);
   }catch(e){
     console.error(e);
     showToast('❌ שגיאת טעינה – בדוק אינטרנט');
@@ -473,24 +587,31 @@ async function loadFields(){
   }
 }
 
-function processFields(els){
-  allFields=[];
-  markerLayer.clearLayers();
-  allMarkers=[];
+function processFields(els,append=false){
+  if(!append){
+    allFields=[];
+    markerLayer.clearLayers();
+    allMarkers=[];
+  }
+  const existingIds=new Set(allFields.map(f=>f.id));
+  let added=0;
 
   els.forEach(el=>{
     let lat,lng;
     if(el.type==='node'){lat=el.lat;lng=el.lon}
     else if(el.center){lat=el.center.lat;lng=el.center.lon}
     else return;
+    const id=el.id+'';
+    if(existingIds.has(id)) return; // no duplicates
     const tags=el.tags||{};
     const sk=getSportKey(tags);
     const meta=SPORT_META[sk]||SPORT_META.other;
-    const id=el.id+'';
-    const name=tags['name:he']||tags.name||(meta.label+' ציבורי');
-    const city=tags['addr:city']||tags['addr:town']||tags['is_in:city']||'';
+    const name=tags['name:en']||tags['name:he']||tags.name||(meta.label);
+    const city=tags['addr:city']||tags['addr:town']||tags['addr:state']||'';
     const f={id,name,sk,meta,city,tags,lat,lng,fg:getFilterGroup(sk)};
     allFields.push(f);
+    existingIds.add(id);
+    added++;
 
     const marker=L.marker([lat,lng],{icon:makeIcon(sk)});
     marker._f=f;
@@ -501,7 +622,11 @@ function processFields(els){
   applyFilter(currentFilter);
   hideSkeleton();
   document.getElementById('hdr-count').textContent=allFields.length+' מגרשים';
-  showToast('✅ נטענו '+allFields.length+' מגרשים');
+  if(append){
+    showToast('✅ נוספו '+added+' מגרשים (סה"כ '+allFields.length+')');
+  } else {
+    showToast('✅ נטענו '+allFields.length+' מגרשים');
+  }
   if(currentTab==='list') renderList();
 }
 
