@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API = 'http://localhost:3001'
+const API = process.env.API_URL || 'http://localhost:3001'
 
 async function handler(req: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/')

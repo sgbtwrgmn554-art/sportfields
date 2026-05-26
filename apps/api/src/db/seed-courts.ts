@@ -15,9 +15,15 @@ interface CourtSeed {
 
 const SPORT_PHOTO: Record<string, string> = {
   basketball: 'https://images.unsplash.com/photo-1546519638405-a9f168a1fd25?w=400',
-  football: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400',
-  tennis: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400',
+  football:   'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400',
+  tennis:     'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400',
   volleyball: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=400',
+  fitness:    'https://images.unsplash.com/photo-1598971457999-ca4ef48a9a71?w=400',
+  skate:      'https://images.unsplash.com/photo-1520045892732-304bc3ac5d8e?w=400',
+  padel:      'https://images.unsplash.com/photo-1667226935543-742afdfe5a40?w=400',
+  pingpong:   'https://images.unsplash.com/photo-1611251135345-18c56206b863?w=400',
+  pumptrack:  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+  ninja:      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400',
 }
 
 async function seedCourts(city: string, file: string) {

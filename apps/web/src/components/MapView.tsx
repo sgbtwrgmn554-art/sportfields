@@ -32,19 +32,18 @@ interface Court {
   rating_sum?: number; rating_count?: number
 }
 
-interface Props { sport: string; onAuthRequired: () => void; onShowFavorites?: () => void }
+interface Props { sport: string; category?: string; onAuthRequired: () => void; onShowFavorites?: () => void }
 
-export default function MapView({ sport, onAuthRequired, onShowFavorites }: Props) {
+export default function MapView({ sport, category, onAuthRequired, onShowFavorites }: Props) {
   const mapRef      = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
   const markersRef  = useRef<any>(null)   // cluster group
   const leafletRef  = useRef<any>(null)
-
   const [addMode, setAddMode]       = useState(false)
   const [pendingPos, setPendingPos] = useState<{ lat: number; lng: number } | null>(null)
   const [showModal, setShowModal]   = useState(false)
   const [toast, setToast]           = useState('')
-  const [form, setForm]             = useState({ name: '', city: '', sport: 'football' })
+  const [form, setForm]             = useState({ name: '', city: '', sport: 'football', isPrivate: false, trailKm: '', trailMin: '', trailDifficulty: 'easy' as 'easy'|'medium'|'hard' })
   const [courtCount, setCourtCount] = useState(0)
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null)
   const [checkedIn, setCheckedIn]         = useState<string | null>(null)
@@ -55,9 +54,17 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboard, setLeaderboard]         = useState<any[]>([])
   const [userRating, setUserRating]           = useState<Record<string, number>>({})
+  const [ownerCode, setOwnerCode]             = useState('')
+  const [ownerMode, setOwnerMode]             = useState(false)
+  const [showOwnerInput, setShowOwnerInput]   = useState(false)
+  const [accessCode, setAccessCode]           = useState('')
+  const [isNature, setIsNature]               = useState(false)
+  const [privateForm, setPrivateForm]         = useState(false)
+  const [trailForm, setTrailForm]             = useState({ km: '', minutes: '', difficulty: 'easy' as 'easy'|'medium'|'hard' })
 
-  const { courts, loading, fetchByBbox } = useBboxCourts(sport)
+  const { courts, loading, fetchByBbox } = useBboxCourts(sport, category, ownerMode ? ownerCode : undefined, accessCode || undefined)
   const { user, token } = useAuth()
+  const fetchByBboxRef = useRef(fetchByBbox) // תמיד מעודכן — מונע stale closure
 
   // ── טוען מועדפים מ-localStorage ─────────────────────────────
   useEffect(() => {
@@ -66,6 +73,11 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
       if (stored) setFavorites(JSON.parse(stored))
     } catch {}
   }, [])
+
+  // ── תמיד שומר את fetchByBbox העדכני ─────────────────────────
+  useEffect(() => {
+    fetchByBboxRef.current = fetchByBbox
+  }, [fetchByBbox])
 
   // ── Init Leaflet + Cluster ───────────────────────────────────
   useEffect(() => {
@@ -126,7 +138,7 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
       // טוען מגרשים בכל פעם שהמפה זזה/זום
       const loadBbox = () => {
         const b = map.getBounds()
-        fetchByBbox({
+        fetchByBboxRef.current({
           minLat: b.getSouth(), maxLat: b.getNorth(),
           minLng: b.getWest(),  maxLng: b.getEast(),
         })
@@ -313,13 +325,35 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
       showToast('נא למלא שם ועיר'); return
     }
     try {
-      await axios.post(`${API}/courts`, {
+      const body: any = {
         name: form.name.trim(), address: form.city.trim(),
         lat: pendingPos.lat, lng: pendingPos.lng, sport_types: [form.sport],
-      }, { headers: { Authorization: `Bearer ${token}` } })
-      setShowModal(false); setForm({ name: '', city: '', sport: 'football' }); setPendingPos(null)
-      showToast('✅ המגרש נוסף!')
-    } catch { showToast('שגיאה — נסה שוב') }
+        is_private: form.isPrivate,
+      }
+      if (form.trailKm)  body.trail_km = parseFloat(form.trailKm)
+      if (form.trailMin) body.trail_minutes = parseInt(form.trailMin)
+      if (form.trailKm)  body.trail_difficulty = form.trailDifficulty
+
+      const res = await axios.post(`${API}/courts`, body,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setShowModal(false)
+      setForm({ name: '', city: '', sport: 'football', isPrivate: false, trailKm: '', trailMin: '', trailDifficulty: 'easy' })
+      setPendingPos(null)
+      if (form.isPrivate && res.data.access_code) {
+        showToast(`✅ נוסף! קוד גישה: ${res.data.access_code}`)
+        // שמור קוד ב-localStorage
+        try {
+          const saved = JSON.parse(localStorage.getItem('sf_my_private') || '[]')
+          saved.push({ name: form.name.trim(), code: res.data.access_code })
+          localStorage.setItem('sf_my_private', JSON.stringify(saved))
+        } catch {}
+      } else {
+        showToast('✅ המקום נוסף!')
+      }
+    } catch (e: any) {
+      showToast(e.response?.data?.error || 'שגיאה — נסה שוב')
+    }
   }
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 2500) }
@@ -339,6 +373,38 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
     <div style={{ position: 'absolute', inset: 0 }}>
       {/* Map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+
+      {/* Owner mode input */}
+      {showOwnerInput && (
+        <div style={{
+          position: 'absolute', top: 60, right: 10, zIndex: 1100,
+          background: 'var(--panel)', border: '1px solid var(--green)',
+          borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          fontFamily: 'Heebo, sans-serif', direction: 'rtl',
+        }}>
+          <input
+            placeholder="קוד בעלים"
+            value={ownerCode}
+            onChange={e => setOwnerCode(e.target.value)}
+            style={{
+              background: 'rgba(255,255,255,.08)', border: '1px solid rgba(37,168,102,.3)',
+              borderRadius: 8, padding: '6px 10px', color: 'white',
+              fontFamily: 'Heebo, sans-serif', fontSize: 13, width: 120, direction: 'rtl',
+            }}
+          />
+          <button onClick={() => {
+            setOwnerMode(true); setShowOwnerInput(false)
+            showToast('🔓 מצב בעלים פעיל — רואה מקומות פרטיים')
+          }} style={{
+            background: 'var(--green)', border: 'none', color: 'white',
+            borderRadius: 8, padding: '6px 12px', fontFamily: 'Heebo, sans-serif',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          }}>אישור</button>
+          <button onClick={() => setShowOwnerInput(false)} style={{
+            background: 'none', border: 'none', color: 'var(--gray)', cursor: 'pointer', fontSize: 16,
+          }}>✕</button>
+        </div>
+      )}
 
       {/* Counter + Favorites button */}
       <div style={{
@@ -369,6 +435,15 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
           cursor: 'pointer',
         }}>
           🏆 Top
+        </button>
+        <button onClick={() => setShowOwnerInput(!showOwnerInput)} style={{
+          background: ownerMode ? 'rgba(37,168,102,.3)' : 'rgba(15,31,21,.9)',
+          border: `1px solid ${ownerMode ? 'var(--green)' : 'rgba(255,255,255,.2)'}`,
+          borderRadius: 20, padding: '4px 10px',
+          fontFamily: 'Heebo, sans-serif', fontSize: 12,
+          color: ownerMode ? 'var(--gl)' : 'var(--gray)', cursor: 'pointer',
+        }}>
+          {ownerMode ? '🔓 בעלים' : '🔑'}
         </button>
       </div>
 
@@ -451,6 +526,34 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
               </div>
               {selectedCourt.address && (
                 <div style={{ fontSize: 11, color: 'var(--gray)', marginTop: 3 }}>📍 {selectedCourt.address}</div>
+              )}
+              {/* מידע שביל */}
+              {(selectedCourt as any).trail_km && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, background: 'rgba(37,168,102,.15)', borderRadius: 20, padding: '2px 8px', color: 'var(--gl)' }}>
+                    🥾 {(selectedCourt as any).trail_km} ק"מ
+                  </span>
+                  {(selectedCourt as any).trail_minutes && (
+                    <span style={{ fontSize: 11, background: 'rgba(37,168,102,.15)', borderRadius: 20, padding: '2px 8px', color: 'var(--gl)' }}>
+                      ⏱ {(selectedCourt as any).trail_minutes} דק׳
+                    </span>
+                  )}
+                  {(selectedCourt as any).trail_difficulty && (
+                    <span style={{
+                      fontSize: 11, borderRadius: 20, padding: '2px 8px',
+                      background: (selectedCourt as any).trail_difficulty === 'easy' ? 'rgba(76,175,80,.2)' : (selectedCourt as any).trail_difficulty === 'medium' ? 'rgba(255,152,0,.2)' : 'rgba(244,67,54,.2)',
+                      color: (selectedCourt as any).trail_difficulty === 'easy' ? '#4caf50' : (selectedCourt as any).trail_difficulty === 'medium' ? '#ff9800' : '#f44336',
+                    }}>
+                      {(selectedCourt as any).trail_difficulty === 'easy' ? '🟢 קל' : (selectedCourt as any).trail_difficulty === 'medium' ? '🟡 בינוני' : '🔴 קשה'}
+                    </span>
+                  )}
+                </div>
+              )}
+              {/* פרטי */}
+              {(selectedCourt as any).is_private && (
+                <div style={{ marginTop: 4, fontSize: 11, color: '#9b59b6' }}>
+                  🔒 מקום פרטי {ownerMode && <span style={{ opacity: .7 }}>| קוד: {(selectedCourt as any).access_code}</span>}
+                </div>
               )}
             </div>
             <div style={{ textAlign: 'center', flexShrink: 0 }}>
@@ -714,12 +817,73 @@ export default function MapView({ sport, onAuthRequired, onShowFavorites }: Prop
               </div>
             ))}
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>סוג ספורט</label>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>סוג</label>
               <select value={form.sport} onChange={e => setForm({ ...form, sport: e.target.value })} style={inputStyle}>
                 {SPORT_OPTIONS.map(o => <option key={o.value} value={o.value} style={{ background: 'var(--panel)' }}>{o.label}</option>)}
+                <option value="beach"    style={{ background: 'var(--panel)' }}>🏖️ חוף ים</option>
+                <option value="pool"     style={{ background: 'var(--panel)' }}>🏊 בריכה</option>
+                <option value="surf"     style={{ background: 'var(--panel)' }}>🏄 גלישה</option>
+                <option value="park"     style={{ background: 'var(--panel)' }}>🌳 פארק</option>
+                <option value="hiking"   style={{ background: 'var(--panel)' }}>🥾 שביל טיול</option>
+                <option value="cycling"  style={{ background: 'var(--panel)' }}>🚵 אופניים</option>
+                <option value="dog"      style={{ background: 'var(--panel)' }}>🐕 גינת כלבים</option>
               </select>
             </div>
+
+            {/* שביל — רק לטבע */}
+            {['hiking','cycling','park'].includes(form.sport) && (
+              <div style={{ background: 'rgba(76,175,80,.08)', border: '1px solid rgba(76,175,80,.2)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#4caf50', marginBottom: 8 }}>🥾 מידע שביל (אופציונלי)</div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>מרחק (ק"מ)</label>
+                    <input value={form.trailKm} onChange={e => setForm({ ...form, trailKm: e.target.value })}
+                      placeholder="5.5" type="number" step="0.1" style={{ ...inputStyle, width: '100%' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>זמן (דקות)</label>
+                    <input value={form.trailMin} onChange={e => setForm({ ...form, trailMin: e.target.value })}
+                      placeholder="90" type="number" style={{ ...inputStyle, width: '100%' }} />
+                  </div>
+                </div>
+                <label style={labelStyle}>רמת קושי</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['easy','medium','hard'] as const).map(d => (
+                    <button key={d} onClick={() => setForm({ ...form, trailDifficulty: d })} style={{
+                      flex: 1, padding: '6px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      fontFamily: 'Heebo, sans-serif', fontSize: 12, fontWeight: 600,
+                      background: form.trailDifficulty === d
+                        ? (d === 'easy' ? '#4caf50' : d === 'medium' ? '#ff9800' : '#f44336')
+                        : 'rgba(255,255,255,.06)',
+                      color: 'white',
+                    }}>
+                      {d === 'easy' ? '🟢 קל' : d === 'medium' ? '🟡 בינוני' : '🔴 קשה'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* פרטי — רק בטבע */}
+            {['hiking','cycling','park','dog','beach'].includes(form.sport) && (
+              <div style={{ marginBottom: 12 }}>
+                <button onClick={() => setForm({ ...form, isPrivate: !form.isPrivate })} style={{
+                  width: '100%', padding: '9px', borderRadius: 10, cursor: 'pointer',
+                  fontFamily: 'Heebo, sans-serif', fontSize: 13, fontWeight: 600,
+                  background: form.isPrivate ? 'rgba(155,89,182,.2)' : 'rgba(255,255,255,.05)',
+                  border: `1px solid ${form.isPrivate ? '#9b59b6' : 'rgba(255,255,255,.1)'}`,
+                  color: form.isPrivate ? '#9b59b6' : 'var(--gray)',
+                }}>
+                  {form.isPrivate ? '🔒 מקום פרטי — יישלח קוד גישה' : '🔓 ציבורי — לחץ להפוך לפרטי'}
+                </button>
+                {form.isPrivate && (
+                  <div style={{ fontSize: 11, color: 'var(--gray)', marginTop: 5, textAlign: 'center' }}>
+                    לאחר השמירה תקבל קוד 6 תווים לשיתוף עם חברים בלבד
+                  </div>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => { setShowModal(false); setPendingPos(null) }} style={{

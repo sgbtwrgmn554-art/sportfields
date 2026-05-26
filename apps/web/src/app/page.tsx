@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import CourtList from '@/components/CourtList'
-import SportFilter from '@/components/SportFilter'
+import SportFilter, { Category } from '@/components/SportFilter'
 import AuthModal from '@/components/AuthModal'
 import AdBanner from '@/components/AdBanner'
 import { useAuth } from '@/lib/useAuth'
@@ -13,6 +13,7 @@ const MapView = dynamic(() => import('@/components/MapView'), { ssr: false })
 export default function HomePage() {
   const [view, setView]       = useState<'map' | 'list'>('map')
   const [sport, setSport]     = useState<string>('all')
+  const [category, setCategory] = useState<Category>('sports')
   const [showAuth, setShowAuth] = useState(false)
   const [lang, setLang]       = useState<Lang>('he')
   const txt = t[lang]
@@ -101,7 +102,12 @@ export default function HomePage() {
       </header>
 
       {/* FILTER */}
-      <SportFilter selected={sport} onChange={setSport} />
+      <SportFilter
+        category={category}
+        selected={sport}
+        onCategoryChange={setCategory}
+        onChange={setSport}
+      />
 
       {/* AD BANNER — בין הפילטר למפה */}
       <AdBanner slot="1234567890" format="banner" />
@@ -109,7 +115,7 @@ export default function HomePage() {
       {/* MAIN */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
         {view === 'map'
-          ? <MapView sport={sport} onAuthRequired={() => setShowAuth(true)} />
+          ? <MapView sport={sport} category={category} onAuthRequired={() => setShowAuth(true)} />
           : <CourtList sport={sport} />
         }
       </div>

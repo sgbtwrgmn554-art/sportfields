@@ -6,6 +6,7 @@ import { authRoutes } from './routes/auth'
 import { courtsRoutes } from './routes/courts'
 import { checkinsRoutes } from './routes/checkins'
 import { adminRoutes } from './routes/admin'
+import { favoritesRoutes } from './routes/favorites'
 
 const app = Fastify({ logger: true })
 
@@ -26,6 +27,7 @@ async function main() {
   await app.register(courtsRoutes)
   await app.register(checkinsRoutes)
   await app.register(adminRoutes)
+  await app.register(favoritesRoutes)
 
   app.get('/health', () => ({ status: 'ok' }))
 

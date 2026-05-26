@@ -14,8 +14,9 @@ const bboxSchema = z.object({
   maxLat: z.coerce.number(),
   minLng: z.coerce.number(),
   maxLng: z.coerce.number(),
-  sport: z.string().optional(),
-  limit: z.coerce.number().default(300),
+  sport:  z.string().optional(),        // סוג בודד
+  sports: z.string().optional(),        // רשימה מופרדת בפסיקים (לפי קטגוריה)
+  limit:  z.coerce.number().default(300),
 })
 
 const addCourtSchema = z.object({
@@ -24,21 +25,55 @@ const addCourtSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   sport_types: z.array(z.string()).min(1),
+  is_private: z.boolean().optional(),
+  trail_km: z.number().optional(),
+  trail_minutes: z.number().int().optional(),
+  trail_difficulty: z.enum(['easy','medium','hard']).optional(),
+  payment_token: z.string().optional(), // לאנטי-ספאם
 })
+
+function generateCode(): string {
+  return Math.random().toString(36).substring(2, 8).toUpperCase()
+}
+
+const OWNER_CODE = process.env.OWNER_CODE || 'OWNER2026'
 
 export async function courtsRoutes(app: FastifyInstance) {
 
   // ── bbox endpoint — רק מה שנמצא בתוך מסגרת המפה הנוכחית ───────────────
   app.get('/courts/bbox', async (req) => {
     const q = bboxSchema.parse(req.query)
-    const sportFilter = q.sport ? `AND $5 = ANY(c.sport_types)` : ''
+    // בנה פילטר ספורט
+    let sportFilter = ''
     const params: unknown[] = [q.minLng, q.minLat, q.maxLng, q.maxLat]
-    if (q.sport) params.push(q.sport)
+
+    if (q.sport) {
+      // סוג בודד
+      sportFilter = `AND $5 = ANY(c.sport_types)`
+      params.push(q.sport)
+    } else if (q.sports) {
+      // רשימת סוגים (קטגוריה)
+      const list = q.sports.split(',').map(s => s.trim()).filter(Boolean)
+      sportFilter = `AND c.sport_types && $5`
+      params.push(list)
+    }
     params.push(q.limit)
+
+    const ownerCode = (req.headers as any)['x-owner-code']
+    const accessCode = (req.headers as any)['x-access-code']
+    const isOwner = ownerCode === OWNER_CODE
+
+    // בעלים רואה הכל; אחרים רואים רק ציבורי + מה שיש להם קוד אליו
+    const privateFilter = isOwner
+      ? ''
+      : accessCode
+        ? `AND (c.is_private = false OR c.access_code = '${accessCode.replace(/'/g,"''")}')`
+        : `AND (c.is_private = false OR c.is_private IS NULL)`
 
     const { rows } = await db.query(
       `SELECT
         c.id, c.name, c.address, c.sport_types, c.verified, c.photo_url,
+        c.is_private, c.access_code, c.trail_km, c.trail_minutes, c.trail_difficulty,
         ST_X(c.location::geometry) as lng,
         ST_Y(c.location::geometry) as lat,
         COUNT(ci.id) FILTER (WHERE ci.checked_out_at IS NULL) as active_players
@@ -47,12 +82,14 @@ export async function courtsRoutes(app: FastifyInstance) {
        WHERE ST_X(c.location::geometry) BETWEEN $1 AND $3
          AND ST_Y(c.location::geometry) BETWEEN $2 AND $4
          ${sportFilter}
+         ${privateFilter}
        GROUP BY c.id
        ORDER BY active_players DESC
        LIMIT $${params.length}`,
       params
     )
-    return rows
+    // אם פרטי ולא בעלים — מסתיר את הקוד עצמו
+    return rows.map(r => isOwner ? r : { ...r, access_code: r.is_private ? '••••••' : null })
   })
 
   // ── מגרשים קרובים + כמה שחקנים נמצאים שם ─────────────────────────────
@@ -242,13 +279,48 @@ export async function courtsRoutes(app: FastifyInstance) {
     const body = addCourtSchema.parse(req.body)
     const userId = (req.user as { userId: string }).userId
 
+    // ── אנטי-ספאם: בדוק כמה הוסיף היום ────────────────────────
+    const todayCount = await db.query(
+      `SELECT COUNT(*) FROM courts WHERE added_by = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
+      [userId]
+    )
+    const count = parseInt(todayCount.rows[0].count)
+    if (count >= 5) {
+      return reply.status(429).send({ error: 'הגעת למגבלה — ניתן להוסיף עד 5 מקומות ביום' })
+    }
+
+    // ── מקום פרטי — יצירת קוד גישה ────────────────────────────
+    const accessCode = body.is_private ? generateCode() : null
+
     const { rows } = await db.query(
-      `INSERT INTO courts (name, address, location, sport_types, added_by)
-       VALUES ($1, $2, ST_MakePoint($3, $4)::geography, $5, $6)
-       RETURNING id, name, address, sport_types`,
-      [body.name, body.address, body.lng, body.lat, body.sport_types, userId]
+      `INSERT INTO courts
+         (name, address, location, sport_types, added_by,
+          is_private, access_code, trail_km, trail_minutes, trail_difficulty)
+       VALUES ($1,$2,ST_MakePoint($3,$4)::geography,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING id, name, address, sport_types, is_private, access_code`,
+      [
+        body.name, body.address, body.lng, body.lat, body.sport_types, userId,
+        body.is_private ?? false, accessCode,
+        body.trail_km ?? null, body.trail_minutes ?? null, body.trail_difficulty ?? null,
+      ]
     )
 
     return reply.status(201).send(rows[0])
+  })
+
+  // בדיקת קוד גישה למקום פרטי
+  app.get('/courts/:id/verify-code', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { code } = req.query as { code: string }
+    const ownerCode = (req.headers as any)['x-owner-code']
+
+    if (ownerCode === OWNER_CODE) return { valid: true, isOwner: true }
+
+    const { rows } = await db.query(
+      `SELECT access_code FROM courts WHERE id = $1 AND is_private = true`, [id]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'לא נמצא' })
+    const valid = rows[0].access_code === code?.toUpperCase()
+    return { valid }
   })
 }
