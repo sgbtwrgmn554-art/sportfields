@@ -123,9 +123,69 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 /* ─── SPONSORED DETAIL ─── */
 .dbtn-phone{background:#30d158;color:#000}
 .dbtn-web{background:#ff9f0a;color:#000}
+
+/* ─── AUTH SCREEN ─── */
+#auth-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px calc(env(safe-area-inset-bottom,0px) + 32px);
+  transition:opacity .4s;
+}
+#auth-screen.hide{opacity:0;pointer-events:none}
+.auth-logo{font-size:72px;margin-bottom:10px;line-height:1}
+.auth-title{font-size:27px;font-weight:900;margin-bottom:6px;letter-spacing:-.4px}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:30px;text-align:center;line-height:1.5}
+.auth-form{width:100%;max-width:340px}
+.auth-tabs{display:flex;border:1.5px solid var(--border2);border-radius:13px;overflow:hidden;margin-bottom:16px}
+.auth-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s}
+.auth-tab.on{background:var(--accent);color:#000}
+.auth-inp{
+  width:100%;padding:14px 16px;border-radius:13px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:inherit;font-size:16px;
+  margin-bottom:11px;outline:none;transition:.2s;display:block;
+}
+.auth-inp:focus{border-color:var(--accent)}
+.auth-btn{
+  width:100%;padding:15px;border-radius:13px;
+  background:var(--accent);color:#000;border:none;
+  font-family:inherit;font-size:16px;font-weight:800;
+  cursor:pointer;margin-bottom:13px;transition:.15s;
+}
+.auth-btn:active{opacity:.85;transform:scale(.98)}
+.auth-div{text-align:center;color:var(--muted);font-size:13px;margin-bottom:13px}
+.auth-guest{
+  width:100%;padding:14px;border-radius:13px;
+  background:transparent;border:1.5px solid var(--border2);
+  color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.auth-guest:active{background:var(--card2)}
+.auth-err{color:var(--red);font-size:13px;margin-bottom:9px;text-align:center;min-height:18px}
 </style>
 </head>
 <body>
+
+<!-- ─── AUTH SCREEN ─── -->
+<div id="auth-screen">
+  <div class="auth-logo">🗺️</div>
+  <div class="auth-title">מגרשי ספורט</div>
+  <div class="auth-sub">גלה מגרשי ספורט קרובים אליך<br>בכל מקום בעולם</div>
+  <div class="auth-form">
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tab-reg" onclick="switchTab('register')">הרשמה</button>
+      <button class="auth-tab"    id="tab-log" onclick="switchTab('login')">כניסה</button>
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <input class="auth-inp" id="auth-name"  type="text"     placeholder="שם מלא"            autocomplete="name" />
+    <input class="auth-inp" id="auth-email" type="email"    placeholder="אימייל"             autocomplete="email"        dir="ltr" />
+    <input class="auth-inp" id="auth-pass"  type="password" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="new-password" dir="ltr" />
+    <button class="auth-btn" id="auth-submit" onclick="authSubmit()">הרשמה</button>
+    <div class="auth-div">— או —</div>
+    <button class="auth-guest" onclick="continueAsGuest()">👤 המשך בלי חשבון</button>
+  </div>
+</div>
 
 <div id="map"></div>
 
@@ -133,6 +193,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   <div class="hdr-row">
     <div class="hdr-title">🗺️ מגרשי ספורט</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
+    <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
@@ -199,6 +260,69 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ─── AUTH (local-storage, no backend needed) ────────────
+let authMode = 'register', currentUser = null;
+
+function switchTab(mode) {
+  authMode = mode;
+  const nameEl = document.getElementById('auth-name');
+  nameEl.style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('tab-reg').classList.toggle('on', mode === 'register');
+  document.getElementById('tab-log').classList.toggle('on', mode === 'login');
+  document.getElementById('auth-submit').textContent = mode === 'register' ? 'הרשמה' : 'כניסה';
+  document.getElementById('auth-err').textContent = '';
+}
+
+function showAuthErr(msg) { document.getElementById('auth-err').textContent = msg; }
+
+function authSubmit() {
+  const name  = document.getElementById('auth-name').value.trim();
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('auth-pass').value;
+  if (!email.includes('@')) return showAuthErr('⚠️ אימייל לא תקין');
+  if (pass.length < 6)      return showAuthErr('⚠️ סיסמה: לפחות 6 תווים');
+
+  const users = JSON.parse(localStorage.getItem('pg_users') || '{}');
+  if (authMode === 'register') {
+    if (users[email]) return showAuthErr('⚠️ אימייל כבר רשום — נסה להיכנס');
+    users[email] = { name: name || email.split('@')[0], pass };
+    localStorage.setItem('pg_users', JSON.stringify(users));
+    currentUser = { email, name: users[email].name };
+  } else {
+    if (!users[email])              return showAuthErr('⚠️ אימייל לא נמצא');
+    if (users[email].pass !== pass) return showAuthErr('⚠️ סיסמה שגויה');
+    currentUser = { email, name: users[email].name };
+  }
+  localStorage.setItem('pg_user', JSON.stringify(currentUser));
+  enterApp();
+}
+
+function continueAsGuest() {
+  currentUser = { guest: true };
+  enterApp();
+}
+
+function enterApp() {
+  const s = document.getElementById('auth-screen');
+  s.classList.add('hide');
+  setTimeout(() => { s.style.display = 'none'; }, 400);
+  document.getElementById('user-btn').style.display = 'flex';
+  updateFilterPills('default');
+  updateLocBtn();
+  locateMe();
+}
+
+function showUserMenu() {
+  if (!currentUser) return;
+  const info = currentUser.guest
+    ? 'אתה גולש כאורח'
+    : `${currentUser.name}\n${currentUser.email}`;
+  if (confirm(`${info}\n\nהתנתק?`)) {
+    localStorage.removeItem('pg_user');
+    location.reload();
+  }
+}
+
 // ─── SPONSORED LISTINGS ─────────────────────────────────
 // כדי להוסיף עסק: העתק בלוק אחד, מלא את הפרטים ושלח לעסק חשבונית 💰
 const SPONSORED = [
@@ -675,9 +799,19 @@ function navTo(app) {
 }
 
 // ─── BOOT ───────────────────────────────────────────────
-updateFilterPills('default'); // show global pills until country is known
-updateLocBtn();
-locateMe();
+{
+  const saved = localStorage.getItem('pg_user');
+  if (saved) {
+    // משתמש מחובר — דלג על מסך הכניסה
+    currentUser = JSON.parse(saved);
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('user-btn').style.display = 'flex';
+    updateFilterPills('default');
+    updateLocBtn();
+    locateMe();
+  }
+  // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
+}
 </script>
 </body>
 </html>
