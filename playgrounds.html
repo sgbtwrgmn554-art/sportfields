@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="מגרשים">
 <title>🗺️ מגרשי ספורט</title>
+<link rel="manifest" href="/manifest-playgrounds.json">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -796,6 +797,11 @@ function navTo(app) {
   const { lat, lon } = selected;
   if (app==='waze') window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`);
   else              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+}
+
+// ─── SERVICE WORKER ─────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw-playgrounds.js');
 }
 
 // ─── BOOT ───────────────────────────────────────────────
