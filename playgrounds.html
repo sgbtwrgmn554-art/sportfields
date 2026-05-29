@@ -106,6 +106,23 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 @keyframes sp{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:36px 20px;color:var(--muted);font-size:15px}
 .empty-ico{font-size:52px;margin-bottom:12px}
+
+/* ─── SPONSORED ─── */
+.sp-row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid #3a1a6a;cursor:pointer;transition:.12s;background:rgba(191,90,242,.07);border-right:3px solid #bf5af2}
+.sp-row:active{background:rgba(191,90,242,.15)}
+.sp-badge{font-size:9px;font-weight:800;color:#bf5af2;background:rgba(191,90,242,.18);border:1px solid rgba(191,90,242,.4);border-radius:4px;padding:2px 6px;display:inline-block;margin-bottom:3px}
+.sp-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-desc{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.sp-dist{font-size:14px;font-weight:800;color:#bf5af2;flex-shrink:0}
+
+/* ─── AD BANNER ─── */
+.ad-wrap{padding:8px 14px;border-bottom:.5px solid var(--border);background:rgba(255,255,255,.03)}
+.ad-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:700;text-align:left;margin-bottom:4px}
+.ad-placeholder{background:linear-gradient(135deg,#1e2d4a,#162035);border-radius:10px;height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,255,255,.3);border:1px dashed #2a3a5c}
+
+/* ─── SPONSORED DETAIL ─── */
+.dbtn-phone{background:#30d158;color:#000}
+.dbtn-web{background:#ff9f0a;color:#000}
 </style>
 </head>
 <body>
@@ -141,6 +158,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
       </select>
     </div>
   </div>
+  <!-- Google AdSense Banner — החלף YOUR_SLOT_ID -->
+  <div class="ad-wrap">
+    <div class="ad-lbl">פרסומת</div>
+    <ins class="adsbygoogle"
+         style="display:block;border-radius:10px;overflow:hidden"
+         data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
+         data-ad-slot="YOUR_SLOT_ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <!-- תצוגת placeholder עד שה-AdSense יוגדר -->
+    <div class="ad-placeholder" id="ad-placeholder">פרסומת Google AdSense — תופיע לאחר הגדרה</div>
+  </div>
   <div class="sheet-body" id="list">
     <div class="empty"><span class="spinner"></span></div>
   </div>
@@ -156,7 +186,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
       </div>
     </div>
     <div class="dtags" id="d-tags"></div>
-    <div class="dbtns">
+    <div class="dbtns" id="d-btns">
       <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
       <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
       <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
@@ -164,8 +194,49 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   </div>
 </div>
 
+<!-- Google AdSense — החלף YOUR_PUBLISHER_ID במזהה שלך מ-adsense.google.com -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID" crossorigin="anonymous"></script>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ─── SPONSORED LISTINGS ─────────────────────────────────
+// כדי להוסיף עסק: העתק בלוק אחד, מלא את הפרטים ושלח לעסק חשבונית 💰
+const SPONSORED = [
+  // דוגמה — מחק והוסף עסקים אמיתיים שמשלמים
+  {
+    name: 'Gold\'s Gym — סניף מרכז',
+    sport: 'fitness',
+    icon: '🏋️',
+    desc: 'חדר כושר מלא · פתוח 24/7 · שבוע ניסיון חינם',
+    lat: 32.0878, lon: 34.7785,   // קואורדינטות העסק
+    phone: '03-1234567',
+    website: 'https://goldsgym.co.il',
+    countries: ['IL'],             // 'all' = בכל מדינה
+  },
+  {
+    name: 'WinSport — כדורגל 5vs5',
+    sport: 'soccer',
+    icon: '⚽',
+    desc: 'מגרשי כדורגל קטן מקורים · השכרה לשעה · תאורה',
+    lat: 32.0812, lon: 34.7901,
+    phone: '03-9876543',
+    website: 'https://winsport.co.il',
+    countries: ['IL'],
+  },
+  {
+    name: 'NYC Sports Club',
+    sport: 'fitness',
+    icon: '💪',
+    desc: 'Full gym · Pool · Classes · Free 1-week trial',
+    lat: 40.7145, lon: -74.0071,
+    phone: '+1-212-555-0100',
+    website: 'https://nycsc.com',
+    countries: ['US'],
+  },
+];
+
+const MAX_SPONSORED_DIST = 5000; // הצג רשומות ממומנות עד 5ק"מ
+
 // ─── ICONS & NAMES ──────────────────────────────────────
 const ICONS = {
   soccer:'⚽',football:'⚽',futsal:'⚽',mini_soccer:'⚽',
@@ -485,16 +556,62 @@ function renderMarkers() {
   });
 }
 
+// ─── SPONSORED HELPERS ──────────────────────────────────
+let shownSponsored = [];
+
+function getNearbySponsored() {
+  if (!uLat) return [];
+  return SPONSORED.filter(s => {
+    const countryOk = s.countries === 'all' || s.countries.includes(curCountry);
+    const distOk = km(uLat, uLon, s.lat, s.lon) <= MAX_SPONSORED_DIST;
+    const filterOk = curFilter === 'all' || (FILTER_GROUPS[curFilter]||[curFilter]).includes(s.sport);
+    return countryOk && distOk && filterOk;
+  }).map(s => ({ ...s, dist: km(uLat, uLon, s.lat, s.lon) }))
+    .sort((a, b) => a.dist - b.dist);
+}
+
+function openSponsored(i) {
+  const s = shownSponsored[i]; if (!s) return;
+  selected = { lat: s.lat, lon: s.lon, _sponsored: s };
+  map.flyTo([s.lat, s.lon], 17, { duration: 0.6 });
+  document.getElementById('d-ico').textContent  = s.icon;
+  document.getElementById('d-name').textContent = s.name;
+  document.getElementById('d-sub').textContent  = `${s.desc} · ${fmt(s.dist)} ממיקומך`;
+  document.getElementById('d-tags').innerHTML =
+    `<span class="dtag">⭐ ממומן</span><span class="dtag">📞 ${s.phone}</span>`;
+  const btns = document.getElementById('d-btns');
+  btns.innerHTML = `
+    <button class="dbtn dbtn-phone" onclick="window.open('tel:${s.phone}')">📞 התקשר</button>
+    <button class="dbtn dbtn-web"   onclick="window.open('${s.website}','_blank')">🌐 אתר</button>
+    <button class="dbtn dbtn-waze"  onclick="navTo('waze')">🔵 Waze</button>
+    <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
+  `;
+  document.getElementById('overlay').classList.add('on');
+}
+
 // ─── LIST ────────────────────────────────────────────────
 function renderList() {
   shownFields = getFiltered();
+  shownSponsored = getNearbySponsored();
   const el = document.getElementById('list');
   document.getElementById('cnt').textContent = `${shownFields.length} מגרשים`;
 
-  if (!shownFields.length) {
+  if (!shownFields.length && !shownSponsored.length) {
     el.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div>לא נמצאו מגרשים<br><small>נסה להגדיל את הרדיוס</small></div>';
     updateLocBtn(); return;
   }
+
+  // רשומות ממומנות בראש הרשימה
+  const sponsoredRows = shownSponsored.map((s, i) => `
+    <div class="sp-row" onclick="openSponsored(${i})">
+      <div style="font-size:32px;flex-shrink:0">${s.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sp-badge">⭐ ממומן</div>
+        <div class="sp-name">${s.name}</div>
+        <div class="sp-desc">${s.desc}</div>
+      </div>
+      <div class="sp-dist">${fmt(s.dist)}</div>
+    </div>`).join('');
 
   const rows = shownFields.slice(0, 50).map((f, i) => {
     const extras = [
@@ -516,7 +633,7 @@ function renderList() {
     ? `<div style="text-align:center;padding:16px;font-size:13px;color:var(--muted)">ועוד ${shownFields.length-50} — הקטן את הרדיוס</div>`
     : '<div style="padding-bottom:env(safe-area-inset-bottom,16px)"></div>';
 
-  el.innerHTML = rows + more;
+  el.innerHTML = sponsoredRows + rows + more;
   updateLocBtn();
 }
 
@@ -538,6 +655,11 @@ function openDetail(i) {
   if (f.tags?.opening_hours)        tags.push(`🕐 ${f.tags.opening_hours}`);
   if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  document.getElementById('d-btns').innerHTML = `
+    <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
+    <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
+  `;
   document.getElementById('overlay').classList.add('on');
 }
 
