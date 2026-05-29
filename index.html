@@ -10,7 +10,6 @@
 <link rel="manifest" href="manifest.json">
 <title>כושר לאבא 💪</title>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" async></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1070,7 +1069,6 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   <button class="nb"        id="nb-body"     onclick="showTab('body')">    <span class="ni">📈</span>גוף</button>
   <button class="nb"        id="nb-plan"     onclick="showTab('plan')">    <span class="ni">📅</span>תוכנית</button>
   <button class="nb"        id="nb-progress" onclick="showTab('progress')"><span class="ni">🏆</span>התקדמות</button>
-  <button class="nb"        id="nb-fields"   onclick="showTab('fields');initFieldsTab()"><span class="ni">🗺️</span>מגרשים</button>
   <button class="nb"        id="nb-settings" onclick="showTab('settings')"><span class="ni">⚙️</span>הגדרות</button>
 </div>
 
@@ -1160,49 +1158,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   </div>
 </div>
 
-<!-- FIELDS / PLAYGROUNDS MAP -->
-<div class="tab" id="tab-fields">
-  <div style="margin:14px 16px 0">
-    <div class="card" style="margin:0">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:17px;font-weight:900">🗺️ מגרשי ספורט</div>
-        <button onclick="refreshFields()" style="background:var(--accent-s);border:1px solid var(--accent);border-radius:10px;padding:6px 12px;font-family:inherit;font-size:13px;font-weight:700;color:var(--accent);cursor:pointer">↻ רענן</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <div style="font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap">רדיוס חיפוש:</div>
-        <select id="fields-radius" class="inp" style="width:auto;padding:7px 12px;font-size:13px" onchange="refreshFields()">
-          <option value="500">500מ'</option>
-          <option value="1000">1ק"מ</option>
-          <option value="1500" selected>1.5ק"מ</option>
-          <option value="2000">2ק"מ</option>
-          <option value="3000">3ק"מ</option>
-          <option value="5000">5ק"מ</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="pill field-pill active" id="fp-all"        onclick="setFieldFilter('all')">🏟️ הכל</button>
-        <button class="pill field-pill"        id="fp-soccer"     onclick="setFieldFilter('soccer')">⚽ כדורגל</button>
-        <button class="pill field-pill"        id="fp-basketball" onclick="setFieldFilter('basketball')">🏀 כדורסל</button>
-        <button class="pill field-pill"        id="fp-tennis"     onclick="setFieldFilter('tennis')">🎾 טניס</button>
-        <button class="pill field-pill"        id="fp-playground" onclick="setFieldFilter('playground')">🛝 גן שעשועים</button>
-      </div>
-      <div id="fields-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:16px"></div>
-    </div>
-  </div>
-  <div style="margin:10px 16px 0">
-    <div id="fields-map" style="height:300px;border-radius:16px;overflow:hidden;border:.5px solid var(--border)"></div>
-  </div>
-  <div style="margin:10px 16px 20px">
-    <div class="card" style="margin:0">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📍 מגרשים קרובים</div>
-      <div id="fields-list"><div style="text-align:center;padding:24px;color:var(--muted)">פותח את הלשונית לטעינה...</div></div>
-    </div>
-  </div>
-</div>
-
 </div><!-- /app-main -->
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const WORKOUTS={
   'בית':[
@@ -3020,128 +2977,6 @@ function enterApp(){
     }
   }
 })();
-// ═══════════════════════════════════════════
-//  PLAYGROUNDS / SPORTS FIELDS MAP
-// ═══════════════════════════════════════════
-let _fieldsMap=null,_fieldsMarkers=[],_fieldsFilter='all',_fieldsData=[];
-const _SPORT_ICONS={soccer:'⚽',football:'⚽',futsal:'⚽',basketball:'🏀',tennis:'🎾',
-  volleyball:'🏐',athletics:'🏃',running:'🏃',fitness:'💪',gym:'💪',swimming:'🏊',
-  table_tennis:'🏓',handball:'🤾',baseball:'⚾',cricket:'🏏',playground:'🛝',default:'🏟️'};
-const _SPORT_HE={soccer:'כדורגל',football:'כדורגל',futsal:'פוטסל',basketball:'כדורסל',
-  tennis:'טניס',volleyball:'כדורעף',athletics:'אתלטיקה',fitness:'כושר',gym:'כושר',
-  swimming:'שחייה',table_tennis:'פינג-פונג',handball:'כדוריד',playground:'גן שעשועים',default:'מגרש ספורט'};
-function _sportIcon(s){return _SPORT_ICONS[s?.toLowerCase()]||_SPORT_ICONS.default;}
-function _sportHe(s){return _SPORT_HE[s?.toLowerCase()]||s||'מגרש ספורט';}
-function _distM(lat1,lon1,lat2,lon2){
-  const R=6371000,dL=(lat2-lat1)*Math.PI/180,dG=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dG/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-async function initFieldsTab(){
-  if(_fieldsMap){setTimeout(()=>_fieldsMap.invalidateSize(),150);return;}
-  const el=document.getElementById('fields-map');
-  if(!el||typeof L==='undefined')return;
-  _fieldsMap=L.map('fields-map',{zoomControl:true}).setView([31.7683,35.2137],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:19
-  }).addTo(_fieldsMap);
-  document.getElementById('fields-status').textContent='📍 מאתר מיקום...';
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      p=>{
-        const{latitude:lat,longitude:lon}=p.coords;
-        _fieldsMap.setView([lat,lon],15);
-        L.circleMarker([lat,lon],{radius:10,fillColor:'#30d158',fillOpacity:1,color:'#fff',weight:3})
-          .addTo(_fieldsMap).bindPopup('<div dir="rtl">📍 המיקום שלך</div>');
-        _loadFields(lat,lon);
-      },
-      ()=>{document.getElementById('fields-status').textContent='⚠️ לא ניתן לאתר מיקום';_loadFields(31.7683,35.2137);}
-    );
-  }else{document.getElementById('fields-status').textContent='⚠️ GPS לא נתמך';_loadFields(31.7683,35.2137);}
-}
-
-async function _loadFields(lat,lon){
-  const radius=parseInt(document.getElementById('fields-radius')?.value||1500);
-  const statusEl=document.getElementById('fields-status');
-  const listEl=document.getElementById('fields-list');
-  statusEl.textContent=`🔍 מחפש מגרשים ב-${radius>=1000?(radius/1000)+'ק"מ':radius+'מ\''}...`;
-  listEl.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner" style="margin:0 auto 10px;width:24px;height:24px;border-width:3px"></div>טוען מגרשים...</div>';
-  const q=`[out:json][timeout:25];(node["leisure"~"^(pitch|sports_centre|playground|fitness_station)$"](around:${radius},${lat},${lon});way["leisure"~"^(pitch|sports_centre|playground|fitness_station)$"](around:${radius},${lat},${lon}););out center tags;`;
-  try{
-    const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    _fieldsData=(data.elements||[]).map(el=>{
-      const clat=el.lat||el.center?.lat,clon=el.lon||el.center?.lon;
-      if(!clat||!clon)return null;
-      const t=el.tags||{};
-      const rawSport=(t.sport||'').split(';')[0].trim()||null;
-      const sport=rawSport||(t.leisure==='playground'?'playground':'default');
-      return{lat:clat,lon:clon,name:t.name||t['name:he']||_sportHe(sport),sport,tags:t,dist:_distM(lat,lon,clat,clon)};
-    }).filter(Boolean).sort((a,b)=>a.dist-b.dist);
-    _renderFieldsMap();_renderFieldsList();
-    statusEl.textContent=`נמצאו ${_fieldsData.length} מגרשים`;
-  }catch(e){
-    statusEl.textContent='❌ שגיאה בטעינה — נסה שוב';
-    listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--red)">שגיאה בטעינת נתונים. בדוק חיבור לאינטרנט.</div>';
-  }
-}
-
-function _renderFieldsMap(){
-  _fieldsMarkers.forEach(m=>_fieldsMap.removeLayer(m));_fieldsMarkers=[];
-  _filtered().forEach(p=>{
-    const icon=L.divIcon({html:`<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))">${_sportIcon(p.sport)}</div>`,className:'',iconSize:[32,32],iconAnchor:[16,16]});
-    const m=L.marker([p.lat,p.lon],{icon}).addTo(_fieldsMap);
-    const extras=[p.tags?.surface,p.tags?.lit==='yes'?'💡 תאורה':''].filter(Boolean).join(' · ');
-    m.bindPopup(`<div dir="rtl" style="min-width:130px"><strong>${p.name}</strong><br><small style="color:#777">${_sportHe(p.sport)} · ${Math.round(p.dist)}מ'${extras?' · '+extras:''}</small></div>`);
-    _fieldsMarkers.push(m);
-  });
-}
-
-function _renderFieldsList(){
-  const fl=_filtered();
-  const listEl=document.getElementById('fields-list');
-  if(!fl.length){listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">לא נמצאו מגרשים בסינון הנוכחי</div>';return;}
-  listEl.innerHTML=fl.slice(0,30).map(p=>{
-    const d=p.dist<1000?Math.round(p.dist)+'מ\'':(p.dist/1000).toFixed(1)+'ק"מ';
-    const extras=[p.tags?.surface,p.tags?.lit==='yes'?'💡':''].filter(Boolean).join(' ');
-    return`<div onclick="flyToField(${p.lat},${p.lon})" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:.5px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent">
-      <div style="font-size:30px;flex-shrink:0">${_sportIcon(p.sport)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">${_sportHe(p.sport)}${extras?' · '+extras:''}</div>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0">${d}</div>
-    </div>`;
-  }).join('')+(fl.length>30?`<div style="text-align:center;padding:12px;font-size:13px;color:var(--muted)">ועוד ${fl.length-30} מגרשים...</div>`:'');
-}
-
-function _filtered(){return _fieldsFilter==='all'?_fieldsData:_fieldsData.filter(p=>p.sport===_fieldsFilter||p.tags?.leisure===_fieldsFilter);}
-function flyToField(lat,lon){_fieldsMap.flyTo([lat,lon],17,{duration:0.7});}
-function setFieldFilter(f){
-  _fieldsFilter=f;
-  document.querySelectorAll('.field-pill').forEach(p=>p.classList.remove('active'));
-  const el=document.getElementById('fp-'+f);if(el)el.classList.add('active');
-  _renderFieldsMap();_renderFieldsList();
-}
-function refreshFields(){
-  if(!_fieldsMap)return;
-  _fieldsMarkers.forEach(m=>_fieldsMap.removeLayer(m));_fieldsMarkers=[];_fieldsData=[];
-  document.getElementById('fields-status').textContent='📍 מאתר מיקום...';
-  document.getElementById('fields-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner" style="margin:0 auto 10px;width:24px;height:24px;border-width:3px"></div>טוען...</div>';
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      p=>{
-        const{latitude:lat,longitude:lon}=p.coords;
-        _fieldsMap.setView([lat,lon],15);
-        _loadFields(lat,lon);
-      },
-      ()=>_loadFields(31.7683,35.2137)
-    );
-  }else _loadFields(31.7683,35.2137);
-}
-
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
