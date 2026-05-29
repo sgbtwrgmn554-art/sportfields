@@ -224,6 +224,22 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .ob-next{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:14px 20px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;flex:1;transition:.15s}
 .ob-next:active,.ob-back:active{opacity:.75;transform:scale(.98)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* ═══ SET TRACKER ═══ */
+.set-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-top:.5px solid var(--border)}
+.set-row.done{opacity:.45}
+.set-num{font-size:11px;font-weight:800;color:var(--muted);min-width:22px;text-align:center;line-height:1}
+.set-inp{width:54px!important;padding:6px 4px!important;font-size:13px!important;text-align:center!important;min-width:0!important}
+.set-btn{flex:1;padding:7px 4px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;transition:.2s;white-space:nowrap}
+.set-btn:active{opacity:.7;transform:scale(.96)}
+.set-btn.done{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+.set-btn.last{border-color:var(--orange);color:var(--orange)}
+.set-btn.last.done{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+
+/* ═══ REST TIMER OVERLAY ═══ */
+#rest-overlay{position:fixed;bottom:90px;left:12px;right:12px;background:var(--card);border:2px solid var(--accent);border-radius:20px;padding:16px;z-index:300;display:none;box-shadow:0 8px 40px rgba(0,0,0,.55);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
+body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.rest-disp{font-size:58px;font-weight:300;text-align:center;letter-spacing:-3px;padding:4px 0;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1158,6 +1174,20 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   </div>
 </div>
 
+<!-- REST TIMER OVERLAY -->
+<div id="rest-overlay">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+    <div style="font-size:13px;font-weight:800;color:var(--accent)">⏱️ <span id="rest-lbl">מנוחה</span></div>
+    <button onclick="skipRestTimer()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer">דלג ✕</button>
+  </div>
+  <div id="rest-disp" class="rest-disp">01:30</div>
+  <div class="prog-track" style="margin-bottom:10px"><div id="rest-prog" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:10px;transition:width 1s linear;width:100%"></div></div>
+  <div style="display:flex;gap:8px">
+    <button id="rest-toggle" class="btn" onclick="toggleRestTimer()" style="flex:1">⏸️ עצור</button>
+    <button class="btn btn-red" onclick="skipRestTimer()" style="width:auto;padding:12px 18px">סיים</button>
+  </div>
+</div>
+
 </div><!-- /app-main -->
 
 <script>
@@ -1330,6 +1360,7 @@ let S={
   apiKey:'',gender:'male',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
   pushSubscribed:false,pushServerUrl:'',
   foodPrefs:{allergies:[],dislikes:[],likes:[],notes:''},
+  workoutSets:{},
 };
 // Push server — built-in, no user configuration needed
 const PUSH_SERVER='https://sportfields.vercel.app';
@@ -1340,6 +1371,7 @@ function checkReset(){
     if(!S.weekDone[new Date(S.lastDate).getDay()])S.streak=0;
     S.checkedEx={};S.checkedMeals={};S.waterCups=0;S.steps=0;
     S.weekDone=[false,false,false,false,false,false,false];
+    S.workoutSets={};
     S.lastDate=TODAY;save();showToast('🌅 יום חדש — בוא נתחיל!');
   }
 }
@@ -1394,10 +1426,34 @@ function renderWorkout(){
   document.getElementById('ex-prog').style.width=(ws.length?done/ws.length*100:0)+'%';
   document.getElementById('ex-done-msg').style.display=done===ws.length&&ws.length?'block':'none';
   const el=document.getElementById('ex-list');el.innerHTML='';
+  if(!S.workoutSets)S.workoutSets={};
   ws.forEach((ex,i)=>{
     const key=S.location+'-'+i,isDone=!!S.checkedEx[key];
+    const sk=TODAY+'_'+S.location+'_'+i;
+    if(!S.workoutSets[sk])S.workoutSets[sk]=Array(ex.sets).fill(null).map(()=>({done:false,reps:'',weight:''}));
+    const sets=S.workoutSets[sk];
+    const doneCount=sets.filter(s=>s.done).length;
+    const locE=S.location.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const div=document.createElement('div');div.className='ci'+(isDone?' done':'');
-    div.innerHTML='<div class="cbox'+(isDone?' done':'')+'" onclick="toggleEx(\''+key+'\')">'+(isDone?'<span style="color:#fff;font-size:16px">✓</span>':'')+'</div><div style="flex:1"><div class="cn">'+ex.emoji+' '+ex.name+'</div><div class="cs">'+ex.sets+' סטים × '+ex.reps+' • '+ex.muscle+'</div><div class="tip">💡 '+ex.tip+'</div>'+(ex.yt?'<a href="'+ex.yt+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ סרטון הדגמה</a>':'')+'</div>';
+
+    let sh='<div style="margin-top:10px">';
+    sets.forEach((set,si)=>{
+      const isLast=si===sets.length-1;
+      sh+='<div class="set-row'+(set.done?' done':'')+'"><span class="set-num">'+(si+1)+'</span>'
+        +'<input class="inp set-inp" type="number" placeholder="חז׳" value="'+(set.reps||'')+'" oninput="saveSetField(\''+locE+'\','+i+','+si+',\'reps\',this.value)">'
+        +'<input class="inp set-inp" type="number" placeholder="ק׳ג" value="'+(set.weight||'')+'" oninput="saveSetField(\''+locE+'\','+i+','+si+',\'weight\',this.value)">'
+        +'<button class="set-btn'+(set.done?' done':isLast?' last':'')+'" onclick="toggleSet(\''+locE+'\','+i+','+si+')">'
+        +(set.done?'✓':isLast?'🏁 סיים':'✓')+'</button></div>';
+    });
+    sh+='</div>';
+
+    div.innerHTML='<div class="cbox'+(isDone?' done':'')+'" onclick="toggleEx(\''+key+'\')" style="flex-direction:column;gap:2px">'
+      +(isDone?'<span style="color:#fff;font-size:16px">✓</span>':'<span style="font-size:10px;font-weight:800;color:var(--muted)">'+doneCount+'/'+ex.sets+'</span>')
+      +'</div><div style="flex:1"><div class="cn">'+ex.emoji+' '+ex.name+'</div>'
+      +'<div class="cs">'+ex.sets+' סטים × '+ex.reps+' • '+ex.muscle+'</div>'
+      +'<div class="tip">💡 '+ex.tip+'</div>'
+      +(ex.yt?'<a href="'+ex.yt+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;background:#ff000022;border:1px solid #ff000066;border-radius:8px;padding:4px 10px;font-size:12px;color:#ff4444;font-weight:700;text-decoration:none">▶ סרטון הדגמה</a>':'')
+      +sh+'</div>';
     el.appendChild(div);
   });
 }
@@ -1691,6 +1747,94 @@ function toggleEx(key){
     showEncourageCard('workout');
   }
   renderAll();
+}
+
+// ── יומן סטים ───────────────────────────────
+function toggleSet(loc,exIdx,setIdx){
+  if(!S.workoutSets)S.workoutSets={};
+  const sk=TODAY+'_'+loc+'_'+exIdx;
+  const ex=WORKOUTS[loc]&&WORKOUTS[loc][exIdx];
+  if(!ex)return;
+  if(!S.workoutSets[sk])S.workoutSets[sk]=Array(ex.sets).fill(null).map(()=>({done:false,reps:'',weight:''}));
+  const sets=S.workoutSets[sk];
+  sets[setIdx].done=!sets[setIdx].done;
+
+  // Auto-check exercise when all sets done
+  const allDone=sets.every(s=>s.done);
+  const exKey=loc+'-'+exIdx;
+  const wasDone=!!S.checkedEx[exKey];
+  S.checkedEx[exKey]=allDone;
+
+  // Start rest timer when last set is newly completed
+  if(sets[setIdx].done&&setIdx===sets.length-1){
+    startRestTimer(90,ex.name);
+  }
+
+  save();
+  const done=getExDone(),total=WORKOUTS[S.location].length;
+  if(done===total&&total>0&&!wasDone){
+    const dow=new Date().getDay();S.weekDone[dow]=true;S.streak=S.weekDone.filter(Boolean).length;save();
+    triggerConfetti();showEncourageCard('workout');
+  }
+  renderAll();
+}
+
+function saveSetField(loc,exIdx,setIdx,field,val){
+  if(!S.workoutSets)S.workoutSets={};
+  const sk=TODAY+'_'+loc+'_'+exIdx;
+  const ex=WORKOUTS[loc]&&WORKOUTS[loc][exIdx];
+  if(!ex)return;
+  if(!S.workoutSets[sk])S.workoutSets[sk]=Array(ex.sets).fill(null).map(()=>({done:false,reps:'',weight:''}));
+  S.workoutSets[sk][setIdx][field]=val;
+  save();
+}
+
+// ── טיימר מנוחה בין סטים ────────────────────
+let restIv=null,restTotal=0,restLeft=0,restOn=false;
+
+function startRestTimer(secs,label){
+  clearInterval(restIv);
+  restTotal=secs||90;restLeft=restTotal;restOn=true;
+  const overlay=document.getElementById('rest-overlay');
+  if(!overlay)return;
+  overlay.style.display='block';
+  const lbl=document.getElementById('rest-lbl');
+  if(lbl)lbl.textContent=label?('מנוחה — '+label):'מנוחה';
+  const tb=document.getElementById('rest-toggle');
+  if(tb)tb.textContent='⏸️ עצור';
+  updRestTimer();
+  restIv=setInterval(()=>{
+    if(!restOn)return;
+    restLeft--;
+    updRestTimer();
+    if(restLeft<=0){
+      clearInterval(restIv);restOn=false;
+      showToast('✅ סיום מנוחה — קדימה!');
+      if(navigator.vibrate)navigator.vibrate([300,120,300,120,400]);
+      setTimeout(()=>{const o=document.getElementById('rest-overlay');if(o)o.style.display='none';},1800);
+    }
+  },1000);
+}
+
+function updRestTimer(){
+  const m=Math.floor(restLeft/60).toString().padStart(2,'0');
+  const s=(restLeft%60).toString().padStart(2,'0');
+  const disp=document.getElementById('rest-disp');
+  if(disp)disp.textContent=m+':'+s;
+  const prog=document.getElementById('rest-prog');
+  if(prog)prog.style.width=(restTotal>0?Math.max(restLeft/restTotal*100,0):0)+'%';
+}
+
+function toggleRestTimer(){
+  restOn=!restOn;
+  const tb=document.getElementById('rest-toggle');
+  if(tb)tb.textContent=restOn?'⏸️ עצור':'▶️ המשך';
+}
+
+function skipRestTimer(){
+  clearInterval(restIv);restOn=false;
+  const overlay=document.getElementById('rest-overlay');
+  if(overlay)overlay.style.display='none';
 }
 
 function toggleMeal(key){
