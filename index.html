@@ -240,6 +240,8 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 #rest-overlay{position:fixed;bottom:90px;left:12px;right:12px;background:var(--card);border:2px solid var(--accent);border-radius:20px;padding:16px;z-index:300;display:none;box-shadow:0 8px 40px rgba(0,0,0,.55);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
 body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.15)}
 .rest-disp{font-size:58px;font-weight:300;text-align:center;letter-spacing:-3px;padding:4px 0;font-variant-numeric:tabular-nums}
+.rest-preset{flex:1;padding:6px 2px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;transition:.2s}
+.rest-preset.active{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -690,6 +692,23 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
     <div class="prog-track"><div class="prog-bar" id="prot-prog" style="background:linear-gradient(90deg,var(--accent),#ea580c);width:0%"></div></div>
     <div style="font-size:11px;color:var(--muted)" id="prot-pct">חלבון: 0%</div>
   </div>
+
+  <!-- גרף מאקרו -->
+  <div class="card" style="margin-bottom:0">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📊 פירוט מאקרו היום</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="position:relative;flex-shrink:0">
+        <canvas id="macro-donut" width="90" height="90" style="width:90px;height:90px;display:block"></canvas>
+        <div id="macro-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+          <div id="macro-cal-center" style="font-size:16px;font-weight:800;line-height:1"></div>
+          <div style="font-size:9px;color:var(--muted)">קל׳</div>
+        </div>
+      </div>
+      <div style="flex:1" id="macro-bars"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center" id="macro-cal-note"></div>
+  </div>
+
   <!-- העדפות תזונה -->
   <div class="card" id="food-prefs-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -980,6 +999,10 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
     <div style="font-size:12px;color:var(--muted);margin-top:7px;text-align:center">לחץ על יום לסמן</div>
   </div>
   <div class="card"><div class="sec">🏆 הישגים</div><div id="achievements"></div></div>
+  <div class="card">
+    <div class="sec">🎯 אתגרי השבוע</div>
+    <div id="challenges-list"></div>
+  </div>
   <div class="card card-purple">
     <div style="font-size:14px;font-weight:800;color:var(--purple);margin-bottom:5px">📊 עובדה מדעית</div>
     <div style="font-size:14px;line-height:1.7">גברים מעל 50 שמתאמנים 3×/שבוע מגדילים מסת שריר ב-10-15% תוך 3 חודשים. אתה בדרך! 💪</div>
@@ -1054,13 +1077,14 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
 
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button class="btn btn-blue" onclick="exportData()" style="flex:1;padding:13px 10px;font-size:14px">
-          📤 ייצא נתונים
+          📤 ייצא JSON
         </button>
         <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()" style="flex:1;padding:13px 10px;font-size:14px">
-          📥 ייבא נתונים
+          📥 ייבא
         </button>
       </div>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn" onclick="exportWorkoutCSV()" style="padding:11px 10px;font-size:13px;background:var(--green-s);color:var(--green);border:1px solid var(--green);margin-bottom:8px">📊 ייצא אימונים CSV</button>
 
       <div id="backup-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:18px"></div>
 
@@ -1163,8 +1187,10 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📊 סיכום השבוע</div>
     <div id="weekly-summary"></div>
     <div style="margin-top:12px;display:flex;gap:8px">
-      <button class="btn" onclick="shareWeekly()" style="flex:1">📤 שתף התקדמות</button>
+      <button class="btn" onclick="shareWeekly()" style="flex:1">📤 שתף</button>
+      <button class="btn" id="weekly-ai-btn" onclick="getWeeklySummary()" style="flex:1;background:var(--purple)">🤖 AI סיכום</button>
     </div>
+    <div id="weekly-ai-result" style="display:none;background:var(--purple-s);border:1px solid var(--purple);border-radius:14px;padding:14px;margin-top:12px;font-size:14px;line-height:1.8;color:var(--text2)"></div>
   </div>
 
   <!-- אנימציה כשמסיימים -->
@@ -1176,9 +1202,16 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
 
 <!-- REST TIMER OVERLAY -->
 <div id="rest-overlay">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <div style="font-size:13px;font-weight:800;color:var(--accent)">⏱️ <span id="rest-lbl">מנוחה</span></div>
     <button onclick="skipRestTimer()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer">דלג ✕</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:10px" id="rest-presets">
+    <button class="rest-preset" onclick="setRestDuration(30)">30שנ׳</button>
+    <button class="rest-preset" onclick="setRestDuration(60)">60שנ׳</button>
+    <button class="rest-preset" onclick="setRestDuration(90)">90שנ׳</button>
+    <button class="rest-preset" onclick="setRestDuration(120)">2דק׳</button>
+    <input type="number" id="rest-custom" min="10" max="600" placeholder="שנ׳" class="inp" style="width:56px;padding:5px 4px;font-size:12px;text-align:center" onchange="setRestDuration(+this.value)">
   </div>
   <div id="rest-disp" class="rest-disp">01:30</div>
   <div class="prog-track" style="margin-bottom:10px"><div id="rest-prog" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:10px;transition:width 1s linear;width:100%"></div></div>
