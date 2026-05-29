@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="מגרשים">
+<title>🗺️ מגרשי ספורט</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a1628;--card:#141f35;--card2:#1e2d4a;
+  --border:#2a3a5c;--border2:#3a4a6c;
+  --accent:#30d158;--accent-s:#30d15820;
+  --blue:#0a84ff;--red:#ff453a;
+  --text:#fff;--text2:rgba(255,255,255,.75);--muted:rgba(255,255,255,.4);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text)}
+#map{position:fixed;inset:0;z-index:1}
+
+.hdr{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
+  background:linear-gradient(to bottom,rgba(10,22,40,.95) 50%,transparent);
+  pointer-events:none;
+}
+.hdr-row{display:flex;align-items:center;gap:10px;pointer-events:all}
+.hdr-title{font-size:19px;font-weight:900;letter-spacing:-.3px;flex:1}
+.hdr-country{font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-s);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;white-space:nowrap}
+.hdr-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(20,31,53,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border2);color:var(--text);font-size:19px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;
+}
+.hdr-btn:active{transform:scale(.9)}
+
+#status{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:100;
+  background:rgba(20,31,53,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border2);border-radius:20px;
+  padding:8px 18px;font-size:13px;font-weight:600;color:var(--text2);
+  white-space:nowrap;transition:opacity .4s;pointer-events:none;
+}
+
+#loc-btn{
+  position:fixed;left:16px;z-index:100;
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(20,31,53,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border2);color:var(--accent);font-size:24px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);transition:.15s;
+}
+#loc-btn:active{transform:scale(.9)}
+
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:200;
+  background:var(--card);border-radius:22px 22px 0 0;
+  border-top:1px solid var(--border);display:flex;flex-direction:column;will-change:transform;
+}
+.handle-wrap{padding:10px 0 2px;cursor:grab;flex-shrink:0;text-align:center}
+.handle{width:40px;height:4px;border-radius:2px;background:var(--border2);display:inline-block}
+.sheet-head{padding:4px 16px 12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filter-row::-webkit-scrollbar{display:none}
+.fpill{
+  flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border2);background:transparent;
+  color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap;
+}
+.fpill.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+.sheet-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.count-lbl{font-size:13px;color:var(--muted);font-weight:600}
+.radius-sel{background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;outline:none}
+.sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+
+.frow{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
+.frow:active{background:var(--card2)}
+.frow:last-child{border-bottom:none}
+.fi{font-size:32px;flex-shrink:0}
+.fn{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fs{font-size:12px;color:var(--muted);margin-top:2px}
+.fd{font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0}
+
+#overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#overlay.on{display:flex}
+.dcard{width:100%;background:var(--card);border-radius:22px 22px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 20px);border-top:1px solid var(--border2)}
+.dhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.dico{font-size:52px;line-height:1}
+.dname{font-size:21px;font-weight:900;letter-spacing:-.4px;line-height:1.2}
+.dsub{font-size:14px;color:var(--muted);margin-top:4px}
+.dtags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.dtag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+.dbtns{display:flex;gap:10px}
+.dbtn{flex:1;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:.15s}
+.dbtn:active{opacity:.8;transform:scale(.97)}
+.dbtn-waze{background:#33ccff;color:#000}
+.dbtn-gmap{background:#4285f4;color:#fff}
+.dbtn-close{background:var(--card2);color:var(--text2);flex:0.5}
+
+.spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:36px 20px;color:var(--muted);font-size:15px}
+.empty-ico{font-size:52px;margin-bottom:12px}
+
+/* ─── SPONSORED ─── */
+.sp-row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid #3a1a6a;cursor:pointer;transition:.12s;background:rgba(191,90,242,.07);border-right:3px solid #bf5af2}
+.sp-row:active{background:rgba(191,90,242,.15)}
+.sp-badge{font-size:9px;font-weight:800;color:#bf5af2;background:rgba(191,90,242,.18);border:1px solid rgba(191,90,242,.4);border-radius:4px;padding:2px 6px;display:inline-block;margin-bottom:3px}
+.sp-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-desc{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.sp-dist{font-size:14px;font-weight:800;color:#bf5af2;flex-shrink:0}
+
+/* ─── AD BANNER ─── */
+.ad-wrap{padding:8px 14px;border-bottom:.5px solid var(--border);background:rgba(255,255,255,.03)}
+.ad-lbl{font-size:9px;color:rgba(255,255,255,.2);font-weight:700;text-align:left;margin-bottom:4px}
+.ad-placeholder{background:linear-gradient(135deg,#1e2d4a,#162035);border-radius:10px;height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,255,255,.3);border:1px dashed #2a3a5c}
+
+/* ─── SPONSORED DETAIL ─── */
+.dbtn-phone{background:#30d158;color:#000}
+.dbtn-web{background:#ff9f0a;color:#000}
+
+/* ─── AUTH SCREEN ─── */
+#auth-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px calc(env(safe-area-inset-bottom,0px) + 32px);
+  transition:opacity .4s;
+}
+#auth-screen.hide{opacity:0;pointer-events:none}
+.auth-logo{font-size:72px;margin-bottom:10px;line-height:1}
+.auth-title{font-size:27px;font-weight:900;margin-bottom:6px;letter-spacing:-.4px}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:30px;text-align:center;line-height:1.5}
+.auth-form{width:100%;max-width:340px}
+.auth-tabs{display:flex;border:1.5px solid var(--border2);border-radius:13px;overflow:hidden;margin-bottom:16px}
+.auth-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s}
+.auth-tab.on{background:var(--accent);color:#000}
+.auth-inp{
+  width:100%;padding:14px 16px;border-radius:13px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:inherit;font-size:16px;
+  margin-bottom:11px;outline:none;transition:.2s;display:block;
+}
+.auth-inp:focus{border-color:var(--accent)}
+.auth-btn{
+  width:100%;padding:15px;border-radius:13px;
+  background:var(--accent);color:#000;border:none;
+  font-family:inherit;font-size:16px;font-weight:800;
+  cursor:pointer;margin-bottom:13px;transition:.15s;
+}
+.auth-btn:active{opacity:.85;transform:scale(.98)}
+.auth-div{text-align:center;color:var(--muted);font-size:13px;margin-bottom:13px}
+.auth-guest{
+  width:100%;padding:14px;border-radius:13px;
+  background:transparent;border:1.5px solid var(--border2);
+  color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.auth-guest:active{background:var(--card2)}
+.auth-err{color:var(--red);font-size:13px;margin-bottom:9px;text-align:center;min-height:18px}
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH SCREEN ─── -->
+<div id="auth-screen">
+  <div class="auth-logo">🗺️</div>
+  <div class="auth-title">מגרשי ספורט</div>
+  <div class="auth-sub">גלה מגרשי ספורט קרובים אליך<br>בכל מקום בעולם</div>
+  <div class="auth-form">
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tab-reg" onclick="switchTab('register')">הרשמה</button>
+      <button class="auth-tab"    id="tab-log" onclick="switchTab('login')">כניסה</button>
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <input class="auth-inp" id="auth-name"  type="text"     placeholder="שם מלא"            autocomplete="name" />
+    <input class="auth-inp" id="auth-email" type="email"    placeholder="אימייל"             autocomplete="email"        dir="ltr" />
+    <input class="auth-inp" id="auth-pass"  type="password" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="new-password" dir="ltr" />
+    <button class="auth-btn" id="auth-submit" onclick="authSubmit()">הרשמה</button>
+    <div class="auth-div">— או —</div>
+    <button class="auth-guest" onclick="continueAsGuest()">👤 המשך בלי חשבון</button>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-title">🗺️ מגרשי ספורט</div>
+    <div class="hdr-country" id="country-badge" style="display:none"></div>
+    <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
+  </div>
+</div>
+
+<div id="status" style="top:76px">🔍 מאתר מיקום...</div>
+<button id="loc-btn" onclick="locateMe()" title="המיקום שלי">📍</button>
+
+<div class="sheet" id="sheet">
+  <div class="handle-wrap" id="handle-wrap"><div class="handle"></div></div>
+  <div class="sheet-head">
+    <div class="filter-row" id="filter-row">
+      <!-- נוצר דינמית לפי מדינה -->
+    </div>
+    <div class="sheet-meta">
+      <span class="count-lbl" id="cnt">טוען...</span>
+      <select class="radius-sel" id="rad" onchange="onRadiusChange()">
+        <option value="500">500מ'</option>
+        <option value="1000">1ק"מ</option>
+        <option value="1500" selected>1.5ק"מ</option>
+        <option value="2000">2ק"מ</option>
+        <option value="3000">3ק"מ</option>
+        <option value="5000">5ק"מ</option>
+      </select>
+    </div>
+  </div>
+  <!-- Google AdSense Banner — החלף YOUR_SLOT_ID -->
+  <div class="ad-wrap">
+    <div class="ad-lbl">פרסומת</div>
+    <ins class="adsbygoogle"
+         style="display:block;border-radius:10px;overflow:hidden"
+         data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
+         data-ad-slot="YOUR_SLOT_ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <!-- תצוגת placeholder עד שה-AdSense יוגדר -->
+    <div class="ad-placeholder" id="ad-placeholder">פרסומת Google AdSense — תופיע לאחר הגדרה</div>
+  </div>
+  <div class="sheet-body" id="list">
+    <div class="empty"><span class="spinner"></span></div>
+  </div>
+</div>
+
+<div id="overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="dcard">
+    <div class="dhead">
+      <div class="dico" id="d-ico">🏟️</div>
+      <div>
+        <div class="dname" id="d-name"></div>
+        <div class="dsub"  id="d-sub"></div>
+      </div>
+    </div>
+    <div class="dtags" id="d-tags"></div>
+    <div class="dbtns" id="d-btns">
+      <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
+      <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+      <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google AdSense — החלף YOUR_PUBLISHER_ID במזהה שלך מ-adsense.google.com -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID" crossorigin="anonymous"></script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─── AUTH (local-storage, no backend needed) ────────────
+let authMode = 'register', currentUser = null;
+
+function switchTab(mode) {
+  authMode = mode;
+  const nameEl = document.getElementById('auth-name');
+  nameEl.style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('tab-reg').classList.toggle('on', mode === 'register');
+  document.getElementById('tab-log').classList.toggle('on', mode === 'login');
+  document.getElementById('auth-submit').textContent = mode === 'register' ? 'הרשמה' : 'כניסה';
+  document.getElementById('auth-err').textContent = '';
+}
+
+function showAuthErr(msg) { document.getElementById('auth-err').textContent = msg; }
+
+function authSubmit() {
+  const name  = document.getElementById('auth-name').value.trim();
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('auth-pass').value;
+  if (!email.includes('@')) return showAuthErr('⚠️ אימייל לא תקין');
+  if (pass.length < 6)      return showAuthErr('⚠️ סיסמה: לפחות 6 תווים');
+
+  const users = JSON.parse(localStorage.getItem('pg_users') || '{}');
+  if (authMode === 'register') {
+    if (users[email]) return showAuthErr('⚠️ אימייל כבר רשום — נסה להיכנס');
+    users[email] = { name: name || email.split('@')[0], pass };
+    localStorage.setItem('pg_users', JSON.stringify(users));
+    currentUser = { email, name: users[email].name };
+  } else {
+    if (!users[email])              return showAuthErr('⚠️ אימייל לא נמצא');
+    if (users[email].pass !== pass) return showAuthErr('⚠️ סיסמה שגויה');
+    currentUser = { email, name: users[email].name };
+  }
+  localStorage.setItem('pg_user', JSON.stringify(currentUser));
+  enterApp();
+}
+
+function continueAsGuest() {
+  currentUser = { guest: true };
+  enterApp();
+}
+
+function enterApp() {
+  const s = document.getElementById('auth-screen');
+  s.classList.add('hide');
+  setTimeout(() => { s.style.display = 'none'; }, 400);
+  document.getElementById('user-btn').style.display = 'flex';
+  updateFilterPills('default');
+  updateLocBtn();
+  locateMe();
+}
+
+function showUserMenu() {
+  if (!currentUser) return;
+  const info = currentUser.guest
+    ? 'אתה גולש כאורח'
+    : `${currentUser.name}\n${currentUser.email}`;
+  if (confirm(`${info}\n\nהתנתק?`)) {
+    localStorage.removeItem('pg_user');
+    location.reload();
+  }
+}
+
+// ─── SPONSORED LISTINGS ─────────────────────────────────
+// כדי להוסיף עסק: העתק בלוק אחד, מלא את הפרטים ושלח לעסק חשבונית 💰
+const SPONSORED = [
+  // דוגמה — מחק והוסף עסקים אמיתיים שמשלמים
+  {
+    name: 'Gold\'s Gym — סניף מרכז',
+    sport: 'fitness',
+    icon: '🏋️',
+    desc: 'חדר כושר מלא · פתוח 24/7 · שבוע ניסיון חינם',
+    lat: 32.0878, lon: 34.7785,   // קואורדינטות העסק
+    phone: '03-1234567',
+    website: 'https://goldsgym.co.il',
+    countries: ['IL'],             // 'all' = בכל מדינה
+  },
+  {
+    name: 'WinSport — כדורגל 5vs5',
+    sport: 'soccer',
+    icon: '⚽',
+    desc: 'מגרשי כדורגל קטן מקורים · השכרה לשעה · תאורה',
+    lat: 32.0812, lon: 34.7901,
+    phone: '03-9876543',
+    website: 'https://winsport.co.il',
+    countries: ['IL'],
+  },
+  {
+    name: 'NYC Sports Club',
+    sport: 'fitness',
+    icon: '💪',
+    desc: 'Full gym · Pool · Classes · Free 1-week trial',
+    lat: 40.7145, lon: -74.0071,
+    phone: '+1-212-555-0100',
+    website: 'https://nycsc.com',
+    countries: ['US'],
+  },
+];
+
+const MAX_SPONSORED_DIST = 5000; // הצג רשומות ממומנות עד 5ק"מ
+
+// ─── ICONS & NAMES ──────────────────────────────────────
+const ICONS = {
+  soccer:'⚽',football:'⚽',futsal:'⚽',mini_soccer:'⚽',
+  basketball:'🏀',
+  tennis:'🎾',
+  volleyball:'🏐',beach_volleyball:'🏐',netball:'🏐',
+  athletics:'🏃',running:'🏃',track:'🏃',
+  fitness:'💪',gym:'💪',
+  swimming:'🏊',water_polo:'🤽',
+  table_tennis:'🏓',
+  handball:'🤾',
+  baseball:'⚾',softball:'⚾',
+  cricket:'🏏',
+  rugby:'🏉',rugby_league:'🏉',rugby_union:'🏉',
+  american_football:'🏈',
+  hockey:'🏒',ice_hockey:'🏒',field_hockey:'🏑',
+  martial_arts:'🥋',judo:'🥋',karate:'🥋',taekwondo:'🥋',
+  boxing:'🥊',wrestling:'🤼',
+  badminton:'🏸',
+  skateboard:'🛹',bmx:'🛹',
+  cycling:'🚴',bicycle_motocross:'🚴',
+  climbing:'🧗',bouldering:'🧗',
+  golf:'⛳',
+  archery:'🏹',
+  lacrosse:'🥍',
+  gymnastics:'🤸',rhythmic_gymnastics:'🤸',
+  padel:'🎾',paddle:'🎾',squash:'🎾',
+  multi:'🏅',
+  playground:'🛝',
+  default:'🏟️'
+};
+const HE = {
+  soccer:'כדורגל',football:'כדורגל',futsal:'פוטסל',mini_soccer:'כדורגל קטן',
+  basketball:'כדורסל',
+  tennis:'טניס',
+  volleyball:'כדורעף',beach_volleyball:'כדורעף חוף',netball:'נטבול',
+  athletics:'אתלטיקה',running:'ריצה',track:'מסלול ריצה',
+  fitness:'כושר',gym:'כושר',
+  swimming:'שחייה',water_polo:'פולו מים',
+  table_tennis:'פינג-פונג',
+  handball:'כדוריד',
+  baseball:'בייסבול',softball:'סופטבול',
+  cricket:'קריקט',
+  rugby:'רוגבי',rugby_league:'רוגבי ליג',rugby_union:'רוגבי יוניון',
+  american_football:'כדורגל אמריקאי',
+  hockey:'הוקי קרח',ice_hockey:'הוקי קרח',field_hockey:'הוקי שדה',
+  martial_arts:'אמנויות לחימה',judo:"ג'ודו",karate:'קראטה',taekwondo:'טאקוונדו',
+  boxing:'אגרוף',wrestling:'היאבקות',
+  badminton:'בדמינטון',
+  skateboard:'סקייטפארק',bmx:'BMX',
+  cycling:'רכיבה',bicycle_motocross:'BMX',
+  climbing:'טיפוס',bouldering:'בולדרינג',
+  golf:'גולף',
+  archery:'קשתות',
+  lacrosse:'לקרוס',
+  gymnastics:'התעמלות',rhythmic_gymnastics:'התעמלות מקצבית',
+  padel:'פאדל',paddle:'פאדל',squash:'סקווש',
+  multi:'רב-ספורטיבי',
+  playground:'גן שעשועים',
+  default:'מגרש ספורט'
+};
+
+// ─── ALL FILTER PILLS (with country restrictions) ───────
+// countries: 'all' = everywhere | array of ISO-2 codes
+const ALL_FILTERS = [
+  { id:'all',              label:'🏟️ הכל',               countries:'all' },
+  { id:'soccer',           label:'⚽ כדורגל',             countries:'all' },
+  { id:'basketball',       label:'🏀 כדורסל',             countries:'all' },
+  { id:'tennis',           label:'🎾 טניס',               countries:'all' },
+  { id:'volleyball',       label:'🏐 כדורעף',             countries:'all' },
+  { id:'fitness',          label:'💪 כושר',               countries:'all' },
+  { id:'swimming',         label:'🏊 שחייה',              countries:'all' },
+  { id:'athletics',        label:'🏃 ריצה',               countries:'all' },
+  { id:'skateboard',       label:'🛹 סקייטפארק',          countries:'all' },
+  { id:'table_tennis',     label:'🏓 פינג-פונג',          countries:'all' },
+  { id:'badminton',        label:'🏸 בדמינטון',           countries:'all' },
+  { id:'climbing',         label:'🧗 טיפוס',              countries:'all' },
+  { id:'playground',       label:'🛝 גן שעשועים',         countries:'all' },
+  // ישראל + אירופה
+  { id:'handball',         label:'🤾 כדוריד',             countries:['IL','DE','FR','ES','PT','DK','NO','SE','HR','PL','HU','RO','RS','AT','CH','GR','TN','EG','MA'] },
+  { id:'padel',            label:'🎾 פאדל',               countries:['IL','ES','IT','AR','SE','BE','PT','MX','AE','SA','QA'] },
+  // ספורט אמריקאי
+  { id:'american_football',label:'🏈 כדורגל אמריקאי',    countries:['US','CA','MX'] },
+  { id:'baseball',         label:'⚾ בייסבול',            countries:['US','CA','JP','KR','MX','CU','DO','PR','VE','CO','TW'] },
+  { id:'lacrosse',         label:'🥍 לקרוס',              countries:['US','CA','GB','AU'] },
+  // הוקי / רוגבי
+  { id:'hockey',           label:'🏒 הוקי קרח',           countries:['US','CA','RU','FI','SE','NO','CZ','SK','DE','CH','LV','BY'] },
+  { id:'field_hockey',     label:'🏑 הוקי שדה',           countries:['NL','DE','AU','IN','PK','GB','BE','AR','ES','MY','ZA'] },
+  { id:'rugby',            label:'🏉 רוגבי',              countries:['GB','AU','NZ','ZA','FR','IE','AR','IT','US','JP','FJ','SA','NR'] },
+  // קריקט
+  { id:'cricket',          label:'🏏 קריקט',              countries:['IN','PK','AU','GB','NZ','ZA','BD','SL','WI','ZW','AF','IE'] },
+  // גולף — נפוץ כמעט בכל מקום
+  { id:'golf',             label:'⛳ גולף',               countries:'all' },
+  // לחימה
+  { id:'martial_arts',     label:'🥋 אמנויות לחימה',      countries:'all' },
+  { id:'boxing',           label:'🥊 אגרוף',              countries:'all' },
+];
+
+// ─── FILTER GROUPS (sport synonyms) ─────────────────────
+const FILTER_GROUPS = {
+  soccer:           ['soccer','football','futsal','mini_soccer'],
+  tennis:           ['tennis'],
+  volleyball:       ['volleyball','beach_volleyball','netball'],
+  fitness:          ['fitness','gym'],
+  swimming:         ['swimming','water_polo'],
+  athletics:        ['athletics','running','track'],
+  skateboard:       ['skateboard','bmx','bicycle_motocross'],
+  table_tennis:     ['table_tennis'],
+  badminton:        ['badminton'],
+  climbing:         ['climbing','bouldering'],
+  playground:       ['playground'],
+  handball:         ['handball'],
+  padel:            ['padel','paddle','squash'],
+  american_football:['american_football'],
+  baseball:         ['baseball','softball'],
+  lacrosse:         ['lacrosse'],
+  hockey:           ['hockey','ice_hockey'],
+  field_hockey:     ['field_hockey'],
+  rugby:            ['rugby','rugby_league','rugby_union'],
+  cricket:          ['cricket'],
+  golf:             ['golf'],
+  martial_arts:     ['martial_arts','judo','karate','taekwondo','wrestling'],
+  boxing:           ['boxing'],
+};
+
+// ─── COUNTRY NAME MAP ────────────────────────────────────
+const COUNTRY_NAMES = {
+  IL:'🇮🇱 ישראל', US:'🇺🇸 ארה"ב', GB:'🇬🇧 בריטניה', AU:'🇦🇺 אוסטרליה',
+  DE:'🇩🇪 גרמניה', FR:'🇫🇷 צרפת', ES:'🇪🇸 ספרד', IT:'🇮🇹 איטליה',
+  CA:'🇨🇦 קנדה', NL:'🇳🇱 הולנד', JP:'🇯🇵 יפן', IN:'🇮🇳 הודו',
+  BR:'🇧🇷 ברזיל', AR:'🇦🇷 ארגנטינה', RU:'🇷🇺 רוסיה',
+};
+
+const ico = s => ICONS[(s||'').toLowerCase()] || ICONS.default;
+const he  = s => HE[(s||'').toLowerCase()]   || s || 'מגרש ספורט';
+const km  = (lat1,lon1,lat2,lon2) => {
+  const R=6371000, dL=(lat2-lat1)*Math.PI/180, dG=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+};
+const fmt = d => d < 1000 ? Math.round(d)+'מ\'' : (d/1000).toFixed(1)+'ק"מ';
+
+// ─── STATE ──────────────────────────────────────────────
+let map, uMarker, uLat, uLon, curCountry = 'default';
+let allFields = [], shownFields = [], markers = [];
+let curFilter = 'all', selected = null;
+
+// ─── MAP INIT ───────────────────────────────────────────
+map = L.map('map', { zoomControl: false, attributionControl: false }).setView([31.7683, 35.2137], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
+L.control.zoom({ position:'topleft' }).addTo(map);
+
+// ─── SHEET DRAG ─────────────────────────────────────────
+const sheetEl  = document.getElementById('sheet');
+const handleEl = document.getElementById('handle-wrap');
+let dStart = null, dH0 = null;
+
+function updateLocBtn() {
+  const h = sheetEl.getBoundingClientRect().height;
+  document.getElementById('loc-btn').style.bottom = (h + 14) + 'px';
+}
+
+handleEl.addEventListener('touchstart', e => {
+  dStart = e.touches[0].clientY; dH0 = sheetEl.getBoundingClientRect().height;
+}, { passive:true });
+handleEl.addEventListener('touchmove', e => {
+  const newH = Math.max(170, Math.min(window.innerHeight*.88, dH0 + dStart - e.touches[0].clientY));
+  sheetEl.style.height = newH + 'px'; updateLocBtn();
+}, { passive:true });
+handleEl.addEventListener('touchend', () => { dStart = null; updateLocBtn(); });
+handleEl.addEventListener('mousedown', e => {
+  dStart = e.clientY; dH0 = sheetEl.getBoundingClientRect().height;
+  const up = ev => {
+    sheetEl.style.height = Math.max(170, Math.min(window.innerHeight*.88, dH0+dStart-ev.clientY))+'px';
+    updateLocBtn(); document.removeEventListener('mouseup', up);
+  };
+  document.addEventListener('mouseup', up);
+});
+
+// ─── STATUS ─────────────────────────────────────────────
+let statusTimer = null;
+function setStatus(msg, autohide = false) {
+  const el = document.getElementById('status');
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(statusTimer);
+  if (autohide) statusTimer = setTimeout(() => el.style.opacity = '0', 3000);
+}
+
+// ─── COUNTRY DETECTION ──────────────────────────────────
+async function getCountry(lat, lon) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=3`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const data = await res.json();
+    return (data.address?.country_code || 'default').toUpperCase();
+  } catch { return 'default'; }
+}
+
+function updateFilterPills(countryCode) {
+  curFilter = 'all';
+  const row = document.getElementById('filter-row');
+  row.innerHTML = ALL_FILTERS
+    .filter(f => f.countries === 'all' || f.countries.includes(countryCode))
+    .map((f, i) => `<button class="fpill${i===0?' on':''}" onclick="setFilter(this,'${f.id}')">${f.label}</button>`)
+    .join('');
+
+  const badge = document.getElementById('country-badge');
+  if (COUNTRY_NAMES[countryCode]) {
+    badge.textContent = COUNTRY_NAMES[countryCode];
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ─── LOCATE ─────────────────────────────────────────────
+function locateMe() {
+  setStatus('📍 מאתר מיקום...');
+  if (!navigator.geolocation) { setStatus('⚠️ GPS לא נתמך בדפדפן זה'); return; }
+  navigator.geolocation.getCurrentPosition(
+    p => onLocation(p.coords.latitude, p.coords.longitude),
+    () => setStatus('⚠️ לא ניתן לאתר מיקום — בדוק הרשאות GPS')
+  );
+}
+
+async function onLocation(lat, lon) {
+  uLat = lat; uLon = lon;
+  map.setView([lat, lon], 15);
+  if (uMarker) map.removeLayer(uMarker);
+  uMarker = L.circleMarker([lat, lon], {
+    radius:11, fillColor:'#30d158', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
+  }).addTo(map).bindPopup('<div dir="rtl" style="font-weight:700;font-family:Assistant,sans-serif">📍 המיקום שלך</div>');
+
+  setStatus('🌍 מזהה מדינה...');
+  curCountry = await getCountry(lat, lon);
+  updateFilterPills(curCountry);
+  loadFields(lat, lon);
+}
+
+// ─── OVERPASS ───────────────────────────────────────────
+async function loadFields(lat, lon) {
+  const radius = parseInt(document.getElementById('rad').value);
+  setStatus(`🔍 מחפש מגרשים ב-${fmt(radius)}...`);
+  document.getElementById('list').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  document.getElementById('cnt').textContent = 'טוען...';
+
+  const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing';
+  const q = `[out:json][timeout:30];(node["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});way["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon}););out center tags;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method:'POST', body:'data='+encodeURIComponent(q)
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    const leisureMap = {
+      playground:'playground', fitness_station:'fitness',
+      swimming_pool:'swimming', track:'athletics',
+      skate_park:'skateboard', golf_course:'golf',
+      ice_rink:'hockey', climbing:'climbing'
+    };
+
+    allFields = (data.elements||[]).map(el => {
+      const clat = el.lat || el.center?.lat;
+      const clon = el.lon || el.center?.lon;
+      if (!clat || !clon) return null;
+      const t = el.tags || {};
+      const rawSport = (t.sport||'').split(';')[0].trim();
+      const sport = rawSport || leisureMap[t.leisure] || 'default';
+      const name = t.name || t['name:he'] || he(sport);
+      return { lat:clat, lon:clon, name, sport, tags:t, dist:km(lat,lon,clat,clon) };
+    }).filter(Boolean).sort((a,b) => a.dist - b.dist);
+
+    renderMarkers(); renderList();
+    setStatus(`נמצאו ${getFiltered().length} מגרשים`, true);
+  } catch(e) {
+    setStatus('❌ שגיאה בטעינה — נסה שוב');
+    document.getElementById('list').innerHTML = '<div class="empty"><div class="empty-ico">😕</div>שגיאה בטעינת נתונים<br><small>בדוק חיבור לאינטרנט</small></div>';
+    document.getElementById('cnt').textContent = 'שגיאה';
+  }
+}
+
+// ─── FILTER ─────────────────────────────────────────────
+function getFiltered() {
+  if (curFilter === 'all') return allFields;
+  const group = FILTER_GROUPS[curFilter] || [curFilter];
+  return allFields.filter(f => group.includes(f.sport));
+}
+
+function setFilter(btn, filter) {
+  curFilter = filter;
+  document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  renderMarkers(); renderList();
+  setStatus(`${getFiltered().length} מגרשים`, true);
+}
+
+function onRadiusChange() {
+  if (uLat != null) loadFields(uLat, uLon);
+}
+
+// ─── MARKERS ────────────────────────────────────────────
+function renderMarkers() {
+  markers.forEach(m => map.removeLayer(m)); markers = [];
+  getFiltered().forEach((f, i) => {
+    const icon = L.divIcon({
+      html:`<div style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));cursor:pointer">${ico(f.sport)}</div>`,
+      className:'', iconSize:[34,34], iconAnchor:[17,17]
+    });
+    const m = L.marker([f.lat, f.lon], { icon }).addTo(map);
+    m.on('click', () => openDetail(i));
+    markers.push(m);
+  });
+}
+
+// ─── SPONSORED HELPERS ──────────────────────────────────
+let shownSponsored = [];
+
+function getNearbySponsored() {
+  if (!uLat) return [];
+  return SPONSORED.filter(s => {
+    const countryOk = s.countries === 'all' || s.countries.includes(curCountry);
+    const distOk = km(uLat, uLon, s.lat, s.lon) <= MAX_SPONSORED_DIST;
+    const filterOk = curFilter === 'all' || (FILTER_GROUPS[curFilter]||[curFilter]).includes(s.sport);
+    return countryOk && distOk && filterOk;
+  }).map(s => ({ ...s, dist: km(uLat, uLon, s.lat, s.lon) }))
+    .sort((a, b) => a.dist - b.dist);
+}
+
+function openSponsored(i) {
+  const s = shownSponsored[i]; if (!s) return;
+  selected = { lat: s.lat, lon: s.lon, _sponsored: s };
+  map.flyTo([s.lat, s.lon], 17, { duration: 0.6 });
+  document.getElementById('d-ico').textContent  = s.icon;
+  document.getElementById('d-name').textContent = s.name;
+  document.getElementById('d-sub').textContent  = `${s.desc} · ${fmt(s.dist)} ממיקומך`;
+  document.getElementById('d-tags').innerHTML =
+    `<span class="dtag">⭐ ממומן</span><span class="dtag">📞 ${s.phone}</span>`;
+  const btns = document.getElementById('d-btns');
+  btns.innerHTML = `
+    <button class="dbtn dbtn-phone" onclick="window.open('tel:${s.phone}')">📞 התקשר</button>
+    <button class="dbtn dbtn-web"   onclick="window.open('${s.website}','_blank')">🌐 אתר</button>
+    <button class="dbtn dbtn-waze"  onclick="navTo('waze')">🔵 Waze</button>
+    <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
+  `;
+  document.getElementById('overlay').classList.add('on');
+}
+
+// ─── LIST ────────────────────────────────────────────────
+function renderList() {
+  shownFields = getFiltered();
+  shownSponsored = getNearbySponsored();
+  const el = document.getElementById('list');
+  document.getElementById('cnt').textContent = `${shownFields.length} מגרשים`;
+
+  if (!shownFields.length && !shownSponsored.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div>לא נמצאו מגרשים<br><small>נסה להגדיל את הרדיוס</small></div>';
+    updateLocBtn(); return;
+  }
+
+  // רשומות ממומנות בראש הרשימה
+  const sponsoredRows = shownSponsored.map((s, i) => `
+    <div class="sp-row" onclick="openSponsored(${i})">
+      <div style="font-size:32px;flex-shrink:0">${s.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sp-badge">⭐ ממומן</div>
+        <div class="sp-name">${s.name}</div>
+        <div class="sp-desc">${s.desc}</div>
+      </div>
+      <div class="sp-dist">${fmt(s.dist)}</div>
+    </div>`).join('');
+
+  const rows = shownFields.slice(0, 50).map((f, i) => {
+    const extras = [
+      f.tags?.surface ? `🌱 ${f.tags.surface}` : '',
+      f.tags?.lit === 'yes' ? '💡' : '',
+      f.tags?.access === 'private' ? '🔒' : ''
+    ].filter(Boolean).join(' ');
+    return `<div class="frow" onclick="openDetail(${i})">
+      <div class="fi">${ico(f.sport)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fn">${f.name}</div>
+        <div class="fs">${he(f.sport)}${extras?' · '+extras:''}</div>
+      </div>
+      <div class="fd">${fmt(f.dist)}</div>
+    </div>`;
+  }).join('');
+
+  const more = shownFields.length > 50
+    ? `<div style="text-align:center;padding:16px;font-size:13px;color:var(--muted)">ועוד ${shownFields.length-50} — הקטן את הרדיוס</div>`
+    : '<div style="padding-bottom:env(safe-area-inset-bottom,16px)"></div>';
+
+  el.innerHTML = sponsoredRows + rows + more;
+  updateLocBtn();
+}
+
+// ─── DETAIL ─────────────────────────────────────────────
+function openDetail(i) {
+  const f = shownFields[i]; if (!f) return;
+  selected = f;
+  map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
+  document.getElementById('d-ico').textContent  = ico(f.sport);
+  document.getElementById('d-name').textContent = f.name;
+  document.getElementById('d-sub').textContent  = `${he(f.sport)} · ${fmt(f.dist)} ממיקומך`;
+  const tags = [];
+  if (f.tags?.surface)              tags.push(`🌱 ${f.tags.surface}`);
+  if (f.tags?.lit === 'yes')        tags.push('💡 תאורה לילית');
+  if (f.tags?.fee === 'no')         tags.push('🆓 כניסה חינם');
+  if (f.tags?.fee === 'yes')        tags.push('💰 בתשלום');
+  if (f.tags?.access === 'private') tags.push('🔒 פרטי');
+  else                              tags.push('✅ פתוח לציבור');
+  if (f.tags?.opening_hours)        tags.push(`🕐 ${f.tags.opening_hours}`);
+  if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
+  document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  document.getElementById('d-btns').innerHTML = `
+    <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
+    <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
+  `;
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('on'); selected = null;
+}
+
+function navTo(app) {
+  if (!selected) return;
+  const { lat, lon } = selected;
+  if (app==='waze') window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`);
+  else              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+}
+
+// ─── BOOT ───────────────────────────────────────────────
+{
+  const saved = localStorage.getItem('pg_user');
+  if (saved) {
+    // משתמש מחובר — דלג על מסך הכניסה
+    currentUser = JSON.parse(saved);
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('user-btn').style.display = 'flex';
+    updateFilterPills('default');
+    updateLocBtn();
+    locateMe();
+  }
+  // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
+}
+</script>
+</body>
+</html>
