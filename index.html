@@ -242,6 +242,18 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
 .rest-disp{font-size:58px;font-weight:300;text-align:center;letter-spacing:-3px;padding:4px 0;font-variant-numeric:tabular-nums}
 .rest-preset{flex:1;padding:6px 2px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;transition:.2s}
 .rest-preset.active{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+
+/* ═══ FOOD DIARY ═══ */
+#fd-pending{position:fixed;bottom:90px;left:12px;right:12px;background:var(--card);border:2px solid var(--orange);border-radius:20px;padding:16px;z-index:300;display:none;box-shadow:0 8px 40px rgba(0,0,0,.55);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
+body.light-mode #fd-pending{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.fd-macro-row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+.fd-macro-badge{display:flex;flex-direction:column;align-items:center;background:var(--card2);border-radius:10px;padding:6px 10px;flex:1;min-width:52px}
+.fd-macro-num{font-size:14px;font-weight:800;line-height:1}
+.fd-macro-lbl{font-size:9px;color:var(--muted);margin-top:2px}
+.fd-entry{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.fd-entry:last-child{border-bottom:none}
+.fd-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;border-radius:8px;flex-shrink:0;line-height:1}
+.fd-del:active{color:var(--red)}
 </style>
 </head>
 <body>
@@ -707,6 +719,39 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
       <div style="flex:1" id="macro-bars"></div>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center" id="macro-cal-note"></div>
+  </div>
+
+  <!-- יומן ארוחות -->
+  <div class="card" id="food-diary-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:900">📓 יומן ארוחות</div>
+      <button onclick="showFoodManualForm()" style="background:var(--accent-s);border:1px solid var(--accent);color:var(--accent);border-radius:10px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">+ הוסף ידנית</button>
+    </div>
+    <div class="upload-area" id="fd-upload-area" onclick="document.getElementById('fd-photo').click()" style="margin-bottom:12px">
+      <div style="font-size:32px;margin-bottom:6px">📷</div>
+      <div style="font-weight:700;font-size:14px">צלם ארוחה — AI יזהה ויספור</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">לחץ לצילום או העלאת תמונה</div>
+    </div>
+    <input type="file" id="fd-photo" accept="image/*" capture="environment" style="display:none" onchange="analyzeAndLogFood(event)">
+    <div id="fd-analyzing" style="display:none;text-align:center;padding:16px;color:var(--muted);font-size:13px">🤖 מנתח תמונה עם AI...</div>
+    <div id="fd-manual-form" style="display:none;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--muted)">✏️ הוספה ידנית</div>
+      <input class="inp" id="fd-m-name" placeholder="שם המזון" style="text-align:right;margin-bottom:6px">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input class="inp" id="fd-m-cal" type="number" placeholder="קל׳" style="text-align:center">
+        <input class="inp" id="fd-m-prot" type="number" placeholder="חלבון g" style="text-align:center">
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input class="inp" id="fd-m-carbs" type="number" placeholder="פחמימות g" style="text-align:center">
+        <input class="inp" id="fd-m-fat" type="number" placeholder="שומן g" style="text-align:center">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="addManualFoodEntry()" class="btn" style="flex:1;padding:10px">✓ שמור</button>
+        <button onclick="hideFoodManualForm()" class="btn btn-red" style="width:auto;padding:10px 16px">✕</button>
+      </div>
+    </div>
+    <div id="fd-log-list"></div>
+    <div id="fd-log-empty" style="text-align:center;color:var(--muted);font-size:13px;padding:8px 0">לא נרשמו ארוחות היום</div>
   </div>
 
   <!-- העדפות תזונה -->
@@ -1201,6 +1246,35 @@ body.light-mode #rest-overlay{background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.
 </div>
 
 <!-- REST TIMER OVERLAY -->
+<div id="fd-pending">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:800;color:var(--orange)">📸 זוהה אוכל</div>
+    <button onclick="cancelFoodEntry()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer">ביטול ✕</button>
+  </div>
+  <div id="fdp-name" style="font-size:17px;font-weight:800;margin-bottom:4px"></div>
+  <div class="fd-macro-row" id="fdp-macros"></div>
+  <div id="fdp-edit-form" style="display:none;margin:8px 0 10px">
+    <input class="inp" id="fdp-edit-name" placeholder="שם המזון" style="text-align:right;margin-bottom:6px">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input class="inp" id="fdp-edit-cal" type="number" placeholder="קל׳" style="text-align:center">
+      <input class="inp" id="fdp-edit-prot" type="number" placeholder="חלבון g" style="text-align:center">
+    </div>
+    <div style="display:flex;gap:6px">
+      <input class="inp" id="fdp-edit-carbs" type="number" placeholder="פחמימות g" style="text-align:center">
+      <input class="inp" id="fdp-edit-fat" type="number" placeholder="שומן g" style="text-align:center">
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <div id="fdp-countdown" style="font-size:26px;font-weight:300;color:var(--orange);min-width:26px;text-align:center;font-variant-numeric:tabular-nums">3</div>
+    <div style="flex:1">
+      <div style="font-size:11px;color:var(--muted)" id="fdp-countdown-lbl">נשמר אוטומטית...</div>
+      <div class="prog-track" style="margin:4px 0 0"><div id="fdp-prog" style="height:100%;background:var(--orange);border-radius:10px;transition:width 1s linear;width:100%"></div></div>
+    </div>
+    <button onclick="toggleFoodPendingEdit()" style="background:none;border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-family:inherit;font-size:12px;color:var(--text2);cursor:pointer">✏️ ערוך</button>
+    <button onclick="confirmFoodEntry()" style="background:var(--orange);color:#000;border:none;border-radius:10px;padding:7px 13px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">שמור</button>
+  </div>
+</div>
+
 <div id="rest-overlay">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <div style="font-size:13px;font-weight:800;color:var(--accent)">⏱️ <span id="rest-lbl">מנוחה</span></div>
@@ -1395,6 +1469,7 @@ let S={
   foodPrefs:{allergies:[],dislikes:[],likes:[],notes:''},
   workoutSets:{},
   restDuration:90,
+  foodLog:{},
 };
 // Push server — built-in, no user configuration needed
 const PUSH_SERVER='https://sportfields.vercel.app';
@@ -1556,6 +1631,187 @@ function showRecipeTab(tab){
   });
 }
 
+// ══════════════════════════════════════════════
+//  יומן תזונה + AI צילום
+// ══════════════════════════════════════════════
+let fdPending=null,fdCountdownTimer=null;
+
+function getTodayLog(){
+  if(!S.foodLog)S.foodLog={};
+  if(!S.foodLog[TODAY])S.foodLog[TODAY]=[];
+  return S.foodLog[TODAY];
+}
+
+async function analyzeAndLogFood(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  event.target.value='';
+  const analyzing=document.getElementById('fd-analyzing');
+  const uploadArea=document.getElementById('fd-upload-area');
+  if(analyzing)analyzing.style.display='block';
+  if(uploadArea)uploadArea.style.display='none';
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const reader=new FileReader();
+      reader.onload=e=>res(e.target.result.split(',')[1]);
+      reader.onerror=rej;
+      reader.readAsDataURL(file);
+    });
+    const resp=await fetch('/api/ai',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:200,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:file.type,data:base64}},
+          {type:'text',text:'תזונאי ישראלי. נתח את הארוחה בתמונה. הערך כמות סבירה לאדם בוגר. החזר JSON בלבד, ללא טקסט נוסף: {"name":"שם בעברית","cal":קלוריות,"protein":חלבון_גרם,"carbs":פחמימות_גרם,"fat":שומן_גרם}'}
+        ]}]
+      })
+    });
+    if(!resp.ok)throw new Error('API error');
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'';
+    const match=text.match(/\{[\s\S]*?\}/);
+    if(!match)throw new Error('No JSON');
+    const food=JSON.parse(match[0]);
+    if(!food.name||food.cal==null)throw new Error('Bad data');
+    showFoodPendingCard({name:food.name,cal:+food.cal||0,protein:+food.protein||0,carbs:+food.carbs||0,fat:+food.fat||0});
+  }catch(e){showToast('❌ לא הצלחתי לזהות — נסה שוב');}
+  finally{
+    if(analyzing)analyzing.style.display='none';
+    if(uploadArea)uploadArea.style.display='block';
+  }
+}
+
+function showFoodPendingCard(food){
+  fdPending={...food,id:Date.now()};
+  const el=document.getElementById('fd-pending');if(!el)return;
+  document.getElementById('fdp-name').textContent=food.name;
+  document.getElementById('fdp-macros').innerHTML=
+    `<div class="fd-macro-badge"><div class="fd-macro-num" style="color:var(--green)">${food.cal}</div><div class="fd-macro-lbl">קל׳</div></div>`+
+    `<div class="fd-macro-badge"><div class="fd-macro-num" style="color:var(--accent)">${food.protein}g</div><div class="fd-macro-lbl">חלבון</div></div>`+
+    `<div class="fd-macro-badge"><div class="fd-macro-num" style="color:var(--blue)">${food.carbs}g</div><div class="fd-macro-lbl">פחמימות</div></div>`+
+    `<div class="fd-macro-badge"><div class="fd-macro-num" style="color:var(--yellow)">${food.fat}g</div><div class="fd-macro-lbl">שומן</div></div>`;
+  const ef=document.getElementById('fdp-edit-form');if(ef)ef.style.display='none';
+  el.style.display='block';
+  startFoodCountdown(3);
+}
+
+function startFoodCountdown(secs){
+  clearFoodCountdown();
+  let left=secs;
+  const disp=document.getElementById('fdp-countdown');
+  const prog=document.getElementById('fdp-prog');
+  const lbl=document.getElementById('fdp-countdown-lbl');
+  if(disp)disp.textContent=left;
+  if(prog)prog.style.width='100%';
+  if(lbl)lbl.textContent='נשמר אוטומטית בעוד '+left+'שנ׳';
+  fdCountdownTimer=setInterval(()=>{
+    left--;
+    if(disp)disp.textContent=left;
+    if(prog)prog.style.width=(left/secs*100)+'%';
+    if(lbl)lbl.textContent=left>0?'נשמר אוטומטית בעוד '+left+'שנ׳':'נשמר!';
+    if(left<=0){clearFoodCountdown();confirmFoodEntry();}
+  },1000);
+}
+
+function clearFoodCountdown(){if(fdCountdownTimer){clearInterval(fdCountdownTimer);fdCountdownTimer=null;}}
+
+function toggleFoodPendingEdit(){
+  const ef=document.getElementById('fdp-edit-form');
+  if(!ef||!fdPending)return;
+  const visible=ef.style.display!=='none';
+  if(!visible){
+    document.getElementById('fdp-edit-name').value=fdPending.name;
+    document.getElementById('fdp-edit-cal').value=fdPending.cal;
+    document.getElementById('fdp-edit-prot').value=fdPending.protein;
+    document.getElementById('fdp-edit-carbs').value=fdPending.carbs;
+    document.getElementById('fdp-edit-fat').value=fdPending.fat;
+    clearFoodCountdown();
+    const lbl=document.getElementById('fdp-countdown-lbl');if(lbl)lbl.textContent='לחץ שמור כשתסיים';
+    const prog=document.getElementById('fdp-prog');if(prog)prog.style.width='0%';
+    const disp=document.getElementById('fdp-countdown');if(disp)disp.textContent='✏️';
+  }
+  ef.style.display=visible?'none':'block';
+}
+
+function confirmFoodEntry(){
+  clearFoodCountdown();
+  if(!fdPending)return;
+  const ef=document.getElementById('fdp-edit-form');
+  if(ef&&ef.style.display!=='none'){
+    fdPending.name=document.getElementById('fdp-edit-name').value||fdPending.name;
+    fdPending.cal=parseInt(document.getElementById('fdp-edit-cal').value)||fdPending.cal;
+    fdPending.protein=parseInt(document.getElementById('fdp-edit-prot').value)||0;
+    fdPending.carbs=parseInt(document.getElementById('fdp-edit-carbs').value)||0;
+    fdPending.fat=parseInt(document.getElementById('fdp-edit-fat').value)||0;
+  }
+  const entry={...fdPending,time:new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})};
+  const savedName=entry.name;
+  getTodayLog().push(entry);
+  save();
+  fdPending=null;
+  const el=document.getElementById('fd-pending');if(el)el.style.display='none';
+  showToast('✅ '+savedName+' נשמר');
+  renderFoodLog();renderFood();
+}
+
+function cancelFoodEntry(){
+  clearFoodCountdown();fdPending=null;
+  const el=document.getElementById('fd-pending');if(el)el.style.display='none';
+}
+
+function showFoodManualForm(){
+  const form=document.getElementById('fd-manual-form');if(!form)return;
+  ['fd-m-name','fd-m-cal','fd-m-prot','fd-m-carbs','fd-m-fat'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  form.style.display='block';
+}
+
+function hideFoodManualForm(){const form=document.getElementById('fd-manual-form');if(form)form.style.display='none';}
+
+function addManualFoodEntry(){
+  const name=(document.getElementById('fd-m-name').value||'').trim();
+  if(!name){showToast('❌ הזן שם מזון');return;}
+  const entry={
+    id:Date.now(),name,
+    cal:parseInt(document.getElementById('fd-m-cal').value)||0,
+    protein:parseInt(document.getElementById('fd-m-prot').value)||0,
+    carbs:parseInt(document.getElementById('fd-m-carbs').value)||0,
+    fat:parseInt(document.getElementById('fd-m-fat').value)||0,
+    time:new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})
+  };
+  getTodayLog().push(entry);save();
+  hideFoodManualForm();showToast('✅ '+name+' נשמר');
+  renderFoodLog();renderFood();
+}
+
+function deleteFoodEntry(id){
+  if(!S.foodLog||!S.foodLog[TODAY])return;
+  S.foodLog[TODAY]=S.foodLog[TODAY].filter(e=>e.id!==id);
+  save();renderFoodLog();renderFood();
+}
+
+function renderFoodLog(){
+  const list=document.getElementById('fd-log-list');
+  const empty=document.getElementById('fd-log-empty');
+  if(!list)return;
+  const log=getTodayLog();
+  if(!log.length){list.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+  list.innerHTML=log.map(e=>`
+    <div class="fd-entry">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px">${e.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">
+          <span style="color:var(--green)">${e.cal} קל׳</span> ·
+          <span style="color:var(--accent)">💪 ${e.protein}g</span> ·
+          <span style="color:var(--blue)">🍞 ${e.carbs}g</span> ·
+          <span style="color:var(--yellow)">🧈 ${e.fat}g</span>${e.time?' · '+e.time:''}
+        </div>
+      </div>
+      <button class="fd-del" onclick="deleteFoodEntry(${e.id})">🗑️</button>
+    </div>`).join('');
+}
+
 function renderFood(){
   const pt=document.getElementById('f-prot-t');if(pt)pt.textContent=S.targetProtein;
   const fl=document.getElementById('food-list');fl.innerHTML='';
@@ -1570,6 +1826,7 @@ function renderFood(){
     });
     card.innerHTML=h;fl.appendChild(card);
   });
+  if(S.foodLog){(S.foodLog[TODAY]||[]).forEach(e=>{cal+=e.cal||0;prot+=e.protein||0;meals++;});}
   document.getElementById('f-cal').textContent=cal;
   document.getElementById('f-prot').textContent=prot+'g';
   document.getElementById('f-meals').textContent=meals;
@@ -1578,6 +1835,7 @@ function renderFood(){
   document.getElementById('prot-pct').textContent='חלבון: '+Math.round(pct*100)+'% ('+S.targetProtein+'g יעד)';
   document.getElementById('s-prot').textContent=prot+'g';
   renderFoodPrefsDisplay();
+  renderFoodLog();
   setTimeout(()=>{drawMacroDonut();renderMacroBars();},0);
 }
 
@@ -1891,6 +2149,26 @@ function highlightActivePreset(secs){
   document.querySelectorAll('.rest-preset').forEach((b,i)=>b.classList.toggle('active',vals[i]===secs));
 }
 
+// ── מאקרו מצטבר (checkedMeals + foodLog) ────
+function getMacroTotals(){
+  let totCal=0,totProt=0,totCarbs=0,totFat=0;
+  Object.entries(S.checkedMeals).forEach(([k,v])=>{
+    if(!v)return;
+    const[mt,idx]=k.split('|');
+    if(MEALS[mt]&&MEALS[mt][idx]){
+      const m=MEALS[mt][idx];
+      totCal+=m.cal;totProt+=m.protein;
+      const rem=Math.max(0,m.cal-m.protein*4);
+      totCarbs+=Math.round(rem*0.68/4);
+      totFat+=Math.round(rem*0.32/9);
+    }
+  });
+  if(S.foodLog){(S.foodLog[TODAY]||[]).forEach(e=>{
+    totCal+=e.cal||0;totProt+=e.protein||0;totCarbs+=e.carbs||0;totFat+=e.fat||0;
+  });}
+  return{totCal,totProt,totCarbs,totFat};
+}
+
 // ── גרף מאקרו ───────────────────────────────
 function drawMacroDonut(){
   const canvas=document.getElementById('macro-donut');if(!canvas)return;
@@ -1899,17 +2177,9 @@ function drawMacroDonut(){
   canvas.width=90*dpr;canvas.height=90*dpr;
   ctx.scale(dpr,dpr);
   const isDark=!document.body.classList.contains('light-mode');
-  let totCal=0,totProt=0;
-  Object.entries(S.checkedMeals).forEach(([k,v])=>{
-    if(!v)return;
-    const[mt,idx]=k.split('|');
-    if(MEALS[mt]&&MEALS[mt][idx]){totCal+=MEALS[mt][idx].cal;totProt+=MEALS[mt][idx].protein;}
-  });
-  const protCal=totProt*4;
-  const remCal=Math.max(0,totCal-protCal);
-  const fatCal=remCal*0.32;
-  const carbCal=remCal-fatCal;
-  const total=protCal+fatCal+carbCal;
+  const{totCal,totProt,totCarbs,totFat}=getMacroTotals();
+  const protCal=totProt*4,carbCal=totCarbs*4,fatCal=totFat*9;
+  const total=protCal+carbCal+fatCal;
   const cx=45,cy=45,r=34,lw=12;
   ctx.clearRect(0,0,90,90);
   if(total===0){
@@ -1933,20 +2203,11 @@ function drawMacroDonut(){
 
 function renderMacroBars(){
   const el=document.getElementById('macro-bars');if(!el)return;
-  let totCal=0,totProt=0;
-  Object.entries(S.checkedMeals).forEach(([k,v])=>{
-    if(!v)return;
-    const[mt,idx]=k.split('|');
-    if(MEALS[mt]&&MEALS[mt][idx]){totCal+=MEALS[mt][idx].cal;totProt+=MEALS[mt][idx].protein;}
-  });
-  const protCal=totProt*4;
-  const remCal=Math.max(0,totCal-protCal);
-  const fatG=Math.round(remCal*0.32/9);
-  const carbG=Math.max(0,Math.round((remCal-fatG*9)/4));
+  const{totCal,totProt,totCarbs,totFat}=getMacroTotals();
   const rows=[
     {label:'💪 חלבון',val:totProt,target:S.targetProtein,unit:'g',color:'var(--green)'},
-    {label:'🍞 פחמימות',val:carbG,target:S.targetCarbs,unit:'g',color:'var(--blue)'},
-    {label:'🧈 שומן',val:fatG,target:S.targetFat,unit:'g',color:'var(--yellow)'},
+    {label:'🍞 פחמימות',val:totCarbs,target:S.targetCarbs,unit:'g',color:'var(--blue)'},
+    {label:'🧈 שומן',val:totFat,target:S.targetFat,unit:'g',color:'var(--yellow)'},
   ];
   el.innerHTML=rows.map(r=>{
     const pct=Math.min(r.val/(r.target||1),1);
@@ -1961,7 +2222,7 @@ function renderMacroBars(){
   const note=document.getElementById('macro-cal-note');
   if(note){
     const calPct=Math.round(totCal/S.targetCal*100);
-    note.textContent=totCal===0?'סמן ארוחות כדי לראות את הפירוט':`${totCal} מתוך ${S.targetCal} קל׳ (${calPct}%)`;
+    note.textContent=totCal===0?'סמן ארוחות או צלם אוכל כדי לראות פירוט':`${totCal} מתוך ${S.targetCal} קל׳ (${calPct}%)`;
   }
 }
 
@@ -3092,6 +3353,7 @@ function getDefaultState(){
     weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
     apiKey:'',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
     pushSubscribed:false,pushServerUrl:'',
+    foodLog:{},
   };
 }
 
