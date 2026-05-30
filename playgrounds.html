@@ -2058,6 +2058,7 @@ function enterApp() {
   setTimeout(() => {
     s.style.display = 'none';
     map.invalidateSize();
+    setTimeout(() => { map.invalidateSize(); tileLayer && tileLayer.redraw(); }, 500);
   }, 420);
   document.getElementById('user-btn').style.display = 'flex';
   document.getElementById('share-loc-btn').style.display = 'flex';
@@ -2310,8 +2311,8 @@ map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas
 
 // ─── DARK / LIGHT TILE LAYERS ───────────────────────────
 const TILES = {
-  light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, detectRetina:true }),
-  dark:  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, detectRetina:true }),
+  light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, detectRetina:true, crossOrigin:true }),
+  dark:  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, detectRetina:true, crossOrigin:true }),
 };
 
 let darkMode = null; // null = auto
@@ -2338,6 +2339,8 @@ function toggleDarkMode() {
 }
 
 applyMapTheme(); // אוטומטי בטעינה
+setTimeout(() => map.invalidateSize(), 300);
+setTimeout(() => map.invalidateSize(), 1000);
 
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
