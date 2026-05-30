@@ -256,6 +256,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .player-meta{font-size:12px;color:var(--muted);margin-top:2px}
 .player-time{font-size:11px;color:var(--accent);font-weight:700;margin-top:4px}
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
+.dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 /* lightbox */
 #lightbox{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column}
 #lightbox.on{display:flex}
@@ -1546,6 +1547,7 @@ function openDetail(i) {
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
     <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-share" onclick="shareField()">📤</button>
     <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
     <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
@@ -1563,6 +1565,20 @@ function onFavClick() {
 
 function closeDetail() {
   document.getElementById('overlay').classList.remove('on'); selected = null;
+}
+
+function shareField() {
+  if (!selected) return;
+  const f = selected;
+  const mapsUrl = `https://www.google.com/maps?q=${f.lat},${f.lon}`;
+  const text = `🏟️ ${f.name}\n${he(f.sport)} · ${fmt(f.dist)} ממיקומי\n${mapsUrl}`;
+
+  if (navigator.share) {
+    navigator.share({ title: f.name, text, url: mapsUrl }).catch(() => {});
+  } else {
+    // fallback — WhatsApp
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
 }
 
 function navTo(app) {
