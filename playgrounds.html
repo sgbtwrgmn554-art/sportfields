@@ -60,6 +60,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 
 .sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:200;
+  height:46vh;
   background:var(--card);border-radius:22px 22px 0 0;
   border-top:1px solid var(--border);display:flex;flex-direction:column;will-change:transform;
 }
@@ -210,6 +211,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     </div>
     <div class="sheet-meta">
       <span class="count-lbl" id="cnt">טוען...</span>
+      <button class="radius-sel" onclick="locateMe()" style="background:var(--accent-s);border-color:var(--accent);color:var(--accent);font-size:15px">📍</button>
       <select class="radius-sel" id="rad" onchange="onRadiusChange()">
         <option value="500">500מ'</option>
         <option value="1000">1ק"מ</option>
