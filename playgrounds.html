@@ -1335,6 +1335,26 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.city-row')) { closeAutocomplete(); closeHistoryList(); }
 });
 
+// ─── OFFLINE DETECTION ──────────────────────────────────
+function updateOnlineStatus() {
+  const online = navigator.onLine;
+  let bar = document.getElementById('offline-bar');
+  if (!online) {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'offline-bar';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff453a;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:8px;safe-area-inset-top:8px';
+      bar.textContent = '📴 אין חיבור לאינטרנט — מוצגים נתונים שמורים';
+      document.body.prepend(bar);
+    }
+  } else {
+    if (bar) bar.remove();
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
 // ─── SERVICE WORKER ─────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw-playgrounds.js');
