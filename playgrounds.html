@@ -269,6 +269,18 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── AVAILABILITY ─── */
+.avail-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:10px;font-size:12px;font-weight:800;margin-bottom:8px}
+.avail-badge.free{background:rgba(48,209,88,.15);border:1px solid var(--accent);color:var(--accent)}
+.avail-badge.busy{background:rgba(255,69,58,.15);border:1px solid var(--red);color:var(--red)}
+.avail-badge.unknown{background:rgba(255,255,255,.08);border:1px solid var(--border2);color:var(--muted)}
+.avail-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.avail-btns{display:flex;gap:6px;margin-bottom:10px}
+.avail-btn{flex:1;padding:7px;border-radius:9px;border:1.5px solid var(--border2);background:transparent;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;color:var(--muted)}
+.avail-btn.free-btn:hover,.avail-btn.free-btn.on{border-color:var(--accent);background:rgba(48,209,88,.15);color:var(--accent)}
+.avail-btn.busy-btn:hover,.avail-btn.busy-btn.on{border-color:var(--red);background:rgba(255,69,58,.15);color:var(--red)}
+
 /* ─── CHAT ─── */
 #chat-panel{position:fixed;inset:0;z-index:750;background:var(--bg);display:none;flex-direction:column}
 #chat-panel.on{display:flex}
@@ -944,6 +956,47 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── AVAILABILITY ───────────────────────────────────────
+function availKey(f) { return `pg_avail_${f.lat}_${f.lon}`; }
+
+function getAvailability(f) {
+  // 1. בדוק אירועים פעילים כרגע (±30 דק')
+  const now = Date.now();
+  const events = getEvents().filter(e =>
+    Math.abs(e.lat - f.lat) < 0.001 && Math.abs(e.lon - f.lon) < 0.001 &&
+    now >= e.dateTs - 30*60*1000 && now <= e.dateTs + 90*60*1000
+  );
+  if (events.length) return { status:'busy', source:'event', label:`תפוס — ${events[0].title}` };
+
+  // 2. דיווח משתמש אחרון (בתוך 30 דק')
+  const report = JSON.parse(localStorage.getItem(availKey(f)) || 'null');
+  if (report && now - report.ts < 30*60*1000) {
+    return { status: report.status, source:'user', label: report.status==='free'?'פנוי — לפי דיווח':'תפוס — לפי דיווח' };
+  }
+  return { status:'unknown', label:'לא ידוע' };
+}
+
+function reportAvailability(f, status) {
+  localStorage.setItem(availKey(f), JSON.stringify({ status, ts: Date.now() }));
+}
+
+function buildAvailBlock(f) {
+  const av = getAvailability(f);
+  const cls = av.status;
+  const icon = cls==='free'?'🟢':cls==='busy'?'🔴':'⚪';
+  return `<div class="avail-badge ${cls}"><span class="avail-dot"></span>${icon} ${av.label}</div>
+  <div class="avail-btns">
+    <button class="avail-btn free-btn${av.status==='free'?' on':''}" onclick="reportAvailability(selected,'free');rebuildDetail()">✅ פנוי עכשיו</button>
+    <button class="avail-btn busy-btn${av.status==='busy'?' on':''}" onclick="reportAvailability(selected,'busy');rebuildDetail()">🔴 תפוס</button>
+  </div>`;
+}
+
+function rebuildDetail() {
+  if (!selected) return;
+  const i = shownFields.indexOf(selected);
+  if (i>=0) openDetail(i);
+}
+
 // ─── CHAT ───────────────────────────────────────────────
 let chatField = null;
 
@@ -2152,10 +2205,12 @@ function renderList() {
     const sportLabel = f.sports.length > 1
       ? f.sports.slice(0,3).map(s=>he(s)).join(' · ')
       : he(f.sport);
+    const av = getAvailability(f);
+    const avDot = av.status==='free'?'<span style="color:#30d158;font-size:9px">●</span>':av.status==='busy'?'<span style="color:#ff453a;font-size:9px">●</span>':'';
     return `<div class="frow" onclick="openDetail(${i})">
       <div class="fi" style="font-size:${f.sports.length>1?'20px':'32px'};line-height:1.4">${sportIcons}</div>
       <div style="flex:1;min-width:0">
-        <div class="fn">${f.name}</div>
+        <div class="fn">${avDot} ${f.name}</div>
         <div class="fs">${sportLabel}${extras?' · '+extras:''}</div>
       </div>
       <div class="fd">${fmt(f.dist)}</div>
@@ -2847,6 +2902,7 @@ function openDetail(i) {
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
   if (f.tags?.website)              tags.push(`🌐 אתר`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
+    + buildAvailBlock(f)
     + buildPhotosBlock(f)
     + buildRatingBlock(f);
   const favSaved = isFav(f);
