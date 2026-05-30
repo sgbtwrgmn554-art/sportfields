@@ -732,6 +732,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
 
@@ -1099,7 +1100,12 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <div class="premium-period">לחודש · ביטול בכל עת</div>
     </div>
     <div style="padding:0 16px 4px">
-      <button class="premium-btn" onclick="subscribePremium()">🚀 התחל ניסיון חינם ל-7 ימים</button>
+      <button class="dbtn" style="background:#635bff;color:white;width:100%;padding:14px;font-size:16px;border-radius:12px;border:none;cursor:pointer;margin-bottom:8px;" onclick="subscribePremium('monthly')">
+        💳 חודשי — 9.90₪ לחודש
+      </button>
+      <button class="dbtn" style="background:#4CAF50;color:white;width:100%;padding:14px;font-size:16px;border-radius:12px;border:none;cursor:pointer;" onclick="subscribePremium('yearly')">
+        🏆 שנתי — 79₪ לשנה <span style="background:rgba(255,255,255,.2);border-radius:8px;padding:2px 8px;font-size:12px;">חסכון 40%</span>
+      </button>
       <button class="premium-restore" onclick="restorePremium()">שחזר רכישה קיימת</button>
       <button class="premium-restore" onclick="closePremiumPanel()">לא עכשיו</button>
     </div>
@@ -1184,6 +1190,19 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── STRIPE CONFIG ───
+const STRIPE_CONFIG = {
+  publishableKey: 'pk_test_YOUR_PUBLISHABLE_KEY',
+  monthlyPriceId: 'price_MONTHLY_ID',   // 9.90₪/month
+  yearlyPriceId:  'price_YEARLY_ID',    // 79₪/year
+  successUrl: window.location.origin + window.location.pathname + '?premium=success',
+  cancelUrl:  window.location.origin + window.location.pathname + '?premium=cancel',
+};
+
+function stripeEnabled() {
+  return STRIPE_CONFIG.publishableKey !== 'pk_test_YOUR_PUBLISHABLE_KEY';
+}
+
 // ─── FIREBASE CONFIG (replace with your project values) ───
 const FIREBASE_CONFIG = {
   apiKey: "YOUR_API_KEY",
@@ -2811,15 +2830,34 @@ function closePremiumPanel() {
   document.getElementById('premium-panel').classList.remove('on');
 }
 
-function subscribePremium() {
-  track('begin_checkout', { value: 9.90, currency: 'ILS' });
-  // כאן יש לשלב עם Stripe / Apple IAP / Google Play Billing
-  // לצורך הדגמה — מסמן כ-PRO מיד
+async function subscribePremium(plan = 'monthly') {
+  track('begin_checkout', { value: plan === 'monthly' ? 9.90 : 79, currency: 'ILS', plan });
+
+  if (stripeEnabled()) {
+    try {
+      const stripe = Stripe(STRIPE_CONFIG.publishableKey);
+      const priceId = plan === 'yearly' ? STRIPE_CONFIG.yearlyPriceId : STRIPE_CONFIG.monthlyPriceId;
+      await stripe.redirectToCheckout({
+        lineItems: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        successUrl: STRIPE_CONFIG.successUrl,
+        cancelUrl: STRIPE_CONFIG.cancelUrl,
+        customerEmail: currentUser?.email || undefined,
+      });
+    } catch(e) {
+      alert('שגיאה בחיבור לתשלום: ' + e.message);
+    }
+    return;
+  }
+
+  // Fallback: mock subscription (when Stripe not configured)
   localStorage.setItem('pg_pro', '1');
+  localStorage.setItem('pg_pro_plan', plan);
   localStorage.setItem('pg_pro_since', Date.now());
-  closePremiumPanel();
   applyProPerks();
-  setStatus('👑 ברוך הבא ל-Arena PRO!', true);
+  alert(plan === 'yearly' ? '🏆 שנתי — 79₪ לשנה' : '✅ פרמיום חודשי — 9.90₪');
+  const panel = document.getElementById('premium-panel');
+  if (panel) panel.classList.remove('on');
 }
 
 function restorePremium() {
@@ -3960,6 +3998,20 @@ window.addEventListener('beforeunload', () => {
   applyLang(curLang);
   applyA11yOnLoad();
   restoreReminders();
+  // Handle Stripe redirect return
+  (function handleStripeReturn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('premium') === 'success') {
+      localStorage.setItem('pg_pro', '1');
+      localStorage.setItem('pg_pro_since', Date.now());
+      applyProPerks();
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => alert('🎉 ברוך הבא לפרמיום!'), 500);
+    } else if (params.get('premium') === 'cancel') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  })();
   // Check lottery after a short delay (after auth loads)
   setTimeout(checkAndShowLottery, 2500);
 }
