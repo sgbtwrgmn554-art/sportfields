@@ -434,9 +434,9 @@ const ICONS = {
   tennis:'🎾',
   volleyball:'🏐',beach_volleyball:'🏐',netball:'🏐',
   athletics:'🏃',running:'🏃',track:'🏃',
-  fitness:'💪',gym:'💪',
+  fitness:'💪',gym:'💪',crossfit:'🏋️',weightlifting:'🏋️',
   swimming:'🏊',water_polo:'🤽',
-  table_tennis:'🏓',
+  table_tennis:'🏓',pickleball:'🏓',
   handball:'🤾',
   baseball:'⚾',softball:'⚾',
   cricket:'🏏',
@@ -449,11 +449,18 @@ const ICONS = {
   skateboard:'🛹',bmx:'🛹',
   cycling:'🚴',bicycle_motocross:'🚴',
   climbing:'🧗',bouldering:'🧗',
-  golf:'⛳',
+  golf:'⛳',miniature_golf:'⛳',
   archery:'🏹',
   lacrosse:'🥍',
-  gymnastics:'🤸',rhythmic_gymnastics:'🤸',
+  gymnastics:'🤸',rhythmic_gymnastics:'🤸',parkour:'🤸',
   padel:'🎾',paddle:'🎾',squash:'🎾',
+  equestrian:'🐴',horse_riding:'🐴',
+  surfing:'🏄',windsurfing:'🏄',kitesurfing:'🏄',
+  kayak:'🚣',canoeing:'🚣',rowing:'🚣',sailing:'⛵',
+  bowling:'🎳',
+  petanque:'🪃',boules:'🪃',bocce:'🪃',
+  shooting:'🎯',
+  yoga:'🧘',dance:'💃',
   multi:'🏅',
   playground:'🎠',
   default:'🏟️'
@@ -464,9 +471,9 @@ const HE = {
   tennis:'טניס',
   volleyball:'כדורעף',beach_volleyball:'כדורעף חוף',netball:'נטבול',
   athletics:'אתלטיקה',running:'ריצה',track:'מסלול ריצה',
-  fitness:'כושר',gym:'כושר',
+  fitness:'כושר',gym:'כושר',crossfit:'קרוספיט',weightlifting:'הרמת משקולות',
   swimming:'שחייה',water_polo:'פולו מים',
-  table_tennis:'פינג-פונג',
+  table_tennis:'פינג-פונג',pickleball:'פיקלבול',
   handball:'כדוריד',
   baseball:'בייסבול',softball:'סופטבול',
   cricket:'קריקט',
@@ -479,14 +486,21 @@ const HE = {
   skateboard:'סקייטפארק',bmx:'BMX',
   cycling:'רכיבה',bicycle_motocross:'BMX',
   climbing:'טיפוס',bouldering:'בולדרינג',
-  golf:'גולף',
+  golf:'גולף',miniature_golf:'מיני גולף',
   archery:'קשתות',
   lacrosse:'לקרוס',
-  gymnastics:'התעמלות',rhythmic_gymnastics:'התעמלות מקצבית',
+  gymnastics:'התעמלות',rhythmic_gymnastics:'התעמלות מקצבית',parkour:'פארקור',
   padel:'פאדל',paddle:'פאדל',squash:'סקווש',
+  equestrian:'רכיבה על סוסים',horse_riding:'רכיבה על סוסים',
+  surfing:'גלישה',windsurfing:'גלישת רוח',kitesurfing:'קייטסרפינג',
+  kayak:'קיאק',canoeing:'קיאק',rowing:'חתירה',sailing:'שיט',
+  bowling:'בולינג',
+  petanque:'גדרון',boules:'גדרון',bocce:'בוצ׳ה',
+  shooting:'ירי',
+  yoga:'יוגה',dance:'ריקוד',
   multi:'רב-ספורטיבי',
   playground:'גן שעשועים',
-  default:'מגרש ספורט'
+  default:'מגרש רב-ספורטיבי'
 };
 
 // ─── ALL FILTER PILLS (with country restrictions) ───────
@@ -505,6 +519,15 @@ const ALL_FILTERS = [
   { id:'badminton',        label:'🏸 בדמינטון',           countries:'all' },
   { id:'climbing',         label:'🧗 טיפוס',              countries:'all' },
   { id:'playground',       label:'🎠 גן שעשועים',         countries:'all' },
+  { id:'pickleball',       label:'🏓 פיקלבול',            countries:'all' },
+  { id:'equestrian',       label:'🐴 רכיבה על סוסים',     countries:'all' },
+  { id:'water_sports',     label:'🏄 ספורט מים',          countries:'all' },
+  { id:'bowling',          label:'🎳 בולינג',             countries:'all' },
+  { id:'miniature_golf',   label:'⛳ מיני גולף',          countries:'all' },
+  { id:'petanque',         label:'🪃 גדרון',              countries:'all' },
+  { id:'archery',          label:'🏹 קשתות',              countries:'all' },
+  { id:'parkour',          label:'🤸 פארקור',             countries:'all' },
+  { id:'crossfit',         label:'🏋️ קרוספיט',            countries:'all' },
   // ישראל + אירופה
   { id:'handball',         label:'🤾 כדוריד',             countries:['IL','DE','FR','ES','PT','DK','NO','SE','HR','PL','HU','RO','RS','AT','CH','GR','TN','EG','MA'] },
   { id:'padel',            label:'🎾 פאדל',               countries:['IL','ES','IT','AR','SE','BE','PT','MX','AE','SA','QA'] },
@@ -518,7 +541,7 @@ const ALL_FILTERS = [
   { id:'rugby',            label:'🏉 רוגבי',              countries:['GB','AU','NZ','ZA','FR','IE','AR','IT','US','JP','FJ','SA','NR'] },
   // קריקט
   { id:'cricket',          label:'🏏 קריקט',              countries:['IN','PK','AU','GB','NZ','ZA','BD','SL','WI','ZW','AF','IE'] },
-  // גולף — נפוץ כמעט בכל מקום
+  // גולף
   { id:'golf',             label:'⛳ גולף',               countries:'all' },
   // לחימה
   { id:'martial_arts',     label:'🥋 אמנויות לחימה',      countries:'all' },
@@ -538,6 +561,15 @@ const FILTER_GROUPS = {
   badminton:        ['badminton'],
   climbing:         ['climbing','bouldering'],
   playground:       ['playground'],
+  pickleball:       ['pickleball'],
+  equestrian:       ['equestrian','horse_riding'],
+  water_sports:     ['surfing','windsurfing','kitesurfing','kayak','canoeing','rowing','sailing','diving','swimming_wild'],
+  bowling:          ['bowling','9pin','10pin'],
+  miniature_golf:   ['miniature_golf'],
+  petanque:         ['petanque','boules','bocce'],
+  archery:          ['archery'],
+  parkour:          ['parkour','obstacle_course'],
+  crossfit:         ['crossfit','weightlifting'],
   handball:         ['handball'],
   padel:            ['padel','paddle','squash'],
   american_football:['american_football'],
@@ -561,7 +593,7 @@ const COUNTRY_NAMES = {
 };
 
 const ico = s => ICONS[(s||'').toLowerCase()] || ICONS.default;
-const he  = s => HE[(s||'').toLowerCase()]   || s || 'מגרש ספורט';
+const he  = s => HE[(s||'').toLowerCase()]   || s || 'מגרש רב-ספורטיבי';
 const km  = (lat1,lon1,lat2,lon2) => {
   const R=6371000, dL=(lat2-lat1)*Math.PI/180, dG=(lon2-lon1)*Math.PI/180;
   const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dG/2)**2;
@@ -688,13 +720,14 @@ async function loadFields(lat, lon) {
   document.getElementById('list').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
   document.getElementById('cnt').textContent = 'טוען...';
 
-  const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing|stadium|sport';
+  const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing|stadium|horse_riding|bowling_alley|miniature_golf|sports_hall';
   const q = `[out:json][timeout:45];(
 node["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
 way["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
-relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium)$"](around:${radius},${lat},${lon});
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"](around:${radius},${lat},${lon});
 way["sport"~"."](around:${radius},${lat},${lon});
-node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby|baseball|american_football|hockey|field_hockey|lacrosse|golf|swimming|athletics|climbing|boxing|martial_arts|skateboard|table_tennis|badminton)$"](around:${radius},${lat},${lon});
+node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby|baseball|american_football|hockey|field_hockey|lacrosse|golf|swimming|athletics|climbing|boxing|martial_arts|skateboard|table_tennis|badminton|pickleball|equestrian|surfing|rowing|sailing|bowling|petanque|archery|parkour|crossfit|shooting|yoga)$"](around:${radius},${lat},${lon});
+node["amenity"="gym"](around:${radius},${lat},${lon});
 );out center tags;`;
 
   try {
@@ -708,7 +741,10 @@ node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby
       playground:'playground', fitness_station:'fitness',
       swimming_pool:'swimming', track:'athletics',
       skate_park:'skateboard', golf_course:'golf',
-      ice_rink:'hockey', climbing:'climbing'
+      ice_rink:'hockey', climbing:'climbing',
+      horse_riding:'equestrian', bowling_alley:'bowling',
+      miniature_golf:'miniature_golf', sports_hall:'fitness',
+      stadium:'multi',
     };
 
     allFields = (data.elements||[]).map(el => {
