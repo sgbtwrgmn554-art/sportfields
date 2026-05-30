@@ -258,6 +258,37 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
+/* ─── ACCESSIBILITY ─── */
+body.a11y-large { font-size: 18px !important }
+body.a11y-xlarge{ font-size: 22px !important }
+body.a11y-contrast{ filter: contrast(1.5) brightness(1.1) }
+body.a11y-big-btns .hdr-btn   { width:52px!important;height:52px!important;font-size:22px!important }
+body.a11y-big-btns .dbtn      { padding:18px!important;font-size:17px!important }
+body.a11y-big-btns .fpill     { padding:10px 18px!important;font-size:15px!important }
+body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!important }
+body.a11y-big-btns .frow      { padding:18px 16px!important }
+body.a11y-big-btns .fn        { font-size:18px!important }
+
+/* ─── SETTINGS PANEL ─── */
+#settings-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#settings-panel.on{display:flex}
+.settings-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.settings-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
+.settings-section{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:12px 0 6px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:.5px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-lbl{font-size:15px;font-weight:600}
+.settings-sub{font-size:12px;color:var(--muted);margin-top:2px}
+/* toggle switch */
+.toggle{width:51px;height:31px;background:var(--border2);border-radius:20px;position:relative;cursor:pointer;transition:.3s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;top:3px;right:3px;width:25px;height:25px;border-radius:50%;background:#fff;transition:.3s;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.toggle.on::after{right:auto;left:3px}
+/* font size selector */
+.font-size-row{display:flex;gap:8px;margin-top:8px}
+.font-size-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-weight:700;cursor:pointer;transition:.2s;text-align:center}
+.font-size-btn.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+
 /* ─── COUPONS PANEL ─── */
 #coupons-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #coupons-panel.on{display:flex}
@@ -499,6 +530,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
     <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
     <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
     <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
@@ -565,6 +597,55 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── SETTINGS PANEL ─── -->
+<div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
+  <div class="settings-card">
+    <div class="lb-head">
+      <div class="lb-title">⚙️ הגדרות</div>
+      <button class="fav-close" onclick="closeSettingsPanel()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section">♿ נגישות</div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-lbl">גודל גופן</div>
+          <div class="settings-sub">בחר גודל טקסט מועדף</div>
+          <div class="font-size-row">
+            <button class="font-size-btn" data-size="normal"  onclick="setFontSize('normal')">רגיל</button>
+            <button class="font-size-btn" data-size="large"   onclick="setFontSize('large')">גדול</button>
+            <button class="font-size-btn" data-size="xlarge"  onclick="setFontSize('xlarge')">ענק</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">ניגודיות גבוהה</div><div class="settings-sub">צבעים בהירים יותר</div></div>
+        <div class="toggle" id="toggle-contrast" onclick="toggleA11y('contrast')"></div>
+      </div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">כפתורים גדולים</div><div class="settings-sub">אזורי לחיצה גדולים יותר</div></div>
+        <div class="toggle" id="toggle-big-btns" onclick="toggleA11y('big-btns')"></div>
+      </div>
+
+      <div class="settings-section">🗺️ מפה</div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">מצב לילה אוטומטי</div><div class="settings-sub">מפה כהה בשעות הלילה</div></div>
+        <div class="toggle" id="toggle-auto-dark" onclick="toggleAutoDark()"></div>
+      </div>
+
+      <div class="settings-section">🔔 התראות</div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">תזכורת יומית</div><div class="settings-sub">בשעה 17:00</div></div>
+        <div class="toggle" id="toggle-reminder" onclick="toggleReminder()"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─── COUPONS PANEL ─── -->
 <div id="coupons-panel" onclick="if(event.target===this)closeCouponsPanel()">
   <div class="coupons-card">
@@ -752,6 +833,65 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── SETTINGS / ACCESSIBILITY ───────────────────────────
+function openSettingsPanel() {
+  syncSettingsUI();
+  document.getElementById('settings-panel').classList.add('on');
+}
+function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
+
+function syncSettingsUI() {
+  const prefs = getA11yPrefs();
+  document.querySelectorAll('.font-size-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.size === (prefs.fontSize || 'normal')));
+  document.getElementById('toggle-contrast').classList.toggle('on', !!prefs.contrast);
+  document.getElementById('toggle-big-btns').classList.toggle('on', !!prefs.bigBtns);
+  document.getElementById('toggle-auto-dark').classList.toggle('on', darkMode === null);
+  document.getElementById('toggle-reminder').classList.toggle('on', !!localStorage.getItem('pg_reminder'));
+}
+
+function getA11yPrefs() { return JSON.parse(localStorage.getItem('pg_a11y') || '{}'); }
+function saveA11yPrefs(p) { localStorage.setItem('pg_a11y', JSON.stringify(p)); }
+
+function setFontSize(size) {
+  const p = getA11yPrefs(); p.fontSize = size; saveA11yPrefs(p);
+  document.body.classList.remove('a11y-large','a11y-xlarge');
+  if (size === 'large')  document.body.classList.add('a11y-large');
+  if (size === 'xlarge') document.body.classList.add('a11y-xlarge');
+  syncSettingsUI();
+}
+
+function toggleA11y(key) {
+  const p = getA11yPrefs();
+  p[key === 'contrast' ? 'contrast' : 'bigBtns'] = !p[key === 'contrast' ? 'contrast' : 'bigBtns'];
+  saveA11yPrefs(p);
+  document.body.classList.toggle(`a11y-${key}`, !!p[key === 'contrast' ? 'contrast' : 'bigBtns']);
+  syncSettingsUI();
+}
+
+function toggleAutoDark() {
+  darkMode = darkMode === null ? !isNight() : null;
+  applyMapTheme(darkMode !== null ? darkMode : undefined);
+  syncSettingsUI();
+}
+
+function toggleReminder() {
+  if (localStorage.getItem('pg_reminder')) {
+    localStorage.removeItem('pg_reminder');
+  } else {
+    scheduleDailyReminder();
+  }
+  syncSettingsUI();
+}
+
+function applyA11yOnLoad() {
+  const p = getA11yPrefs();
+  if (p.fontSize === 'large')  document.body.classList.add('a11y-large');
+  if (p.fontSize === 'xlarge') document.body.classList.add('a11y-xlarge');
+  if (p.contrast)  document.body.classList.add('a11y-contrast');
+  if (p.bigBtns)   document.body.classList.add('a11y-big-btns');
+}
+
 // ─── i18n ────────────────────────────────────────────────
 const LANGS = {
   he: {
@@ -2544,6 +2684,7 @@ if ('serviceWorker' in navigator) {
   // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
   if (isPro()) applyProPerks();
   applyLang(curLang);
+  applyA11yOnLoad();
 }
 </script>
 </body>
