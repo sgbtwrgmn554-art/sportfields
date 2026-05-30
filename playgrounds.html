@@ -697,6 +697,9 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .auth-google{border-color:#4285f4;background:rgba(66,133,244,.1)}
 .auth-apple{border-color:#fff;background:rgba(255,255,255,.08)}
 </style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1148,6 +1151,24 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── FIREBASE CONFIG (replace with your project values) ───
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+} catch(e) { console.warn('Firebase not configured, using localStorage fallback'); }
+
+function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
+
 // ─── BIZ DASHBOARD ──────────────────────────────────────
 function openBizPanel() {
   renderBizDashboard();
@@ -1277,13 +1298,44 @@ function openChatPanel(f) {
 }
 
 function closeChatPanel() {
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   document.getElementById('chat-panel').classList.remove('on');
 }
 
+let chatUnsub = null;
 function renderChat() {
-  const msgs = getChat(chatField);
   const myId = currentUser?.email || 'guest';
   const el   = document.getElementById('chat-msgs');
+  if (!el) return;
+
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+
+  if (fsEnabled() && chatField) {
+    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
+    chatUnsub = db.collection('chats').doc(fieldId).collection('messages')
+      .orderBy('ts').limitToLast(60)
+      .onSnapshot(snap => {
+        if (!snap.docs.length) {
+          el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
+          return;
+        }
+        el.innerHTML = snap.docs.map(d => {
+          const m = d.data();
+          const me = m.uid === myId;
+          const ts = m.ts?.toMillis ? m.ts.toMillis() : (m.ts || 0);
+          const time = new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+          return `<div class="msg-row ${me?'me':'them'}">
+            <div class="msg-bubble">${m.text}</div>
+            <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+          </div>`;
+        }).join('');
+        el.scrollTop = el.scrollHeight;
+      });
+    return;
+  }
+
+  // localStorage fallback
+  const msgs = getChat(chatField);
   if (!msgs.length) {
     el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
     return;
@@ -1299,19 +1351,29 @@ function renderChat() {
   el.scrollTop = el.scrollHeight;
 }
 
-function sendMsg() {
+async function sendMsg() {
   const inp  = document.getElementById('chat-inp');
   const text = inp.value.trim(); if (!text || !chatField) return;
-  const msgs = getChat(chatField);
-  msgs.push({
+  inp.value = '';
+  const msg = {
     text,
     uid:  currentUser?.email || 'guest',
     name: currentUser?.name  || 'אורח',
     ts:   Date.now(),
-  });
-  localStorage.setItem(chatKey(chatField), JSON.stringify(msgs.slice(-100)));
-  inp.value = '';
-  renderChat();
+  };
+  if (fsEnabled()) {
+    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
+    await db.collection('chats').doc(fieldId).collection('messages').add({
+      ...msg,
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // renderChat is driven by onSnapshot listener — no manual call needed
+  } else {
+    const msgs = getChat(chatField);
+    msgs.push(msg);
+    localStorage.setItem(chatKey(chatField), JSON.stringify(msgs.slice(-100)));
+    renderChat();
+  }
 }
 
 // ─── EVENTS ─────────────────────────────────────────────
@@ -1408,6 +1470,10 @@ function createEvent() {
   // קבע תזכורת אם נבחרה
   if (reminderMin > 0) scheduleEventReminder(ev);
   const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
+  if (fsEnabled()) {
+    const fieldId = selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global');
+    db.collection('events').doc(fieldId).collection('list').add(ev).catch(console.warn);
+  }
   // שתף קישור
   const text = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
   if (navigator.share) navigator.share({ title, text }).catch(()=>{});
@@ -2992,13 +3058,12 @@ function getFieldAvg(f) {
   return all[key] || null; // { avg, count }
 }
 
-function saveRating(f, stars, tags) {
-  // שמור דירוג של המשתמש הנוכחי
+async function saveRating(f, stars, tags) {
+  // always save locally too
   const all = getRatings();
   all[ratingKey(f)] = { stars, tags };
   localStorage.setItem('pg_ratings', JSON.stringify(all));
 
-  // עדכן ממוצע (מדמה שמירה מקומית של כל הדירוגים)
   const avg = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
   const key = ratingKey(f);
   if (!avg[key]) avg[key] = { sum: 0, count: 0 };
@@ -3006,6 +3071,20 @@ function saveRating(f, stars, tags) {
   avg[key].count += 1;
   avg[key].avg    = (avg[key].sum / avg[key].count).toFixed(1);
   localStorage.setItem('pg_all_ratings', JSON.stringify(avg));
+
+  if (fsEnabled()) {
+    const fieldId = f.id || `${f.lat}_${f.lon}`;
+    const rating = { stars, tags, user: currentUser?.name || 'אורח', uid: currentUser?.email || 'guest', ts: Date.now() };
+    await db.collection('ratings').doc(fieldId).collection('entries').add(rating);
+    // update aggregate
+    const agg = await db.collection('ratings').doc(fieldId).get();
+    const data = agg.exists ? agg.data() : { total: 0, count: 0 };
+    await db.collection('ratings').doc(fieldId).set({
+      total: (data.total || 0) + stars,
+      count: (data.count || 0) + 1,
+      avg: (((data.total || 0) + stars) / ((data.count || 0) + 1)).toFixed(1)
+    });
+  }
 }
 
 let curStars = 0, curRatingTags = new Set();
