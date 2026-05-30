@@ -317,6 +317,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 }
 .auth-guest:active{background:var(--card2)}
 .auth-err{color:var(--red);font-size:13px;margin-bottom:9px;text-align:center;min-height:18px}
+/* social login */
+.auth-social{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
+.auth-social-btn{
+  width:100%;padding:14px;border-radius:13px;border:1.5px solid var(--border2);
+  background:var(--card2);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.auth-social-btn:active{opacity:.8;transform:scale(.98)}
+.auth-google{border-color:#4285f4;background:rgba(66,133,244,.1)}
+.auth-apple{border-color:#fff;background:rgba(255,255,255,.08)}
 </style>
 </head>
 <body>
@@ -337,6 +347,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <input class="auth-inp" id="auth-pass"  type="password" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="new-password" dir="ltr" />
     <button class="auth-btn" id="auth-submit" onclick="authSubmit()">הרשמה</button>
     <div class="auth-div">— או —</div>
+    <div class="auth-social">
+      <button class="auth-social-btn auth-google" onclick="signInWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        המשך עם Google
+      </button>
+      <button class="auth-social-btn auth-apple" onclick="signInWithApple()">
+        <svg width="20" height="20" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.5 0 286.9 0 200.5 0 112.5 53.4 44.9 150.6 44.9c52.6 0 97.1 30.3 130.3 30.3 32.2 0 82.7-30.3 141.3-30.3 22.4 0 108.2 2.6 168.7 99.5z"/></svg>
+        המשך עם Apple
+      </button>
+    </div>
     <button class="auth-guest" onclick="continueAsGuest()">👤 המשך בלי חשבון</button>
   </div>
 </div>
@@ -449,6 +469,85 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── SOCIAL AUTH CONFIG ──────────────────────────────────
+// כדי להפעיל: החלף את ה-IDs האמיתיים שלך מ-console.developers.google.com ו-developer.apple.com
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const APPLE_CLIENT_ID  = 'YOUR_APPLE_SERVICE_ID'; // e.g. com.yourapp.service
+
+function signInWithGoogle() {
+  if (GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
+    showAuthErr('⚙️ יש להגדיר GOOGLE_CLIENT_ID בקוד');
+    return;
+  }
+  if (!window.google?.accounts) {
+    // טען את ה-SDK בזמן ריצה
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = () => _googleSignIn();
+    document.head.appendChild(s);
+    return;
+  }
+  _googleSignIn();
+}
+
+function _googleSignIn() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: resp => {
+      try {
+        // decode JWT payload
+        const payload = JSON.parse(atob(resp.credential.split('.')[1]));
+        currentUser = { email: payload.email, name: payload.name, avatar: payload.picture };
+        localStorage.setItem('pg_user', JSON.stringify(currentUser));
+        enterApp();
+      } catch { showAuthErr('❌ שגיאה בכניסה עם Google'); }
+    },
+  });
+  google.accounts.id.prompt(notification => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // fallback — popup
+      google.accounts.id.renderButton(
+        document.createElement('div'),
+        { theme:'filled_black', size:'large', width:340 }
+      );
+    }
+  });
+}
+
+function signInWithApple() {
+  if (APPLE_CLIENT_ID.startsWith('YOUR_')) {
+    showAuthErr('⚙️ יש להגדיר APPLE_CLIENT_ID בקוד');
+    return;
+  }
+  if (!window.AppleID) {
+    const s = document.createElement('script');
+    s.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+    s.onload = () => _appleSignIn();
+    document.head.appendChild(s);
+    return;
+  }
+  _appleSignIn();
+}
+
+async function _appleSignIn() {
+  AppleID.auth.init({
+    clientId: APPLE_CLIENT_ID,
+    scope: 'name email',
+    redirectURI: location.origin + '/playgrounds.html',
+    usePopup: true,
+  });
+  try {
+    const data = await AppleID.auth.signIn();
+    const email = data.authorization?.id_token
+      ? JSON.parse(atob(data.authorization.id_token.split('.')[1])).email
+      : 'apple-user@privaterelay.appleid.com';
+    const name = data.user ? `${data.user.name?.firstName || ''} ${data.user.name?.lastName || ''}`.trim() : 'Apple User';
+    currentUser = { email, name: name || email };
+    localStorage.setItem('pg_user', JSON.stringify(currentUser));
+    enterApp();
+  } catch { showAuthErr('❌ שגיאה בכניסה עם Apple'); }
+}
+
 // ─── AUTH (local-storage, no backend needed) ────────────
 let authMode = 'register', currentUser = null;
 
