@@ -258,6 +258,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
+/* ─── PREMIUM PANEL ─── */
+#premium-panel{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end}
+#premium-panel.on{display:flex}
+.premium-card{width:100%;max-height:92vh;background:linear-gradient(160deg,#1a1040,#0a1628 60%);border-radius:22px 22px 0 0;border-top:2px solid #bf5af2;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto}
+.premium-hero{text-align:center;padding:28px 20px 16px}
+.premium-crown{font-size:60px;line-height:1;margin-bottom:8px}
+.premium-title{font-size:24px;font-weight:900;letter-spacing:-.4px;background:linear-gradient(90deg,#bf5af2,#ff9f0a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.premium-sub{font-size:14px;color:rgba(255,255,255,.6);margin-top:6px;line-height:1.5}
+.premium-perks{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.perk-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.05);border:1px solid rgba(191,90,242,.2);border-radius:14px;padding:14px}
+.perk-ico{font-size:28px;flex-shrink:0}
+.perk-name{font-size:15px;font-weight:700}
+.perk-desc{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.premium-price{text-align:center;padding:8px 16px 16px}
+.premium-amount{font-size:38px;font-weight:900;color:#fff}
+.premium-period{font-size:14px;color:rgba(255,255,255,.5)}
+.premium-btn{width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#bf5af2,#ff9f0a);color:#000;font-family:inherit;font-size:17px;font-weight:900;cursor:pointer;margin-bottom:10px;transition:.15s}
+.premium-btn:active{opacity:.85;transform:scale(.98)}
+.premium-restore{background:none;border:none;color:rgba(255,255,255,.4);font-family:inherit;font-size:13px;cursor:pointer;width:100%;padding:8px;margin-bottom:8px}
+.pro-badge{display:inline-block;background:linear-gradient(135deg,#bf5af2,#ff9f0a);color:#000;font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;vertical-align:middle;margin-right:4px}
+
 /* ─── STATS PANEL ─── */
 #stats-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #stats-panel.on{display:flex}
@@ -425,6 +446,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
     <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
     <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
@@ -487,6 +509,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── PREMIUM PANEL ─── -->
+<div id="premium-panel" onclick="if(event.target===this)closePremiumPanel()">
+  <div class="premium-card">
+    <div class="premium-hero">
+      <div class="premium-crown">👑</div>
+      <div class="premium-title">Arena PRO</div>
+      <div class="premium-sub">שדרג את החוויה שלך<br>וקבל גישה לכל היתרונות</div>
+    </div>
+    <div class="premium-perks">
+      <div class="perk-row"><div class="perk-ico">🚫</div><div><div class="perk-name">ללא פרסומות</div><div class="perk-desc">גלה מגרשים בלי הפרעות</div></div></div>
+      <div class="perk-row"><div class="perk-ico">👑</div><div><div class="perk-name">סמל PRO בטבלת הדירוג</div><div class="perk-desc">הופע עם עיצוב מיוחד בין המובילים</div></div></div>
+      <div class="perk-row"><div class="perk-ico">🎰</div><div><div class="perk-name">הגרלה חודשית — 100₪</div><div class="perk-desc">כל מנוי PRO נכנס אוטומטית להגרלה</div></div></div>
+      <div class="perk-row"><div class="perk-ico">🏷️</div><div><div class="perk-name">הנחות למגרשים ועסקי ספורט</div><div class="perk-desc">קופונים בלעדיים לעסקים ממומנים</div></div></div>
+      <div class="perk-row"><div class="perk-ico">📋</div><div><div class="perk-name">200 מגרשים ברשימה</div><div class="perk-desc">פי 4 יותר תוצאות בחיפוש</div></div></div>
+    </div>
+    <div class="premium-price">
+      <div class="premium-amount">₪9.90</div>
+      <div class="premium-period">לחודש · ביטול בכל עת</div>
+    </div>
+    <div style="padding:0 16px 4px">
+      <button class="premium-btn" onclick="subscribePremium()">🚀 התחל ניסיון חינם ל-7 ימים</button>
+      <button class="premium-restore" onclick="restorePremium()">שחזר רכישה קיימת</button>
+      <button class="premium-restore" onclick="closePremiumPanel()">לא עכשיו</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── STATS PANEL ─── -->
 <div id="stats-panel" onclick="if(event.target===this)closeStatsPanel()">
   <div class="stats-card">
@@ -1283,6 +1332,40 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── PREMIUM ────────────────────────────────────────────
+function isPro() { return localStorage.getItem('pg_pro') === '1'; }
+
+function openPremiumPanel() {
+  document.getElementById('premium-panel').classList.add('on');
+}
+function closePremiumPanel() {
+  document.getElementById('premium-panel').classList.remove('on');
+}
+
+function subscribePremium() {
+  // כאן יש לשלב עם Stripe / Apple IAP / Google Play Billing
+  // לצורך הדגמה — מסמן כ-PRO מיד
+  localStorage.setItem('pg_pro', '1');
+  localStorage.setItem('pg_pro_since', Date.now());
+  closePremiumPanel();
+  applyProPerks();
+  setStatus('👑 ברוך הבא ל-Arena PRO!', true);
+}
+
+function restorePremium() {
+  const pro = localStorage.getItem('pg_pro');
+  if (pro === '1') { applyProPerks(); setStatus('👑 PRO שוחזר בהצלחה', true); closePremiumPanel(); }
+  else             { setStatus('לא נמצא מנוי קיים', true); }
+}
+
+function applyProPerks() {
+  // הסר פרסומות
+  document.querySelectorAll('.ad-wrap').forEach(el => el.style.display = 'none');
+  // סמל PRO בכותרת
+  const userBtn = document.getElementById('user-btn');
+  if (userBtn) userBtn.textContent = '👑';
+}
+
 // ─── VISIT TRACKER ──────────────────────────────────────
 function trackVisit(f) {
   const key = `pg_visits_${f.lat}_${f.lon}`;
@@ -2077,6 +2160,7 @@ if ('serviceWorker' in navigator) {
     locateMe();
   }
   // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
+  if (isPro()) applyProPerks();
 }
 </script>
 </body>
