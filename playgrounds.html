@@ -269,6 +269,23 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── BIZ DASHBOARD ─── */
+#biz-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#biz-panel.on{display:flex}
+.biz-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:2px solid #ff9f0a;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.biz-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.biz-hero{background:linear-gradient(135deg,#1a1000,#0a1628);border-radius:14px;padding:16px;border:1px solid rgba(255,159,10,.3);text-align:center}
+.biz-hero-name{font-size:18px;font-weight:900;color:#ff9f0a;margin-bottom:4px}
+.biz-hero-sub{font-size:12px;color:var(--muted)}
+.biz-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.biz-stat{background:var(--card2);border-radius:12px;padding:13px 10px;text-align:center;border:1px solid var(--border)}
+.biz-stat-num{font-size:28px;font-weight:900;color:#ff9f0a;line-height:1}
+.biz-stat-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.biz-section{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.biz-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)}
+.biz-row:last-child{border-bottom:none}
+.biz-tip{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:12px;padding:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
+
 /* ─── AVAILABILITY ─── */
 .avail-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:10px;font-size:12px;font-weight:800;margin-bottom:8px}
 .avail-badge.free{background:rgba(48,209,88,.15);border:1px solid var(--accent);color:var(--accent)}
@@ -681,6 +698,17 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── BIZ DASHBOARD ─── -->
+<div id="biz-panel" onclick="if(event.target===this)closeBizPanel()">
+  <div class="biz-card">
+    <div class="lb-head">
+      <div class="lb-title">📊 דשבורד עסקי</div>
+      <button class="fav-close" onclick="closeBizPanel()">✕</button>
+    </div>
+    <div class="biz-body" id="biz-body"></div>
+  </div>
+</div>
+
 <!-- ─── CHAT PANEL ─── -->
 <div id="chat-panel">
   <div class="chat-hdr">
@@ -956,6 +984,70 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── BIZ DASHBOARD ──────────────────────────────────────
+function openBizPanel() {
+  renderBizDashboard();
+  document.getElementById('biz-panel').classList.add('on');
+}
+function closeBizPanel() { document.getElementById('biz-panel').classList.remove('on'); }
+
+function renderBizDashboard() {
+  // נתונים מה-localStorage — בעולם אמיתי אלה יגיעו מ-backend
+  const rentalClicks  = JSON.parse(localStorage.getItem('pg_rental_clicks') || '[]');
+  const sponsoredViews= parseInt(localStorage.getItem('pg_sp_views') || '0');
+
+  // קבץ לפי קוד affiliate
+  const byCode = {};
+  rentalClicks.forEach(c => {
+    if (!byCode[c.code]) byCode[c.code] = { shop: c.shop, count: 0, lastTs: 0 };
+    byCode[c.code].count++;
+    byCode[c.code].lastTs = Math.max(byCode[c.code].lastTs, c.ts);
+  });
+
+  const totalClicks  = rentalClicks.length;
+  const uniqueCodes  = Object.keys(byCode).length;
+  const totalRevenue = totalClicks * 8; // הדגמה: 8₪ עמלה ממוצעת לקליק
+
+  const codeRows = Object.entries(byCode).map(([code, d]) => `
+    <div class="biz-row">
+      <div>
+        <div style="font-size:13px;font-weight:700">${d.shop}</div>
+        <div style="font-size:11px;color:var(--muted)">${code} · ${new Date(d.lastTs).toLocaleDateString('he-IL')}</div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:#ff9f0a">${d.count} קליקים</div>
+    </div>`).join('') || '<div style="font-size:13px;color:var(--muted)">אין נתונים עדיין</div>';
+
+  document.getElementById('biz-body').innerHTML = `
+    <div class="biz-hero">
+      <div style="font-size:32px">📊</div>
+      <div class="biz-hero-name">Arena Business Dashboard</div>
+      <div class="biz-hero-sub">נתוני עמלות ב-30 הימים האחרונים</div>
+    </div>
+
+    <div class="biz-grid">
+      <div class="biz-stat"><div class="biz-stat-num">${totalClicks}</div><div class="biz-stat-lbl">קליקי affiliate</div></div>
+      <div class="biz-stat"><div class="biz-stat-num">${sponsoredViews}</div><div class="biz-stat-lbl">הצפות עסקים</div></div>
+      <div class="biz-stat"><div class="biz-stat-num">₪${totalRevenue}</div><div class="biz-stat-lbl">עמלות משוערות</div></div>
+    </div>
+
+    <div>
+      <div class="biz-section">📋 פירוט לפי קוד Affiliate</div>
+      ${codeRows}
+    </div>
+
+    <div class="biz-tip">
+      💡 <strong>איך להגדיל הכנסות?</strong><br>
+      • הוסף עוד עסקים לרשימת ה-RENTAL_SHOPS<br>
+      • גבה ₪200-500/חודש לכל עסק ממומן<br>
+      • כל קליק על "להזמנה" = עמלה מהעסק<br>
+      • מנויי PRO מכפילים את חשיפת העסקים
+    </div>
+  `;
+
+  // עדכן צפיות (בכל פתיחה)
+  localStorage.setItem('pg_sp_views', sponsoredViews + 1);
+}
+
 // ─── AVAILABILITY ───────────────────────────────────────
 function availKey(f) { return `pg_avail_${f.lat}_${f.lon}`; }
 
@@ -1638,12 +1730,11 @@ function enterApp() {
 
 function showUserMenu() {
   if (!currentUser) return;
-  const info = currentUser.guest
-    ? 'אתה גולש כאורח'
-    : `${currentUser.name}\n${currentUser.email}`;
-  if (confirm(`${info}\n\nהתנתק?`)) {
-    localStorage.removeItem('pg_user');
-    location.reload();
+  const info = currentUser.guest ? 'אתה גולש כאורח' : `${currentUser.name}\n${currentUser.email}`;
+  const choice = confirm(`${info}\n\n📊 לחץ אישור לדשבורד עסקי\nלחץ ביטול להתנתקות`);
+  if (choice) { openBizPanel(); }
+  else {
+    if (confirm('להתנתק?')) { localStorage.removeItem('pg_user'); location.reload(); }
   }
 }
 
