@@ -320,6 +320,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
+    <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום">🌙</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
@@ -698,12 +699,38 @@ let curFilter = 'all', selected = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
 map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  detectRetina: true,
-  tileSize: 256,
-  zoomOffset: 0,
-}).addTo(map);
+
+// ─── DARK / LIGHT TILE LAYERS ───────────────────────────
+const TILES = {
+  light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, detectRetina:true }),
+  dark:  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, detectRetina:true }),
+};
+
+let darkMode = null; // null = auto
+let tileLayer = null;
+
+function isNight() {
+  const h = new Date().getHours();
+  return h < 6 || h >= 21;
+}
+
+function applyMapTheme(forceDark) {
+  const useDark = forceDark !== undefined ? forceDark : isNight();
+  if (tileLayer) map.removeLayer(tileLayer);
+  tileLayer = useDark ? TILES.dark : TILES.light;
+  tileLayer.addTo(map);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = useDark ? '☀️' : '🌙';
+}
+
+function toggleDarkMode() {
+  if (darkMode === null) darkMode = !isNight();
+  else darkMode = !darkMode;
+  applyMapTheme(darkMode);
+}
+
+applyMapTheme(); // אוטומטי בטעינה
+
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
 
