@@ -1,6 +1,6 @@
 {
-  "name": "מגרשי ספורט",
-  "short_name": "מגרשים",
+  "name": "Arena · ארנה",
+  "short_name": "ארנה",
   "description": "גלה מגרשי ספורט קרובים אליך",
   "start_url": "/playgrounds.html",
   "display": "standalone",
