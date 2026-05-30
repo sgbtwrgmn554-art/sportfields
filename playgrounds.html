@@ -269,6 +269,27 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── EVENTS ─── */
+#events-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#events-panel.on{display:flex}
+.events-card{width:100%;max-height:92vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.events-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ev-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.ev-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.events-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:10px}
+.ev-card{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border)}
+.ev-title{font-size:15px;font-weight:800;margin-bottom:4px}
+.ev-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.ev-field{font-size:13px;color:var(--blue);font-weight:700;margin-bottom:8px}
+.ev-actions{display:flex;gap:7px}
+.ev-rsvp{flex:1;padding:9px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
+.ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ev-count{font-size:11px;color:var(--muted);margin-top:6px}
+/* create form */
+.ev-form{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+.ev-form-title{font-size:14px;font-weight:800;color:var(--text2)}
+
 /* ─── HEATMAP ─── */
 .heat-marker{
   border-radius:50%;opacity:.55;
@@ -558,6 +579,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
     <button class="hdr-btn" id="heat-btn" onclick="toggleHeatmap()" title="מפת חום">🔥</button>
     <button class="hdr-btn" onclick="openRentalPanel()" title="השכרת ציוד">🎾</button>
     <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
@@ -627,6 +649,21 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── EVENTS PANEL ─── -->
+<div id="events-panel" onclick="if(event.target===this)closeEventsPanel()">
+  <div class="events-card">
+    <div class="lb-head">
+      <div class="lb-title">📅 אירועים</div>
+      <button class="fav-close" onclick="closeEventsPanel()">✕</button>
+    </div>
+    <div class="events-tabs">
+      <button class="ev-tab on" onclick="switchEvTab(this,'list')">📋 כל האירועים</button>
+      <button class="ev-tab"   onclick="switchEvTab(this,'create')">➕ צור אירוע</button>
+    </div>
+    <div class="events-body" id="events-body"></div>
+  </div>
+</div>
+
 <!-- ─── RENTAL PANEL ─── -->
 <div id="rental-panel" onclick="if(event.target===this)closeRentalPanel()">
   <div class="rental-card">
@@ -874,6 +911,120 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── EVENTS ─────────────────────────────────────────────
+let curEvTab = 'list';
+
+function openEventsPanel(preField) {
+  curEvTab = preField ? 'create' : 'list';
+  renderEventsPanel(preField);
+  document.getElementById('events-panel').classList.add('on');
+}
+function closeEventsPanel() { document.getElementById('events-panel').classList.remove('on'); }
+
+function switchEvTab(btn, tab) {
+  curEvTab = tab;
+  document.querySelectorAll('.ev-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderEventsPanel();
+}
+
+function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
+function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
+
+function renderEventsPanel(preField) {
+  const body = document.getElementById('events-body');
+  if (curEvTab === 'list') {
+    const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000)
+      .sort((a,b) => a.dateTs - b.dateTs);
+    if (!evs.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>אין אירועים קרובים<br><small>צור את הראשון!</small></div>';
+      return;
+    }
+    body.innerHTML = evs.map((e,i) => {
+      const joined = (e.rsvp||[]).includes(currentUser?.email||'guest');
+      const d = new Date(e.dateTs);
+      const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="ev-card">
+        <div class="ev-title">${e.title}</div>
+        <div class="ev-field">🏟️ ${e.fieldName}</div>
+        <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
+        <div class="ev-actions">
+          <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
+          <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
+        </div>
+        <div class="ev-count">👥 ${(e.rsvp||[]).length} מצטרפים</div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // create form
+  const f = preField || selected;
+  body.innerHTML = `<div class="ev-form">
+    <div class="ev-form-title">📅 צור אירוע חדש</div>
+    <input class="add-inp" id="ev-title" placeholder="שם האירוע (לדוגמה: משחק כדורסל 3x3)" />
+    ${f ? `<div style="font-size:13px;color:var(--blue);font-weight:700">🏟️ ${f.name}</div>` : `<input class="add-inp" id="ev-field" placeholder="שם המגרש" />`}
+    <select class="add-sel" id="ev-sport">
+      ${Object.keys(ICONS).filter(k=>k!=='default').slice(0,14).map(k=>`<option value="${k}">${ico(k)} ${he(k)}</option>`).join('')}
+    </select>
+    <input class="add-inp" id="ev-date" type="datetime-local" style="color-scheme:dark" />
+    <input class="add-inp" id="ev-desc" placeholder="פרטים נוספים (אופציונלי)" />
+    <button class="add-submit" onclick="createEvent()">📅 צור אירוע ושתף</button>
+  </div>`;
+  // set default datetime to tomorrow 18:00
+  const tmr = new Date(); tmr.setDate(tmr.getDate()+1); tmr.setHours(18,0,0,0);
+  const el = document.getElementById('ev-date');
+  if (el) el.value = tmr.toISOString().slice(0,16);
+}
+
+function createEvent() {
+  const title    = document.getElementById('ev-title')?.value.trim();
+  const fieldName= selected?.name || document.getElementById('ev-field')?.value.trim() || 'מגרש';
+  const sport    = document.getElementById('ev-sport')?.value || 'multi';
+  const dateVal  = document.getElementById('ev-date')?.value;
+  if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
+  const ev = {
+    id: Date.now(), title, fieldName,
+    sport, dateTs: new Date(dateVal).getTime(),
+    lat: selected?.lat, lon: selected?.lon,
+    creator: currentUser?.name || 'אנונימי',
+    rsvp: [currentUser?.email || 'guest'],
+    ts: Date.now(),
+  };
+  const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
+  // שתף קישור
+  const text = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
+  if (navigator.share) navigator.share({ title, text }).catch(()=>{});
+  else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  curEvTab = 'list';
+  document.querySelectorAll('.ev-tab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  renderEventsPanel();
+  setStatus('✅ האירוע נוצר ושותף!', true);
+}
+
+function rsvpEvent(i) {
+  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
+  const ev  = evs[i]; if (!ev) return;
+  const uid = currentUser?.email || 'guest';
+  if (!ev.rsvp) ev.rsvp = [];
+  const idx = ev.rsvp.indexOf(uid);
+  if (idx >= 0) ev.rsvp.splice(idx, 1);
+  else ev.rsvp.push(uid);
+  // update in storage
+  const all = getEvents();
+  const ai  = all.findIndex(e => e.id === ev.id);
+  if (ai >= 0) { all[ai] = ev; saveEvents(all); }
+  renderEventsPanel();
+}
+
+function shareEvent(i) {
+  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
+  const ev  = evs[i]; if (!ev) return;
+  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
+  if (navigator.share) navigator.share({ title: ev.title, text }).catch(()=>{});
+  else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
 // ─── HEATMAP ────────────────────────────────────────────
 let heatLayer = null, heatMode = false;
 
@@ -2578,6 +2729,7 @@ function openDetail(i) {
     <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
     <button class="dbtn dbtn-share" onclick="shareField()">📤</button>
     <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
+    <button class="dbtn" style="background:rgba(48,209,88,.1);border:1.5px solid var(--accent);color:var(--accent);flex:.7" onclick="closeDetail();openEventsPanel(selected)">📅</button>
     <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
