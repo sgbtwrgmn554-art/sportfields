@@ -2328,6 +2328,14 @@ function applyMapTheme(forceDark) {
   if (tileLayer) map.removeLayer(tileLayer);
   tileLayer = useDark ? TILES.dark : TILES.light;
   tileLayer.addTo(map);
+  // fallback to OSM light if dark tiles fail
+  tileLayer.on('tileerror', () => {
+    if (tileLayer === TILES.dark) {
+      map.removeLayer(tileLayer);
+      tileLayer = TILES.light;
+      tileLayer.addTo(map);
+    }
+  });
   const btn = document.getElementById('theme-btn');
   if (btn) btn.textContent = useDark ? '☀️' : '🌙';
 }

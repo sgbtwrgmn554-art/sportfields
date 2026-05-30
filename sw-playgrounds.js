@@ -1,6 +1,6 @@
-const CACHE_STATIC = 'playgrounds-static-v2';
-const CACHE_TILES  = 'playgrounds-tiles-v1';
-const CACHE_DATA   = 'playgrounds-data-v1';
+const CACHE_STATIC = 'playgrounds-static-v4';
+const CACHE_TILES  = 'playgrounds-tiles-v3';
+const CACHE_DATA   = 'playgrounds-data-v2';
 
 const ASSETS = [
   '/playgrounds.html',
