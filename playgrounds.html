@@ -258,6 +258,29 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
+/* ─── ADD FIELD PANEL ─── */
+#add-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#add-panel.on{display:flex}
+.add-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto}
+.add-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.add-body{padding:16px;display:flex;flex-direction:column;gap:11px}
+.add-label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.add-inp{width:100%;padding:12px 14px;border-radius:12px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:.2s}
+.add-inp:focus{border-color:var(--accent)}
+.add-sel{width:100%;padding:12px 14px;border-radius:12px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none;cursor:pointer}
+.add-loc-row{display:flex;gap:8px;align-items:center}
+.add-loc-val{flex:1;padding:10px 12px;border-radius:11px;background:var(--bg);border:1px solid var(--border2);font-size:12px;color:var(--muted);font-family:monospace}
+.add-loc-btn{padding:10px 14px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+.add-map-hint{font-size:12px;color:var(--muted);text-align:center;padding:4px}
+.add-submit{width:100%;padding:15px;border-radius:13px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:.15s;margin-top:4px}
+.add-submit:active{opacity:.8}
+/* pin on map mode */
+#map-pin-overlay{position:fixed;inset:0;z-index:90;pointer-events:none;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+#map-pin-overlay.on{display:flex}
+.pin-cross{font-size:36px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))}
+.pin-confirm{pointer-events:all;padding:12px 28px;border-radius:14px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.pin-cancel{pointer-events:all;padding:10px 20px;border-radius:12px;border:1.5px solid var(--border2);background:rgba(10,22,40,.9);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+
 /* ─── PREMIUM PANEL ─── */
 #premium-panel{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end}
 #premium-panel.on{display:flex}
@@ -446,6 +469,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
     <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
     <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
     <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
@@ -509,6 +533,70 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── MAP PIN OVERLAY ─── -->
+<div id="map-pin-overlay">
+  <div class="pin-cross">📍</div>
+  <button class="pin-confirm" onclick="confirmPinLocation()">✓ אשר מיקום</button>
+  <button class="pin-cancel"  onclick="cancelPinMode()">ביטול</button>
+</div>
+
+<!-- ─── ADD FIELD PANEL ─── -->
+<div id="add-panel" onclick="if(event.target===this)closeAddPanel()">
+  <div class="add-card">
+    <div class="add-head">
+      <div class="lb-title">➕ הוסף מגרש חדש</div>
+      <button class="fav-close" onclick="closeAddPanel()">✕</button>
+    </div>
+    <div class="add-body">
+      <div>
+        <div class="add-label">שם המגרש</div>
+        <input class="add-inp" id="af-name" placeholder="לדוגמה: מגרש הכדורסל בפארק" />
+      </div>
+      <div>
+        <div class="add-label">ענף ספורט</div>
+        <select class="add-sel" id="af-sport">
+          <option value="soccer">⚽ כדורגל</option>
+          <option value="basketball">🏀 כדורסל</option>
+          <option value="tennis">🎾 טניס</option>
+          <option value="volleyball">🏐 כדורעף</option>
+          <option value="fitness">💪 כושר</option>
+          <option value="swimming">🏊 שחייה</option>
+          <option value="athletics">🏃 ריצה</option>
+          <option value="skateboard">🛹 סקייטפארק</option>
+          <option value="table_tennis">🏓 פינג-פונג</option>
+          <option value="badminton">🏸 בדמינטון</option>
+          <option value="padel">🎾 פאדל</option>
+          <option value="climbing">🧗 טיפוס</option>
+          <option value="playground">🎠 גן שעשועים</option>
+          <option value="multi">🏅 רב-ספורטיבי</option>
+        </select>
+      </div>
+      <div>
+        <div class="add-label">פרטים נוספים (אופציונלי)</div>
+        <select class="add-sel" id="af-lit" style="margin-bottom:8px">
+          <option value="">תאורה לילית — לא ידוע</option>
+          <option value="yes">💡 יש תאורה לילית</option>
+          <option value="no">🌑 אין תאורה</option>
+        </select>
+        <select class="add-sel" id="af-fee">
+          <option value="">כניסה — לא ידוע</option>
+          <option value="no">🆓 כניסה חינם</option>
+          <option value="yes">💰 בתשלום</option>
+        </select>
+      </div>
+      <div>
+        <div class="add-label">מיקום</div>
+        <div class="add-loc-row">
+          <div class="add-loc-val" id="af-loc-val">לא נבחר עדיין</div>
+          <button class="add-loc-btn" onclick="startPinMode()">📍 בחר במפה</button>
+        </div>
+        <div class="add-map-hint">לחץ "בחר במפה" ואז גרור למיקום המדויק</div>
+      </div>
+      <button class="add-submit" onclick="submitNewField()">➕ הוסף מגרש</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── PREMIUM PANEL ─── -->
 <div id="premium-panel" onclick="if(event.target===this)closePremiumPanel()">
   <div class="premium-card">
@@ -1179,7 +1267,12 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       if (!sports.length) sports.push(primarySport);
       const name = t.name || t['name:he'] || he(primarySport);
       return { lat:clat, lon:clon, name, sport:primarySport, sports, tags:t, dist:km(lat,lon,clat,clon) };
-    }).filter(Boolean).sort((a,b) => a.dist - b.dist);
+    }).filter(Boolean);
+
+    // הוסף מגרשים שהמשתמש הוסיף ידנית
+    const userFields = JSON.parse(localStorage.getItem('pg_user_fields') || '[]')
+      .map(f => ({ ...f, dist: km(lat, lon, f.lat, f.lon) }));
+    allFields = [...userFields, ...allFields].sort((a,b) => a.dist - b.dist);
 
     renderMarkers(); renderList();
     // אם לא נמצא כלום ב-radius — הגדל אוטומטית
@@ -1332,6 +1425,83 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── ADD FIELD ──────────────────────────────────────────
+let newFieldLat = null, newFieldLon = null;
+let pinMode = false;
+
+function openAddPanel() {
+  newFieldLat = uLat; newFieldLon = uLon;
+  updateAfLocVal();
+  document.getElementById('add-panel').classList.add('on');
+}
+function closeAddPanel() { document.getElementById('add-panel').classList.remove('on'); }
+
+function updateAfLocVal() {
+  const el = document.getElementById('af-loc-val');
+  if (newFieldLat != null)
+    el.textContent = `${newFieldLat.toFixed(5)}, ${newFieldLon.toFixed(5)}`;
+  else
+    el.textContent = 'לא נבחר עדיין';
+}
+
+function startPinMode() {
+  closeAddPanel();
+  pinMode = true;
+  document.getElementById('map-pin-overlay').classList.add('on');
+  setStatus('📍 גרור את המפה למיקום המגרש ואז לחץ "אשר מיקום"');
+}
+
+function confirmPinLocation() {
+  const center = map.getCenter();
+  newFieldLat = center.lat;
+  newFieldLon = center.lng;
+  cancelPinMode();
+  updateAfLocVal();
+  document.getElementById('add-panel').classList.add('on');
+  setStatus('✅ מיקום נבחר', true);
+}
+
+function cancelPinMode() {
+  pinMode = false;
+  document.getElementById('map-pin-overlay').classList.remove('on');
+}
+
+function submitNewField() {
+  const name  = document.getElementById('af-name').value.trim();
+  const sport = document.getElementById('af-sel')?.value || document.getElementById('af-sport').value;
+  const lit   = document.getElementById('af-lit').value;
+  const fee   = document.getElementById('af-fee').value;
+
+  if (!name)              { setStatus('⚠️ יש לרשום שם למגרש', true); return; }
+  if (newFieldLat == null){ setStatus('⚠️ יש לבחור מיקום במפה', true); return; }
+
+  const newField = {
+    lat: newFieldLat, lon: newFieldLon,
+    name, sport, sports: [sport],
+    tags: { lit, fee, _user_added: 'yes' },
+    dist: uLat != null ? km(uLat, uLon, newFieldLat, newFieldLon) : 0,
+    _userAdded: true,
+  };
+
+  // שמור ב-localStorage
+  const userFields = JSON.parse(localStorage.getItem('pg_user_fields') || '[]');
+  userFields.unshift(newField);
+  localStorage.setItem('pg_user_fields', JSON.stringify(userFields));
+
+  // הוסף לרשימה הנוכחית
+  allFields.unshift(newField);
+  allFields.sort((a,b) => a.dist - b.dist);
+  renderMarkers(); renderList();
+
+  closeAddPanel();
+  map.flyTo([newFieldLat, newFieldLon], 17, { duration: 0.6 });
+  setStatus(`✅ "${name}" נוסף בהצלחה!`, true);
+
+  // אפס טופס
+  document.getElementById('af-name').value = '';
+  newFieldLat = null; newFieldLon = null;
+}
+
 // ─── PREMIUM ────────────────────────────────────────────
 function isPro() { return localStorage.getItem('pg_pro') === '1'; }
 
