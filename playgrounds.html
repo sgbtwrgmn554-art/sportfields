@@ -225,6 +225,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .saved-rating{font-size:13px;color:var(--accent);font-weight:700;margin-top:4px}
 .avg-stars{font-size:13px;color:#ffcc00;font-weight:700}
 
+/* ─── PHOTOS ─── */
+.photos-wrap{margin:12px 0 4px}
+.photos-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.photo-btns{display:flex;gap:8px;margin-bottom:10px}
+.photo-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--border2);background:var(--card2);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
+.photo-btn:active{background:var(--card)}
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;border:1.5px solid var(--border)}
+.photo-count{font-size:11px;color:var(--muted);font-weight:700}
+/* lightbox */
+#lightbox{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column}
+#lightbox.on{display:flex}
+#lightbox img{max-width:95vw;max-height:82vh;border-radius:14px;object-fit:contain}
+#lightbox-close{position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:26px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
 /* ─── DESKTOP LAYOUT ─── */
 @media (min-width: 700px) {
   .sheet{
@@ -393,6 +408,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── LIGHTBOX ─── -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
 <div id="fav-panel" onclick="if(event.target===this)closeFavPanel()">
   <div class="fav-card">
     <div class="fav-head">
@@ -1066,6 +1087,66 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── PHOTOS ─────────────────────────────────────────────
+function photoKey(f) { return `pg_photos_${f.lat}_${f.lon}`; }
+
+function getFieldPhotos(f) {
+  return JSON.parse(localStorage.getItem(photoKey(f)) || '[]');
+}
+
+function addFieldPhoto(f, dataUrl) {
+  const photos = getFieldPhotos(f);
+  photos.unshift(dataUrl);
+  // שמור עד 6 תמונות לכל מגרש
+  localStorage.setItem(photoKey(f), JSON.stringify(photos.slice(0, 6)));
+}
+
+function buildPhotosBlock(f) {
+  const photos = getFieldPhotos(f);
+  const gridHtml = photos.length
+    ? `<div class="photos-grid">${photos.map((p,i)=>`<img class="photo-thumb" src="${p}" onclick="openLightbox(${i})" alt="">`).join('')}</div>
+       <div class="photo-count">${photos.length} תמונות</div>`
+    : '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">אין תמונות עדיין — היה הראשון!</div>';
+  return `<div class="photos-wrap">
+    <div class="photos-label">📸 תמונות מהמגרש</div>
+    ${gridHtml}
+    <div class="photo-btns">
+      <button class="photo-btn" onclick="pickPhoto('camera')">📷 צלם</button>
+      <button class="photo-btn" onclick="pickPhoto('gallery')">🖼️ גלריה</button>
+    </div>
+  </div>`;
+}
+
+function pickPhoto(source) {
+  if (!selected) return;
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  if (source === 'camera') inp.capture = 'environment';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      addFieldPhoto(selected, ev.target.result);
+      // רענן את בלוק התמונות
+      const wrap = document.querySelector('.photos-wrap');
+      if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+let lightboxPhotos = [];
+function openLightbox(i) {
+  if (!selected) return;
+  lightboxPhotos = getFieldPhotos(selected);
+  document.getElementById('lightbox-img').src = lightboxPhotos[i] || '';
+  document.getElementById('lightbox').classList.add('on');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('on');
+}
+
 // ─── RATINGS ────────────────────────────────────────────
 const RATING_TAGS = ['מצב טוב','תאורה','שמישה','ניקיון','נגישות','חינמי','צל','חניה'];
 
@@ -1257,6 +1338,7 @@ function openDetail(i) {
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
   if (f.tags?.website)              tags.push(`🌐 אתר`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
+    + buildPhotosBlock(f)
     + buildRatingBlock(f);
   const favSaved = isFav(f);
   document.getElementById('d-btns').innerHTML = `
