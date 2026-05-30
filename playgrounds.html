@@ -2014,6 +2014,7 @@ function enterApp() {
     map.invalidateSize();
   }, 420);
   document.getElementById('user-btn').style.display = 'flex';
+  document.getElementById('share-loc-btn').style.display = 'flex';
   if (fsEnabled()) {
     const existingBadge = document.getElementById('fs-badge');
     if (!existingBadge) {
@@ -3782,6 +3783,133 @@ function showStarBurst(x, y) {
 }
 
 // (setStars, renderList, toggleFav enhanced versions are defined below — they supersede the originals above)
+
+// ─── LIVE LOCATION (BUMP-STYLE) ───
+let liveShareActive = false;
+let liveShareInterval = null;
+let liveShareTimeout = null;
+let liveMarkers = {}; // userId → Leaflet marker
+
+function toggleLocationShare() {
+  if (liveShareActive) {
+    stopLocationShare();
+  } else {
+    startLocationShare();
+  }
+}
+
+function startLocationShare() {
+  if (!currentUser) return;
+  liveShareActive = true;
+  const btn = document.getElementById('share-loc-btn');
+  if (btn) { btn.classList.add('share-btn-active'); btn.textContent = '🟢'; }
+
+  broadcastLocation();
+  liveShareInterval = setInterval(broadcastLocation, 15000);
+
+  // Auto-stop after 10 minutes
+  liveShareTimeout = setTimeout(stopLocationShare, 10 * 60 * 1000);
+
+  // Start watching others
+  watchLiveUsers();
+}
+
+function stopLocationShare() {
+  liveShareActive = false;
+  clearInterval(liveShareInterval);
+  clearTimeout(liveShareTimeout);
+  liveShareInterval = null;
+
+  const btn = document.getElementById('share-loc-btn');
+  if (btn) { btn.classList.remove('share-btn-active'); btn.textContent = '📍'; }
+
+  // Remove own presence from Firestore
+  if (fsEnabled() && currentUser) {
+    db.collection('live_users').doc(currentUser.id || currentUser.email || currentUser.name).delete().catch(() => {});
+  }
+
+  // Remove live markers
+  Object.values(liveMarkers).forEach(m => map.removeLayer(m));
+  liveMarkers = {};
+
+  if (liveWatchUnsub) { liveWatchUnsub(); liveWatchUnsub = null; }
+}
+
+function broadcastLocation() {
+  if (!currentUser || !liveShareActive) return;
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    const userId = currentUser.id || currentUser.email || currentUser.name;
+    const payload = {
+      name: currentUser.name || 'שחקן',
+      lat, lon,
+      ts: Date.now(),
+      expires: Date.now() + 10 * 60 * 1000
+    };
+
+    if (fsEnabled()) {
+      db.collection('live_users').doc(userId).set(payload);
+    } else {
+      // localStorage fallback — store own location
+      localStorage.setItem('pg_live_me', JSON.stringify(payload));
+    }
+  }, () => {});
+}
+
+let liveWatchUnsub = null;
+
+function watchLiveUsers() {
+  if (!fsEnabled()) return;
+
+  if (liveWatchUnsub) liveWatchUnsub();
+
+  const myId = currentUser?.id || currentUser?.email || currentUser?.name;
+
+  liveWatchUnsub = db.collection('live_users').onSnapshot(snap => {
+    const now = Date.now();
+    const activeIds = new Set();
+
+    snap.docs.forEach(doc => {
+      const u = doc.data();
+      const id = doc.id;
+
+      // Skip own marker and expired
+      if (id === myId) return;
+      if (u.expires && u.expires < now) return;
+
+      activeIds.add(id);
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="live-dot" title="${u.name}">${u.name.charAt(0).toUpperCase()}</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      if (liveMarkers[id]) {
+        liveMarkers[id].setLatLng([u.lat, u.lon]);
+      } else {
+        liveMarkers[id] = L.marker([u.lat, u.lon], { icon })
+          .addTo(map)
+          .bindTooltip(u.name, { permanent: false, direction: 'top' });
+      }
+    });
+
+    // Remove markers for users who left
+    Object.keys(liveMarkers).forEach(id => {
+      if (!activeIds.has(id)) {
+        map.removeLayer(liveMarkers[id]);
+        delete liveMarkers[id];
+      }
+    });
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  if (liveShareActive) stopLocationShare();
+});
 
 // ─── BOOT ───────────────────────────────────────────────
 {
