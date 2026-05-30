@@ -11,6 +11,8 @@
 <link rel="manifest" href="/manifest-playgrounds.json">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -125,6 +127,32 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 /* ─── SPONSORED DETAIL ─── */
 .dbtn-phone{background:#30d158;color:#000}
 .dbtn-web{background:#ff9f0a;color:#000}
+
+/* ─── MAP MARKERS ─── */
+.map-pin{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(10,22,40,.92);
+  border:2.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  box-shadow:0 4px 16px rgba(0,0,0,.7);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  transition:.15s;
+}
+.map-pin:active{transform:scale(.9)}
+
+/* ─── CLUSTER ─── */
+.cl-wrap{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(10,22,40,.95);
+  border:3px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  box-shadow:0 4px 18px rgba(48,209,88,.35),0 2px 8px rgba(0,0,0,.6);
+  font-family:-apple-system,'Assistant',sans-serif;
+}
+.cl-count{font-size:15px;font-weight:900;color:var(--accent);line-height:1}
+.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:transparent!important}
+.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:transparent!important}
 
 /* ─── AUTH SCREEN ─── */
 #auth-screen{
@@ -262,6 +290,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID" crossorigin="anonymous"></script>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ─── AUTH (local-storage, no backend needed) ────────────
 let authMode = 'register', currentUser = null;
@@ -508,7 +537,7 @@ const fmt = d => d < 1000 ? Math.round(d)+'מ\'' : (d/1000).toFixed(1)+'ק"מ';
 
 // ─── STATE ──────────────────────────────────────────────
 let map, uMarker, uLat, uLon, curCountry = 'default';
-let allFields = [], shownFields = [], markers = [];
+let allFields = [], shownFields = [], markerCluster = null;
 let curFilter = 'all', selected = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
@@ -613,8 +642,14 @@ async function loadFields(lat, lon) {
   document.getElementById('list').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
   document.getElementById('cnt').textContent = 'טוען...';
 
-  const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing';
-  const q = `[out:json][timeout:30];(node["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});way["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon}););out center tags;`;
+  const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing|stadium|sport';
+  const q = `[out:json][timeout:45];(
+node["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
+way["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium)$"](around:${radius},${lat},${lon});
+way["sport"~"."](around:${radius},${lat},${lon});
+node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby|baseball|american_football|hockey|field_hockey|lacrosse|golf|swimming|athletics|climbing|boxing|martial_arts|skateboard|table_tennis|badminton)$"](around:${radius},${lat},${lon});
+);out center tags;`;
 
   try {
     const res = await fetch('https://overpass-api.de/api/interpreter', {
@@ -679,15 +714,28 @@ function onRadiusChange() {
 
 // ─── MARKERS ────────────────────────────────────────────
 function renderMarkers() {
-  markers.forEach(m => map.removeLayer(m)); markers = [];
+  if (markerCluster) { markerCluster.clearLayers(); }
+  else {
+    markerCluster = L.markerClusterGroup({
+      maxClusterRadius: 55,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      iconCreateFunction: c => L.divIcon({
+        html: `<div class="cl-wrap"><span class="cl-count">${c.getChildCount()}</span></div>`,
+        className: '', iconSize: [44,44], iconAnchor: [22,22]
+      })
+    });
+    map.addLayer(markerCluster);
+  }
   getFiltered().forEach((f, i) => {
     const icon = L.divIcon({
-      html:`<div style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));cursor:pointer">${ico(f.sport)}</div>`,
-      className:'', iconSize:[34,34], iconAnchor:[17,17]
+      html: `<div class="map-pin">${ico(f.sport)}</div>`,
+      className: '', iconSize: [42,42], iconAnchor: [21,21]
     });
-    const m = L.marker([f.lat, f.lon], { icon }).addTo(map);
+    const m = L.marker([f.lat, f.lon], { icon });
     m.on('click', () => openDetail(i));
-    markers.push(m);
+    markerCluster.addLayer(m);
   });
 }
 
