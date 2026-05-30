@@ -140,6 +140,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-waze{background:#33ccff;color:#000}
 .dbtn-gmap{background:#4285f4;color:#fff}
 .dbtn-close{background:var(--card2);color:var(--text2);flex:0.5}
+.dbtn-fav{background:rgba(255,204,0,.15);border:1.5px solid #ffcc00;color:#ffcc00;flex:0.5}
+.dbtn-fav.saved{background:rgba(255,204,0,.3);color:#ffcc00}
+
+/* ─── FAVORITES PANEL ─── */
+#fav-panel{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;
+}
+#fav-panel.on{display:flex}
+.fav-card{
+  width:100%;max-height:80vh;background:var(--card);
+  border-radius:22px 22px 0 0;border-top:1px solid var(--border2);
+  display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.fav-head{padding:16px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.fav-head-title{font-size:18px;font-weight:900;flex:1}
+.fav-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0}
+.fav-sport-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border);scrollbar-width:none}
+.fav-sport-tabs::-webkit-scrollbar{display:none}
+.fav-stab{flex-shrink:0;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;white-space:nowrap;transition:.2s}
+.fav-stab.on{border-color:#ffcc00;background:rgba(255,204,0,.15);color:#ffcc00}
+.fav-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.fav-item{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
+.fav-item:active{background:var(--card2)}
+.fav-del{background:none;border:none;font-size:20px;color:var(--red);cursor:pointer;padding:4px;flex-shrink:0}
 
 .spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -271,6 +298,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
@@ -322,6 +350,18 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   </div>
   <div class="sheet-body" id="list">
     <div class="empty"><span class="spinner"></span></div>
+  </div>
+</div>
+
+<!-- ─── FAVORITES PANEL ─── -->
+<div id="fav-panel" onclick="if(event.target===this)closeFavPanel()">
+  <div class="fav-card">
+    <div class="fav-head">
+      <div class="fav-head-title">⭐ המועדפים שלי</div>
+      <button class="fav-close" onclick="closeFavPanel()">✕</button>
+    </div>
+    <div class="fav-sport-tabs" id="fav-sport-tabs"></div>
+    <div class="fav-body" id="fav-body"></div>
   </div>
 </div>
 
@@ -961,6 +1001,90 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── FAVORITES ──────────────────────────────────────────
+function getFavs() { return JSON.parse(localStorage.getItem('pg_favs') || '{}'); }
+function saveFavs(f) { localStorage.setItem('pg_favs', JSON.stringify(f)); }
+
+function isFav(field) {
+  const favs = getFavs();
+  const sport = field.sport || 'default';
+  return !!(favs[sport] || []).find(f => f.lat === field.lat && f.lon === field.lon);
+}
+
+function toggleFav(field) {
+  const favs = getFavs();
+  const sport = field.sport || 'default';
+  if (!favs[sport]) favs[sport] = [];
+  const idx = favs[sport].findIndex(f => f.lat === field.lat && f.lon === field.lon);
+  if (idx >= 0) {
+    favs[sport].splice(idx, 1);
+    if (!favs[sport].length) delete favs[sport];
+  } else {
+    favs[sport].push({ lat: field.lat, lon: field.lon, name: field.name, sport, dist: field.dist });
+  }
+  saveFavs(favs);
+  return isFav(field);
+}
+
+let curFavSport = 'all';
+
+function openFavPanel() {
+  curFavSport = 'all';
+  renderFavPanel();
+  document.getElementById('fav-panel').classList.add('on');
+}
+
+function closeFavPanel() {
+  document.getElementById('fav-panel').classList.remove('on');
+}
+
+function renderFavPanel() {
+  const favs = getFavs();
+  const sports = Object.keys(favs);
+  const tabsEl = document.getElementById('fav-sport-tabs');
+  const bodyEl = document.getElementById('fav-body');
+
+  // tabs
+  const allCount = sports.reduce((s, k) => s + favs[k].length, 0);
+  tabsEl.innerHTML = [
+    `<button class="fav-stab${curFavSport==='all'?' on':''}" onclick="setFavSport('all')">🏟️ הכל (${allCount})</button>`,
+    ...sports.map(s => `<button class="fav-stab${curFavSport===s?' on':''}" onclick="setFavSport('${s}')">${ico(s)} ${he(s)} (${favs[s].length})</button>`)
+  ].join('');
+
+  // items
+  const items = curFavSport === 'all'
+    ? sports.flatMap(s => favs[s].map(f => ({ ...f, sport: s })))
+    : (favs[curFavSport] || []);
+
+  if (!items.length) {
+    bodyEl.innerHTML = '<div class="empty"><div class="empty-ico">⭐</div>אין מועדפים עדיין<br><small>לחץ ⭐ בחלון פרטי המגרש</small></div>';
+    return;
+  }
+  bodyEl.innerHTML = items.map((f, i) => `
+    <div class="fav-item" onclick="closeFavPanel();goToLatLon(${f.lat},${f.lon})">
+      <div style="font-size:28px">${ico(f.sport)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fn">${f.name}</div>
+        <div class="fs">${he(f.sport)}${f.dist ? ' · ' + fmt(f.dist) : ''}</div>
+      </div>
+      <button class="fav-del" onclick="event.stopPropagation();removeFav('${f.sport}',${f.lat},${f.lon})" title="הסר">🗑️</button>
+    </div>`).join('');
+}
+
+function setFavSport(sport) {
+  curFavSport = sport;
+  renderFavPanel();
+}
+
+function removeFav(sport, lat, lon) {
+  const favs = getFavs();
+  if (!favs[sport]) return;
+  favs[sport] = favs[sport].filter(f => f.lat !== lat || f.lon !== lon);
+  if (!favs[sport].length) delete favs[sport];
+  saveFavs(favs);
+  renderFavPanel();
+}
+
 function openDetail(i) {
   const f = shownFields[i]; if (!f) return;
   selected = f;
@@ -969,10 +1093,8 @@ function openDetail(i) {
   document.getElementById('d-name').textContent = f.name;
   document.getElementById('d-sub').textContent  = `${fmt(f.dist)} ממיקומך`;
   const tags = [];
-  // כל הספורטים כ-chips ראשונים
   f.sports.filter(s=>s!=='default').forEach(s => tags.push(`${ico(s)} ${he(s)}`));
   if (!f.sports.filter(s=>s!=='default').length) tags.push(`${ico(f.sport)} ${he(f.sport)}`);
-  // מידע נוסף
   if (f.tags?.surface)              tags.push(`🌱 ${f.tags.surface}`);
   if (f.tags?.lit === 'yes')        tags.push('💡 תאורה לילית');
   if (f.tags?.fee === 'no')         tags.push('🆓 כניסה חינם');
@@ -984,12 +1106,22 @@ function openDetail(i) {
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
   if (f.tags?.website)              tags.push(`🌐 אתר`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  const favSaved = isFav(f);
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
     <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
   document.getElementById('overlay').classList.add('on');
+}
+
+function onFavClick() {
+  if (!selected || selected._sponsored) return;
+  const saved = toggleFav(selected);
+  const btn = document.getElementById('fav-btn');
+  btn.textContent = saved ? '★' : '☆';
+  btn.classList.toggle('saved', saved);
 }
 
 function closeDetail() {
