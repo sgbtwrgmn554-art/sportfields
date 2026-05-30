@@ -642,6 +642,14 @@ async function loadFields(lat, lon) {
     }).filter(Boolean).sort((a,b) => a.dist - b.dist);
 
     renderMarkers(); renderList();
+    // אם לא נמצא כלום — נסה אוטומטית עם רדיוס גדול יותר
+    if (allFields.length === 0 && radius < 5000) {
+      const radEl = document.getElementById('rad');
+      radEl.value = radius <= 1000 ? '3000' : '5000';
+      setStatus('🔍 מרחיב חיפוש...');
+      setTimeout(() => loadFields(lat, lon), 600);
+      return;
+    }
     setStatus(`נמצאו ${getFiltered().length} מגרשים`, true);
   } catch(e) {
     setStatus('❌ שגיאה בטעינה — נסה שוב');
@@ -724,7 +732,7 @@ function renderList() {
   document.getElementById('cnt').textContent = `${shownFields.length} מגרשים`;
 
   if (!shownFields.length && !shownSponsored.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div>לא נמצאו מגרשים<br><small>נסה להגדיל את הרדיוס</small></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div>לא נמצאו מגרשים<br><small>נסה להגדיל את הרדיוס</small><br><br><button onclick="locateMe()" style="margin-top:8px;padding:12px 24px;border-radius:12px;background:var(--accent);color:#000;border:none;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer">📍 אתר מיקומי מחדש</button></div>';
     updateLocBtn(); return;
   }
 
