@@ -258,6 +258,31 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
+/* ─── COUPONS PANEL ─── */
+#coupons-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#coupons-panel.on{display:flex}
+.coupons-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.coupons-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px}
+.coupon-card{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border);position:relative;overflow:hidden}
+.coupon-card::before{content:'';position:absolute;top:0;bottom:0;right:0;width:6px;background:linear-gradient(180deg,#ff9f0a,#ff453a)}
+.coupon-biz{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.coupon-offer{font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2}
+.coupon-desc{font-size:12px;color:var(--muted);margin-bottom:12px}
+.coupon-actions{display:flex;gap:8px}
+.coupon-copy{flex:1;padding:10px;border-radius:10px;border:1.5px solid #ff9f0a;background:rgba(255,159,10,.12);color:#ff9f0a;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.coupon-copy:active{opacity:.7}
+.coupon-qr{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.coupon-qr:active{opacity:.7}
+.coupon-exp{font-size:11px;color:var(--muted);margin-top:8px}
+.coupon-pro-only{opacity:.5;filter:blur(2px);pointer-events:none}
+.coupon-pro-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,22,40,.7);border-radius:16px;font-size:14px;font-weight:700;color:#bf5af2;cursor:pointer}
+/* QR overlay */
+#qr-overlay{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#qr-overlay.on{display:flex}
+#qr-canvas{border-radius:16px;background:#fff;padding:16px}
+.qr-code-val{font-size:22px;font-weight:900;color:#fff;letter-spacing:4px}
+.qr-close{padding:12px 28px;border-radius:12px;border:none;background:var(--card2);color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+
 /* ─── ADD FIELD PANEL ─── */
 #add-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #add-panel.on{display:flex}
@@ -469,6 +494,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
     <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
     <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
     <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
@@ -533,6 +559,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── COUPONS PANEL ─── -->
+<div id="coupons-panel" onclick="if(event.target===this)closeCouponsPanel()">
+  <div class="coupons-card">
+    <div class="lb-head">
+      <div class="lb-title">🏷️ קופונים והנחות</div>
+      <button class="fav-close" onclick="closeCouponsPanel()">✕</button>
+    </div>
+    <div class="coupons-body" id="coupons-body"></div>
+  </div>
+</div>
+
+<!-- ─── QR OVERLAY ─── -->
+<div id="qr-overlay" onclick="closeQr()">
+  <canvas id="qr-canvas" width="200" height="200"></canvas>
+  <div class="qr-code-val" id="qr-val"></div>
+  <button class="qr-close" onclick="closeQr()">סגור</button>
+</div>
+
 <!-- ─── MAP PIN OVERLAY ─── -->
 <div id="map-pin-overlay">
   <div class="pin-cross">📍</div>
@@ -1425,6 +1469,77 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── COUPONS ────────────────────────────────────────────
+const COUPONS = [
+  { id:'C1', biz:'Gold\'s Gym', offer:'שבוע ניסיון חינם', desc:'הצג קוד בכניסה לאחד מסניפי Gold\'s Gym', code:'ARENA-GYM7', exp:'31.12.2025', proOnly:false, sport:'fitness' },
+  { id:'C2', biz:'WinSport', offer:'20% הנחה על השכרת מגרש', desc:'השכרת מגרש כדורגל קטן, תקף ימי חול', code:'WIN-ARENA20', exp:'30.06.2025', proOnly:false, sport:'soccer' },
+  { id:'C3', biz:'Pro Sport Store', offer:'15% על ציוד ספורט', desc:'רכישת ציוד בחנות הדגל בת"א', code:'PROSP-15', exp:'31.03.2025', proOnly:true, sport:'multi' },
+  { id:'C4', biz:'Padel IL', offer:'משחק ראשון ב-50₪', desc:'מגרשי פאדל מקורים, כולל ציוד', code:'PADEL-ARENA', exp:'30.09.2025', proOnly:true, sport:'padel' },
+];
+
+function openCouponsPanel() {
+  renderCoupons();
+  document.getElementById('coupons-panel').classList.add('on');
+}
+function closeCouponsPanel() { document.getElementById('coupons-panel').classList.remove('on'); }
+
+function renderCoupons() {
+  const pro = isPro();
+  document.getElementById('coupons-body').innerHTML = COUPONS.map(c => {
+    const locked = c.proOnly && !pro;
+    return `<div class="coupon-card${locked?' coupon-pro-only':''}">
+      <div class="coupon-biz">${ico(c.sport)} ${c.biz}</div>
+      <div class="coupon-offer">${c.offer}</div>
+      <div class="coupon-desc">${c.desc}</div>
+      <div class="coupon-actions">
+        <button class="coupon-copy" onclick="copyCoupon('${c.code}')">📋 ${c.code}</button>
+        <button class="coupon-qr"   onclick="showQr('${c.code}')">QR</button>
+      </div>
+      <div class="coupon-exp">בתוקף עד ${c.exp}</div>
+      ${locked ? `<div class="coupon-pro-lock" onclick="closeCouponsPanel();openPremiumPanel()">👑 למנויי PRO בלבד — שדרג</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function copyCoupon(code) {
+  navigator.clipboard?.writeText(code).catch(() => {});
+  setStatus(`✅ קוד "${code}" הועתק!`, true);
+}
+
+function showQr(code) {
+  document.getElementById('qr-val').textContent = code;
+  drawQr(code);
+  document.getElementById('qr-overlay').classList.add('on');
+}
+function closeQr() { document.getElementById('qr-overlay').classList.remove('on'); }
+
+function drawQr(text) {
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = 200;
+  canvas.width = canvas.height = size;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,size,size);
+
+  // QR פשוט — מטריצה מבוססת hash (לא QR אמיתי — לקוד אמיתי יש לשלב qrcode.js)
+  ctx.fillStyle = '#000';
+  const cells = 21, cell = Math.floor(size / cells);
+  const seed = text.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  for (let r = 0; r < cells; r++) for (let c2 = 0; c2 < cells; c2++) {
+    const val = ((seed * (r+1) * (c2+1)) ^ (r * 17 + c2 * 13)) % 3;
+    if (val === 0) ctx.fillRect(c2*cell, r*cell, cell-1, cell-1);
+  }
+  // finder patterns
+  [[0,0],[0,14],[14,0]].forEach(([rx,cx]) => {
+    ctx.fillStyle='#000'; ctx.fillRect(cx*cell,rx*cell,7*cell,7*cell);
+    ctx.fillStyle='#fff'; ctx.fillRect(cx*cell+cell,rx*cell+cell,5*cell,5*cell);
+    ctx.fillStyle='#000'; ctx.fillRect(cx*cell+2*cell,rx*cell+2*cell,3*cell,3*cell);
+  });
+  // הצג טקסט
+  ctx.fillStyle='#000'; ctx.font='bold 11px monospace'; ctx.textAlign='center';
+  ctx.fillText(text, size/2, size-4);
+}
+
 // ─── ADD FIELD ──────────────────────────────────────────
 let newFieldLat = null, newFieldLon = null;
 let pinMode = false;
