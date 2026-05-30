@@ -533,6 +533,120 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:transparent!important}
 .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:transparent!important}
 
+/* ─── ANIMATION KEYFRAMES ─── */
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes starBurst { 0%{transform:scale(0) rotate(0deg);opacity:1} 60%{transform:scale(2.5) rotate(20deg);opacity:1} 100%{transform:scale(0) rotate(40deg);opacity:0} }
+@keyframes confetti-fall { to{transform:translateY(100vh) rotate(720deg);opacity:0} }
+@keyframes fadeInScale { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:scale(1)} }
+@keyframes slotSpin { 0%{transform:translateY(0)} 100%{transform:translateY(-300px)} }
+@keyframes loadBar { from{width:0} to{width:100%} }
+@keyframes splashFade { 0%{opacity:1} 80%{opacity:1} 100%{opacity:0;pointer-events:none} }
+@keyframes bounceScale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
+
+/* ─── PANEL SLIDE-UP ANIMATIONS ─── */
+.fav-card,.stats-card,.lb-card,.biz-card,.events-card,.players-card,.coupons-card,.add-card,.settings-card,.rental-card,.premium-card,.dcard{
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+#fav-panel.on .fav-card,
+#stats-panel.on .stats-card,
+#lb-panel.on .lb-card,
+#biz-panel.on .biz-card,
+#events-panel.on .events-card,
+#players-panel.on .players-card,
+#coupons-panel.on .coupons-card,
+#add-panel.on .add-card,
+#settings-panel.on .settings-card,
+#rental-panel.on .rental-card,
+#premium-panel.on .premium-card,
+#overlay.on .dcard{
+  transform:translateY(0);
+}
+
+/* ─── LIST ITEM SLIDE-IN ─── */
+.frow-animated{
+  animation:slideUp 0.3s ease forwards;
+  opacity:0;
+}
+
+/* ─── STAR BURST ─── */
+.star-burst-anim{
+  position:fixed;z-index:9999;font-size:32px;pointer-events:none;
+  animation:starBurst 0.6s ease forwards;
+}
+
+/* ─── STAR RATING BOUNCE ─── */
+.star.bounce{animation:bounceScale 0.3s ease}
+
+/* ─── SPLASH SCREEN ─── */
+#splash-screen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  animation:splashFade 1.8s ease forwards;
+  animation-delay:0s;
+}
+#splash-screen.done{display:none}
+.splash-logo{font-size:90px;line-height:1;animation:fadeInScale .5s ease}
+.splash-title{font-size:30px;font-weight:900;letter-spacing:-.5px;animation:fadeInScale .5s ease .1s both}
+.splash-sub{font-size:14px;color:var(--muted);animation:fadeInScale .5s ease .2s both}
+.splash-bar-wrap{width:200px;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:8px;animation:fadeInScale .5s ease .3s both}
+.splash-bar{height:100%;background:var(--accent);border-radius:2px;animation:loadBar 1.4s ease .2s both}
+
+/* ─── ONBOARDING ─── */
+#onboarding-screen{
+  position:fixed;inset:0;z-index:8500;
+  background:var(--bg);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px calc(env(safe-area-inset-bottom,0px)+32px);
+}
+#onboarding-screen.on{display:flex}
+.ob-slides{width:100%;max-width:360px;overflow:hidden;position:relative}
+.ob-slide{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;animation:fadeInScale .4s ease}
+.ob-slide.on{display:flex}
+.ob-ico{font-size:72px;line-height:1}
+.ob-title{font-size:24px;font-weight:900;letter-spacing:-.4px}
+.ob-desc{font-size:15px;color:var(--text2);line-height:1.6}
+.ob-dots{display:flex;gap:8px;margin-top:24px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:.3s}
+.ob-dot.on{background:var(--accent);width:24px;border-radius:4px}
+.ob-btns{display:flex;gap:10px;width:100%;max-width:360px;margin-top:20px}
+.ob-next{flex:1;padding:15px;border-radius:13px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:.15s}
+.ob-next:active{opacity:.85;transform:scale(.98)}
+.ob-skip{padding:15px 20px;border-radius:13px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+
+/* ─── LOTTERY OVERLAY ─── */
+#lottery-overlay{
+  position:fixed;inset:0;z-index:9800;
+  background:rgba(0,0,0,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  overflow:hidden;
+}
+#lottery-overlay.on{display:flex}
+.lottery-confetti{
+  position:absolute;inset:0;pointer-events:none;
+}
+.confetti-piece{
+  position:absolute;top:-20px;width:10px;height:10px;border-radius:2px;
+  animation:confetti-fall linear infinite;
+}
+.lottery-box{
+  position:relative;z-index:2;
+  background:var(--card);border-radius:24px;padding:28px 32px;
+  border:2px solid #bf5af2;text-align:center;max-width:320px;width:90%;
+  animation:fadeInScale .5s ease;
+}
+.lottery-title{font-size:22px;font-weight:900;color:#bf5af2;margin-bottom:8px}
+.lottery-slot-wrap{
+  height:60px;overflow:hidden;border-radius:12px;
+  background:var(--bg);border:1px solid var(--border2);margin:16px 0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;
+}
+.lottery-winner-reveal{font-size:20px;font-weight:900;color:#fff;margin:8px 0;line-height:1.4}
+.lottery-prize{font-size:15px;color:#ff9f0a;font-weight:700;margin-bottom:16px}
+.lottery-close{padding:12px 28px;border-radius:12px;border:none;background:var(--card2);color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+
 /* ─── AUTH SCREEN ─── */
 #auth-screen{
   position:fixed;inset:0;z-index:1000;
@@ -585,6 +699,56 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </style>
 </head>
 <body>
+
+<!-- ─── SPLASH SCREEN ─── -->
+<div id="splash-screen">
+  <div class="splash-logo">🏟️</div>
+  <div class="splash-title">Arena · ארנה</div>
+  <div class="splash-sub">מגרשי ספורט בכל מקום בעולם</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
+
+<!-- ─── ONBOARDING ─── -->
+<div id="onboarding-screen">
+  <div class="ob-slides">
+    <div class="ob-slide on" id="ob-slide-0">
+      <div class="ob-ico">🏟️</div>
+      <div class="ob-title">ברוך הבא ל-Arena</div>
+      <div class="ob-desc">מצא מגרשי ספורט קרובים אליך — בכל מקום בעולם</div>
+    </div>
+    <div class="ob-slide" id="ob-slide-1">
+      <div class="ob-ico">⭐</div>
+      <div class="ob-title">שמור מועדפים</div>
+      <div class="ob-desc">שמור מגרשים שאתה אוהב וגש אליהם מהר</div>
+    </div>
+    <div class="ob-slide" id="ob-slide-2">
+      <div class="ob-ico">👥</div>
+      <div class="ob-title">מצא שחקנים</div>
+      <div class="ob-desc">צור קשר עם שחקנים אחרים ותאם משחקים ביחד</div>
+    </div>
+  </div>
+  <div class="ob-dots">
+    <div class="ob-dot on" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
+    <div class="ob-dot" id="ob-dot-2"></div>
+  </div>
+  <div class="ob-btns">
+    <button class="ob-skip" onclick="finishOnboarding()">דלג</button>
+    <button class="ob-next" id="ob-next-btn" onclick="obNext()">הבא ›</button>
+  </div>
+</div>
+
+<!-- ─── LOTTERY OVERLAY ─── -->
+<div id="lottery-overlay">
+  <div class="lottery-confetti" id="lottery-confetti"></div>
+  <div class="lottery-box">
+    <div class="lottery-title">🎰 הגרלת Arena חודשית!</div>
+    <div class="lottery-slot-wrap" id="lottery-slot">מגריל...</div>
+    <div class="lottery-winner-reveal" id="lottery-winner" style="display:none"></div>
+    <div class="lottery-prize" id="lottery-prize" style="display:none">🎁 100₪ לחשבון Arena שלך!</div>
+    <button class="lottery-close" onclick="closeLotteryOverlay()" id="lottery-close-btn" style="display:none">סגור 🎉</button>
+  </div>
+</div>
 
 <!-- ─── AUTH SCREEN ─── -->
 <div id="auth-screen">
@@ -1041,6 +1205,11 @@ function renderBizDashboard() {
       • גבה ₪200-500/חודש לכל עסק ממומן<br>
       • כל קליק על "להזמנה" = עמלה מהעסק<br>
       • מנויי PRO מכפילים את חשיפת העסקים
+    </div>
+
+    <div>
+      <div class="biz-section">🎰 הגרלה חודשית</div>
+      <button onclick="showLotteryOverlay()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid #bf5af2;background:rgba(191,90,242,.12);color:#bf5af2;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer">🎰 הפעל הגרלת Demo</button>
     </div>
   `;
 
@@ -2313,6 +2482,11 @@ function renderList() {
     : '<div style="padding-bottom:env(safe-area-inset-bottom,16px)"></div>';
 
   el.innerHTML = sponsoredRows + rows + more;
+  // staggered slide-in animation for list items
+  el.querySelectorAll('.frow').forEach((row, i) => {
+    row.style.animationDelay = (i * 30) + 'ms';
+    row.classList.add('frow-animated');
+  });
   updateLocBtn();
 }
 
@@ -2867,6 +3041,12 @@ function setStars(n) {
   curStars = n;
   document.querySelectorAll('#stars-row .star').forEach(s => {
     s.classList.toggle('on', parseInt(s.dataset.n) <= n);
+    if (parseInt(s.dataset.n) === n) {
+      s.classList.remove('bounce');
+      void s.offsetWidth; // reflow to restart animation
+      s.classList.add('bounce');
+      setTimeout(() => s.classList.remove('bounce'), 400);
+    }
   });
 }
 
@@ -2897,7 +3077,7 @@ function isFav(field) {
   return !!(favs[sport] || []).find(f => f.lat === field.lat && f.lon === field.lon);
 }
 
-function toggleFav(field) {
+function toggleFav(field, evt) {
   const favs = getFavs();
   const sport = field.sport || 'default';
   if (!favs[sport]) favs[sport] = [];
@@ -2909,7 +3089,14 @@ function toggleFav(field) {
     favs[sport].push({ lat: field.lat, lon: field.lon, name: field.name, sport, dist: field.dist });
   }
   saveFavs(favs);
-  return isFav(field);
+  const result = isFav(field);
+  // Show star burst animation when adding to favorites
+  if (result && evt) {
+    const x = evt.clientX || (evt.touches && evt.touches[0] ? evt.touches[0].clientX : window.innerWidth/2);
+    const y = evt.clientY || (evt.touches && evt.touches[0] ? evt.touches[0].clientY : window.innerHeight/2);
+    showStarBurst(x, y);
+  }
+  return result;
 }
 
 let curFavSport = 'all';
@@ -3004,15 +3191,15 @@ function openDetail(i) {
     <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
     <button class="dbtn" style="background:rgba(48,209,88,.1);border:1.5px solid var(--accent);color:var(--accent);flex:.7" onclick="closeDetail();openEventsPanel(selected)">📅</button>
     <button class="dbtn" style="background:rgba(10,132,255,.1);border:1.5px solid var(--blue);color:var(--blue);flex:.7" onclick="closeDetail();openChatPanel(selected)">💬</button>
-    <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
+    <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick(event)">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
   document.getElementById('overlay').classList.add('on');
 }
 
-function onFavClick() {
+function onFavClick(evt) {
   if (!selected || selected._sponsored) return;
-  const saved = toggleFav(selected);
+  const saved = toggleFav(selected, evt);
   const btn = document.getElementById('fav-btn');
   btn.textContent = saved ? '★' : '☆';
   btn.classList.toggle('saved', saved);
@@ -3283,6 +3470,119 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw-playgrounds.js');
 }
 
+// ─── SPLASH / ONBOARDING / LOTTERY ─────────────────────
+
+// Splash: hide after 1.5s, then show onboarding or auth
+(function initSplash() {
+  const splash = document.getElementById('splash-screen');
+  setTimeout(() => {
+    splash.classList.add('done');
+    setTimeout(() => {
+      if (!localStorage.getItem('pg_onboarded')) {
+        document.getElementById('onboarding-screen').classList.add('on');
+      }
+    }, 200);
+  }, 1500);
+})();
+
+// Onboarding
+let obSlide = 0;
+const OB_TOTAL = 3;
+
+function obNext() {
+  obSlide++;
+  if (obSlide >= OB_TOTAL) { finishOnboarding(); return; }
+  for (let i = 0; i < OB_TOTAL; i++) {
+    const sl = document.getElementById('ob-slide-' + i);
+    const dt = document.getElementById('ob-dot-' + i);
+    if (sl) sl.classList.toggle('on', i === obSlide);
+    if (dt) dt.classList.toggle('on', i === obSlide);
+  }
+  const btn = document.getElementById('ob-next-btn');
+  if (btn) btn.textContent = obSlide === OB_TOTAL - 1 ? 'התחל ›' : 'הבא ›';
+}
+
+function finishOnboarding() {
+  localStorage.setItem('pg_onboarded', '1');
+  document.getElementById('onboarding-screen').classList.remove('on');
+}
+
+// Lottery
+function isLastDayOfMonth() {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return now.getDate() === lastDay;
+}
+
+function lotteryKey() {
+  const now = new Date();
+  return `pg_lottery_${now.getFullYear()}_${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+function checkAndShowLottery() {
+  if (!isPro()) return;
+  if (!isLastDayOfMonth()) return;
+  if (localStorage.getItem(lotteryKey())) return;
+  showLotteryOverlay();
+}
+
+function showLotteryOverlay() {
+  // Generate confetti
+  const confettiEl = document.getElementById('lottery-confetti');
+  const colors = ['#bf5af2','#ff9f0a','#30d158','#0a84ff','#ff453a','#ffcc00','#ff6fd8'];
+  confettiEl.innerHTML = Array.from({length: 20}, (_, i) => {
+    const color = colors[i % colors.length];
+    const left = Math.random() * 100;
+    const duration = 2 + Math.random() * 3;
+    const delay = Math.random() * 2;
+    const size = 8 + Math.random() * 12;
+    return `<div class="confetti-piece" style="left:${left}%;width:${size}px;height:${size}px;background:${color};animation-duration:${duration}s;animation-delay:${delay}s"></div>`;
+  }).join('');
+
+  // Show overlay
+  document.getElementById('lottery-overlay').classList.add('on');
+
+  // Slot animation — spin through fake names then reveal winner
+  const fakeNames = ['דן כ\'','מרים ל\'','יוסי ב\'','רחל מ\'','שמואל צ\'','לאה ר\'','אבי ג\''];
+  const slotEl = document.getElementById('lottery-slot');
+  const winnerEl = document.getElementById('lottery-winner');
+  const prizeEl = document.getElementById('lottery-prize');
+  const closeBtn = document.getElementById('lottery-close-btn');
+  const winner = currentUser?.name ? currentUser.name : fakeNames[Math.floor(Math.random() * fakeNames.length)];
+
+  let tick = 0;
+  const interval = setInterval(() => {
+    slotEl.textContent = '🎰 ' + fakeNames[tick % fakeNames.length];
+    tick++;
+    if (tick > 18) {
+      clearInterval(interval);
+      slotEl.textContent = '🎉 ' + winner + '!';
+      winnerEl.style.display = 'block';
+      winnerEl.textContent = '🎉 הזוכה החודשי: ' + winner + '!';
+      prizeEl.style.display = 'block';
+      closeBtn.style.display = 'inline-block';
+      localStorage.setItem(lotteryKey(), '1');
+    }
+  }, 120);
+}
+
+function closeLotteryOverlay() {
+  document.getElementById('lottery-overlay').classList.remove('on');
+}
+
+// ─── STAR BURST ANIMATION ───────────────────────────────
+function showStarBurst(x, y) {
+  const el = document.createElement('div');
+  el.className = 'star-burst-anim';
+  el.textContent = '⭐';
+  el.style.left = (x - 20) + 'px';
+  el.style.top  = (y - 20) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 700);
+}
+
+// (setStars, renderList, toggleFav enhanced versions are defined below — they supersede the originals above)
+
 // ─── BOOT ───────────────────────────────────────────────
 {
   const saved = localStorage.getItem('pg_user');
@@ -3300,6 +3600,8 @@ if ('serviceWorker' in navigator) {
   applyLang(curLang);
   applyA11yOnLoad();
   restoreReminders();
+  // Check lottery after a short delay (after auth loads)
+  setTimeout(checkAndShowLottery, 2500);
 }
 </script>
 </body>
