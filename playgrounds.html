@@ -78,7 +78,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 }
 .fpill.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
 .sheet-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-.city-row{display:flex;gap:7px;margin-top:10px}
+.city-row{display:flex;gap:7px;margin-top:10px;position:relative}
 .city-inp{
   flex:1;padding:9px 12px;border-radius:11px;
   background:var(--card2);border:1.5px solid var(--border2);
@@ -92,6 +92,42 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   font-family:inherit;cursor:pointer;flex-shrink:0;transition:.15s;
 }
 .city-btn:active{opacity:.8}
+/* history button */
+.history-btn{
+  flex-shrink:0;width:40px;height:40px;border-radius:11px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  color:var(--muted);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.history-btn:active{background:var(--card);color:var(--text)}
+/* history dropdown */
+#history-list{
+  position:absolute;top:100%;right:0;left:0;z-index:1000;
+  background:var(--card);border:1.5px solid var(--border2);border-radius:12px;
+  margin-top:4px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);
+  display:none;
+}
+#history-list.open{display:block}
+.hist-head{padding:8px 14px 4px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center}
+.hist-clear{background:none;border:none;font-size:11px;color:var(--red);cursor:pointer;font-family:inherit;font-weight:700;padding:0}
+.hist-item{padding:10px 14px;font-size:13px;color:var(--text2);cursor:pointer;border-top:.5px solid var(--border);display:flex;align-items:center;gap:8px;transition:.12s}
+.hist-item:active,.hist-item:hover{background:var(--card2);color:var(--text)}
+
+/* autocomplete dropdown */
+#autocomplete-list{
+  position:absolute;top:100%;right:0;left:0;z-index:999;
+  background:var(--card);border:1.5px solid var(--border2);border-radius:12px;
+  margin-top:4px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);
+  display:none;
+}
+#autocomplete-list.open{display:block}
+.ac-item{
+  padding:11px 14px;font-size:13px;color:var(--text2);cursor:pointer;
+  border-bottom:.5px solid var(--border);transition:.12s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ac-item:last-child{border-bottom:none}
+.ac-item:active,.ac-item:hover{background:var(--card2);color:var(--text)}
 .count-lbl{font-size:13px;color:var(--muted);font-weight:600}
 .radius-sel{background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;outline:none}
 .scope-row{display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -125,6 +161,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-waze{background:#33ccff;color:#000}
 .dbtn-gmap{background:#4285f4;color:#fff}
 .dbtn-close{background:var(--card2);color:var(--text2);flex:0.5}
+.dbtn-fav{background:rgba(255,204,0,.15);border:1.5px solid #ffcc00;color:#ffcc00;flex:0.5}
+.dbtn-fav.saved{background:rgba(255,204,0,.3);color:#ffcc00}
+
+/* ─── FAVORITES PANEL ─── */
+#fav-panel{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;
+}
+#fav-panel.on{display:flex}
+.fav-card{
+  width:100%;max-height:80vh;background:var(--card);
+  border-radius:22px 22px 0 0;border-top:1px solid var(--border2);
+  display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.fav-head{padding:16px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.fav-head-title{font-size:18px;font-weight:900;flex:1}
+.fav-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0}
+.fav-sport-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border);scrollbar-width:none}
+.fav-sport-tabs::-webkit-scrollbar{display:none}
+.fav-stab{flex-shrink:0;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;white-space:nowrap;transition:.2s}
+.fav-stab.on{border-color:#ffcc00;background:rgba(255,204,0,.15);color:#ffcc00}
+.fav-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.fav-item{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
+.fav-item:active{background:var(--card2)}
+.fav-del{background:none;border:none;font-size:20px;color:var(--red);cursor:pointer;padding:4px;flex-shrink:0}
 
 .spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -148,6 +211,290 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-phone{background:#30d158;color:#000}
 .dbtn-web{background:#ff9f0a;color:#000}
 
+/* ─── RATING ─── */
+.rating-wrap{margin:12px 0 4px}
+.rating-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.stars-row{display:flex;gap:6px;margin-bottom:10px}
+.star{font-size:28px;cursor:pointer;transition:.15s;opacity:.35;line-height:1}
+.star.on{opacity:1}
+.rtag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.rtag{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s}
+.rtag.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+.rating-submit{width:100%;padding:11px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:.15s}
+.rating-submit:active{opacity:.8}
+.saved-rating{font-size:13px;color:var(--accent);font-weight:700;margin-top:4px}
+.avg-stars{font-size:13px;color:#ffcc00;font-weight:700}
+
+/* ─── PHOTOS ─── */
+.photos-wrap{margin:12px 0 4px}
+.photos-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.photo-btns{display:flex;gap:8px;margin-bottom:10px}
+.photo-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--border2);background:var(--card2);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
+.photo-btn:active{background:var(--card)}
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;border:1.5px solid var(--border)}
+.photo-count{font-size:11px;color:var(--muted);font-weight:700}
+
+/* ─── PLAYERS BOARD ─── */
+#players-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#players-panel.on{display:flex}
+.players-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.players-head{padding:16px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.players-title{font-size:17px;font-weight:900;flex:1}
+.players-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.pform{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:14px}
+.pform-title{font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px}
+.pform-row{display:flex;gap:8px;margin-bottom:8px}
+.pinp{flex:1;padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:.2s}
+.pinp:focus{border-color:var(--accent)}
+.pselect{padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+.ppost-btn{width:100%;padding:12px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:.15s}
+.ppost-btn:active{opacity:.8}
+.player-card{background:var(--card2);border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid var(--border)}
+.player-sport{font-size:22px;float:left;margin-left:10px}
+.player-name{font-size:14px;font-weight:800}
+.player-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.player-time{font-size:11px;color:var(--accent);font-weight:700;margin-top:4px}
+.dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
+.dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
+
+/* ─── ACCESSIBILITY ─── */
+body.a11y-large { font-size: 18px !important }
+body.a11y-xlarge{ font-size: 22px !important }
+body.a11y-contrast{ filter: contrast(1.5) brightness(1.1) }
+body.a11y-big-btns .hdr-btn   { width:52px!important;height:52px!important;font-size:22px!important }
+body.a11y-big-btns .dbtn      { padding:18px!important;font-size:17px!important }
+body.a11y-big-btns .fpill     { padding:10px 18px!important;font-size:15px!important }
+body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!important }
+body.a11y-big-btns .frow      { padding:18px 16px!important }
+body.a11y-big-btns .fn        { font-size:18px!important }
+
+/* ─── BIZ DASHBOARD ─── */
+#biz-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#biz-panel.on{display:flex}
+.biz-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:2px solid #ff9f0a;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.biz-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.biz-hero{background:linear-gradient(135deg,#1a1000,#0a1628);border-radius:14px;padding:16px;border:1px solid rgba(255,159,10,.3);text-align:center}
+.biz-hero-name{font-size:18px;font-weight:900;color:#ff9f0a;margin-bottom:4px}
+.biz-hero-sub{font-size:12px;color:var(--muted)}
+.biz-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.biz-stat{background:var(--card2);border-radius:12px;padding:13px 10px;text-align:center;border:1px solid var(--border)}
+.biz-stat-num{font-size:28px;font-weight:900;color:#ff9f0a;line-height:1}
+.biz-stat-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.biz-section{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.biz-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)}
+.biz-row:last-child{border-bottom:none}
+.biz-tip{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:12px;padding:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
+
+/* ─── AVAILABILITY ─── */
+.avail-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:10px;font-size:12px;font-weight:800;margin-bottom:8px}
+.avail-badge.free{background:rgba(48,209,88,.15);border:1px solid var(--accent);color:var(--accent)}
+.avail-badge.busy{background:rgba(255,69,58,.15);border:1px solid var(--red);color:var(--red)}
+.avail-badge.unknown{background:rgba(255,255,255,.08);border:1px solid var(--border2);color:var(--muted)}
+.avail-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.avail-btns{display:flex;gap:6px;margin-bottom:10px}
+.avail-btn{flex:1;padding:7px;border-radius:9px;border:1.5px solid var(--border2);background:transparent;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;color:var(--muted)}
+.avail-btn.free-btn:hover,.avail-btn.free-btn.on{border-color:var(--accent);background:rgba(48,209,88,.15);color:var(--accent)}
+.avail-btn.busy-btn:hover,.avail-btn.busy-btn.on{border-color:var(--red);background:rgba(255,69,58,.15);color:var(--red)}
+
+/* ─── CHAT ─── */
+#chat-panel{position:fixed;inset:0;z-index:750;background:var(--bg);display:none;flex-direction:column}
+#chat-panel.on{display:flex}
+.chat-hdr{padding:calc(env(safe-area-inset-top,0px)+14px) 16px 12px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chat-back{background:none;border:none;font-size:22px;color:var(--text);cursor:pointer;padding:0}
+.chat-title{font-size:16px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.msg-row{display:flex;flex-direction:column;max-width:80%}
+.msg-row.me{align-self:flex-end;align-items:flex-end}
+.msg-row.them{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:9px 13px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word}
+.msg-row.me   .msg-bubble{background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.msg-row.them .msg-bubble{background:var(--card2);color:var(--text);border-bottom-left-radius:4px}
+.msg-meta{font-size:10px;color:var(--muted);margin-top:2px;padding:0 4px}
+.chat-inp-row{display:flex;gap:8px;padding:10px 14px calc(env(safe-area-inset-bottom,0px)+10px);background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.chat-inp{flex:1;padding:10px 14px;border-radius:22px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none}
+.chat-inp:focus{border-color:var(--accent)}
+.chat-send{width:42px;height:42px;border-radius:50%;border:none;background:var(--accent);color:#000;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.chat-send:active{transform:scale(.9)}
+
+/* ─── EVENTS ─── */
+#events-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#events-panel.on{display:flex}
+.events-card{width:100%;max-height:92vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.events-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ev-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.ev-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.events-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:10px}
+.ev-card{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border)}
+.ev-title{font-size:15px;font-weight:800;margin-bottom:4px}
+.ev-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.ev-field{font-size:13px;color:var(--blue);font-weight:700;margin-bottom:8px}
+.ev-actions{display:flex;gap:7px}
+.ev-rsvp{flex:1;padding:9px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
+.ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ev-count{font-size:11px;color:var(--muted);margin-top:6px}
+/* create form */
+.ev-form{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+.ev-form-title{font-size:14px;font-weight:800;color:var(--text2)}
+
+/* ─── HEATMAP ─── */
+.heat-marker{
+  border-radius:50%;opacity:.55;
+  box-shadow:0 0 12px 4px currentColor;
+  pointer-events:none;
+}
+
+/* ─── RENTAL PANEL ─── */
+#rental-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#rental-panel.on{display:flex}
+.rental-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.rental-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px}
+.rental-item{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border);position:relative}
+.rental-biz-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rental-biz-ico{font-size:36px}
+.rental-biz-name{font-size:15px;font-weight:800}
+.rental-biz-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.rental-items-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.rental-tag{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.3);color:var(--blue)}
+.rental-price{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.rental-affiliate-note{font-size:10px;color:var(--muted);margin-bottom:8px}
+.rental-actions{display:flex;gap:8px}
+.rental-call{flex:1;padding:11px;border-radius:11px;border:none;background:#30d158;color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.rental-web{flex:1;padding:11px;border-radius:11px;border:none;background:#ff9f0a;color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.rental-waze{flex:0.7;padding:11px;border-radius:11px;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.rental-paid-badge{position:absolute;top:12px;left:12px;font-size:9px;font-weight:800;color:#bf5af2;background:rgba(191,90,242,.15);border:1px solid rgba(191,90,242,.3);border-radius:4px;padding:2px 6px}
+.rental-dist{font-size:12px;color:var(--muted);margin-bottom:6px}
+
+/* ─── SETTINGS PANEL ─── */
+#settings-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#settings-panel.on{display:flex}
+.settings-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.settings-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
+.settings-section{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:12px 0 6px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:.5px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-lbl{font-size:15px;font-weight:600}
+.settings-sub{font-size:12px;color:var(--muted);margin-top:2px}
+/* toggle switch */
+.toggle{width:51px;height:31px;background:var(--border2);border-radius:20px;position:relative;cursor:pointer;transition:.3s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;top:3px;right:3px;width:25px;height:25px;border-radius:50%;background:#fff;transition:.3s;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.toggle.on::after{right:auto;left:3px}
+/* font size selector */
+.font-size-row{display:flex;gap:8px;margin-top:8px}
+.font-size-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-weight:700;cursor:pointer;transition:.2s;text-align:center}
+.font-size-btn.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+
+/* ─── COUPONS PANEL ─── */
+#coupons-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#coupons-panel.on{display:flex}
+.coupons-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.coupons-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px}
+.coupon-card{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border);position:relative;overflow:hidden}
+.coupon-card::before{content:'';position:absolute;top:0;bottom:0;right:0;width:6px;background:linear-gradient(180deg,#ff9f0a,#ff453a)}
+.coupon-biz{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.coupon-offer{font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2}
+.coupon-desc{font-size:12px;color:var(--muted);margin-bottom:12px}
+.coupon-actions{display:flex;gap:8px}
+.coupon-copy{flex:1;padding:10px;border-radius:10px;border:1.5px solid #ff9f0a;background:rgba(255,159,10,.12);color:#ff9f0a;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.coupon-copy:active{opacity:.7}
+.coupon-qr{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.coupon-qr:active{opacity:.7}
+.coupon-exp{font-size:11px;color:var(--muted);margin-top:8px}
+.coupon-pro-only{opacity:.5;filter:blur(2px);pointer-events:none}
+.coupon-pro-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,22,40,.7);border-radius:16px;font-size:14px;font-weight:700;color:#bf5af2;cursor:pointer}
+/* QR overlay */
+#qr-overlay{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#qr-overlay.on{display:flex}
+#qr-canvas{border-radius:16px;background:#fff;padding:16px}
+.qr-code-val{font-size:22px;font-weight:900;color:#fff;letter-spacing:4px}
+.qr-close{padding:12px 28px;border-radius:12px;border:none;background:var(--card2);color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+
+/* ─── ADD FIELD PANEL ─── */
+#add-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#add-panel.on{display:flex}
+.add-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto}
+.add-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.add-body{padding:16px;display:flex;flex-direction:column;gap:11px}
+.add-label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.add-inp{width:100%;padding:12px 14px;border-radius:12px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:.2s}
+.add-inp:focus{border-color:var(--accent)}
+.add-sel{width:100%;padding:12px 14px;border-radius:12px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none;cursor:pointer}
+.add-loc-row{display:flex;gap:8px;align-items:center}
+.add-loc-val{flex:1;padding:10px 12px;border-radius:11px;background:var(--bg);border:1px solid var(--border2);font-size:12px;color:var(--muted);font-family:monospace}
+.add-loc-btn{padding:10px 14px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+.add-map-hint{font-size:12px;color:var(--muted);text-align:center;padding:4px}
+.add-submit{width:100%;padding:15px;border-radius:13px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:.15s;margin-top:4px}
+.add-submit:active{opacity:.8}
+/* pin on map mode */
+#map-pin-overlay{position:fixed;inset:0;z-index:90;pointer-events:none;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+#map-pin-overlay.on{display:flex}
+.pin-cross{font-size:36px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))}
+.pin-confirm{pointer-events:all;padding:12px 28px;border-radius:14px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.pin-cancel{pointer-events:all;padding:10px 20px;border-radius:12px;border:1.5px solid var(--border2);background:rgba(10,22,40,.9);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ─── PREMIUM PANEL ─── */
+#premium-panel{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end}
+#premium-panel.on{display:flex}
+.premium-card{width:100%;max-height:92vh;background:linear-gradient(160deg,#1a1040,#0a1628 60%);border-radius:22px 22px 0 0;border-top:2px solid #bf5af2;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto}
+.premium-hero{text-align:center;padding:28px 20px 16px}
+.premium-crown{font-size:60px;line-height:1;margin-bottom:8px}
+.premium-title{font-size:24px;font-weight:900;letter-spacing:-.4px;background:linear-gradient(90deg,#bf5af2,#ff9f0a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.premium-sub{font-size:14px;color:rgba(255,255,255,.6);margin-top:6px;line-height:1.5}
+.premium-perks{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.perk-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.05);border:1px solid rgba(191,90,242,.2);border-radius:14px;padding:14px}
+.perk-ico{font-size:28px;flex-shrink:0}
+.perk-name{font-size:15px;font-weight:700}
+.perk-desc{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.premium-price{text-align:center;padding:8px 16px 16px}
+.premium-amount{font-size:38px;font-weight:900;color:#fff}
+.premium-period{font-size:14px;color:rgba(255,255,255,.5)}
+.premium-btn{width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#bf5af2,#ff9f0a);color:#000;font-family:inherit;font-size:17px;font-weight:900;cursor:pointer;margin-bottom:10px;transition:.15s}
+.premium-btn:active{opacity:.85;transform:scale(.98)}
+.premium-restore{background:none;border:none;color:rgba(255,255,255,.4);font-family:inherit;font-size:13px;cursor:pointer;width:100%;padding:8px;margin-bottom:8px}
+.pro-badge{display:inline-block;background:linear-gradient(135deg,#bf5af2,#ff9f0a);color:#000;font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;vertical-align:middle;margin-right:4px}
+
+/* ─── STATS PANEL ─── */
+#stats-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#stats-panel.on{display:flex}
+.stats-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.stats-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.stats-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.stat-box{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border)}
+.stat-box-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.stat-big{font-size:42px;font-weight:900;color:var(--accent);line-height:1}
+.stat-label{font-size:13px;color:var(--text2);margin-top:4px}
+.stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.stat-bar-name{font-size:13px;font-weight:700;width:80px;flex-shrink:0}
+.stat-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .6s}
+.stat-bar-val{font-size:12px;font-weight:700;color:var(--accent);width:28px;text-align:left;flex-shrink:0}
+
+/* ─── LEADERBOARD ─── */
+#lb-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#lb-panel.on{display:flex}
+.lb-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.lb-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.lb-title{font-size:17px;font-weight:900;flex:1}
+.lb-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.lb-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;border-bottom:2px solid transparent}
+.lb-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.lb-body{overflow-y:auto;flex:1;padding:8px 0;-webkit-overflow-scrolling:touch}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:.5px solid var(--border)}
+.lb-rank{font-size:18px;font-weight:900;width:32px;text-align:center;flex-shrink:0}
+.lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.lb-score{font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0}
+/* lightbox */
+#lightbox{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column}
+#lightbox.on{display:flex}
+#lightbox img{max-width:95vw;max-height:82vh;border-radius:14px;object-fit:contain}
+#lightbox-close{position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:26px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
 /* ─── DESKTOP LAYOUT ─── */
 @media (min-width: 700px) {
   .sheet{
@@ -159,6 +506,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   #status{left:auto;right:calc(380px + 50%);transform:translateX(50%)}
   .hdr{right:380px}
 }
+
+/* ─── LIVE USER DOTS ─── */
+.live-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--accent, #4fc);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: bold; color: #111;
+  cursor: pointer;
+  animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+  0%,100% { box-shadow: 0 0 0 0 rgba(79,252,136,.5); }
+  50% { box-shadow: 0 0 0 10px rgba(79,252,136,0); }
+}
+.share-btn-active { background: #4fc !important; color: #111 !important; }
 
 /* ─── MAP MARKERS ─── */
 .map-pin{
@@ -185,6 +550,120 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .cl-count{font-size:15px;font-weight:900;color:var(--accent);line-height:1}
 .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:transparent!important}
 .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:transparent!important}
+
+/* ─── ANIMATION KEYFRAMES ─── */
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes starBurst { 0%{transform:scale(0) rotate(0deg);opacity:1} 60%{transform:scale(2.5) rotate(20deg);opacity:1} 100%{transform:scale(0) rotate(40deg);opacity:0} }
+@keyframes confetti-fall { to{transform:translateY(100vh) rotate(720deg);opacity:0} }
+@keyframes fadeInScale { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:scale(1)} }
+@keyframes slotSpin { 0%{transform:translateY(0)} 100%{transform:translateY(-300px)} }
+@keyframes loadBar { from{width:0} to{width:100%} }
+@keyframes splashFade { 0%{opacity:1} 80%{opacity:1} 100%{opacity:0;pointer-events:none} }
+@keyframes bounceScale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
+
+/* ─── PANEL SLIDE-UP ANIMATIONS ─── */
+.fav-card,.stats-card,.lb-card,.biz-card,.events-card,.players-card,.coupons-card,.add-card,.settings-card,.rental-card,.premium-card,.dcard{
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+#fav-panel.on .fav-card,
+#stats-panel.on .stats-card,
+#lb-panel.on .lb-card,
+#biz-panel.on .biz-card,
+#events-panel.on .events-card,
+#players-panel.on .players-card,
+#coupons-panel.on .coupons-card,
+#add-panel.on .add-card,
+#settings-panel.on .settings-card,
+#rental-panel.on .rental-card,
+#premium-panel.on .premium-card,
+#overlay.on .dcard{
+  transform:translateY(0);
+}
+
+/* ─── LIST ITEM SLIDE-IN ─── */
+.frow-animated{
+  animation:slideUp 0.3s ease forwards;
+  opacity:0;
+}
+
+/* ─── STAR BURST ─── */
+.star-burst-anim{
+  position:fixed;z-index:9999;font-size:32px;pointer-events:none;
+  animation:starBurst 0.6s ease forwards;
+}
+
+/* ─── STAR RATING BOUNCE ─── */
+.star.bounce{animation:bounceScale 0.3s ease}
+
+/* ─── SPLASH SCREEN ─── */
+#splash-screen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  animation:splashFade 1.8s ease forwards;
+  animation-delay:0s;
+}
+#splash-screen.done{display:none}
+.splash-logo{font-size:90px;line-height:1;animation:fadeInScale .5s ease}
+.splash-title{font-size:30px;font-weight:900;letter-spacing:-.5px;animation:fadeInScale .5s ease .1s both}
+.splash-sub{font-size:14px;color:var(--muted);animation:fadeInScale .5s ease .2s both}
+.splash-bar-wrap{width:200px;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:8px;animation:fadeInScale .5s ease .3s both}
+.splash-bar{height:100%;background:var(--accent);border-radius:2px;animation:loadBar 1.4s ease .2s both}
+
+/* ─── ONBOARDING ─── */
+#onboarding-screen{
+  position:fixed;inset:0;z-index:8500;
+  background:var(--bg);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px calc(env(safe-area-inset-bottom,0px)+32px);
+}
+#onboarding-screen.on{display:flex}
+.ob-slides{width:100%;max-width:360px;overflow:hidden;position:relative}
+.ob-slide{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;animation:fadeInScale .4s ease}
+.ob-slide.on{display:flex}
+.ob-ico{font-size:72px;line-height:1}
+.ob-title{font-size:24px;font-weight:900;letter-spacing:-.4px}
+.ob-desc{font-size:15px;color:var(--text2);line-height:1.6}
+.ob-dots{display:flex;gap:8px;margin-top:24px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:.3s}
+.ob-dot.on{background:var(--accent);width:24px;border-radius:4px}
+.ob-btns{display:flex;gap:10px;width:100%;max-width:360px;margin-top:20px}
+.ob-next{flex:1;padding:15px;border-radius:13px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:.15s}
+.ob-next:active{opacity:.85;transform:scale(.98)}
+.ob-skip{padding:15px 20px;border-radius:13px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+
+/* ─── LOTTERY OVERLAY ─── */
+#lottery-overlay{
+  position:fixed;inset:0;z-index:9800;
+  background:rgba(0,0,0,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  overflow:hidden;
+}
+#lottery-overlay.on{display:flex}
+.lottery-confetti{
+  position:absolute;inset:0;pointer-events:none;
+}
+.confetti-piece{
+  position:absolute;top:-20px;width:10px;height:10px;border-radius:2px;
+  animation:confetti-fall linear infinite;
+}
+.lottery-box{
+  position:relative;z-index:2;
+  background:var(--card);border-radius:24px;padding:28px 32px;
+  border:2px solid #bf5af2;text-align:center;max-width:320px;width:90%;
+  animation:fadeInScale .5s ease;
+}
+.lottery-title{font-size:22px;font-weight:900;color:#bf5af2;margin-bottom:8px}
+.lottery-slot-wrap{
+  height:60px;overflow:hidden;border-radius:12px;
+  background:var(--bg);border:1px solid var(--border2);margin:16px 0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;
+}
+.lottery-winner-reveal{font-size:20px;font-weight:900;color:#fff;margin:8px 0;line-height:1.4}
+.lottery-prize{font-size:15px;color:#ff9f0a;font-weight:700;margin-bottom:16px}
+.lottery-close{padding:12px 28px;border-radius:12px;border:none;background:var(--card2);color:var(--text2);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
 
 /* ─── AUTH SCREEN ─── */
 #auth-screen{
@@ -225,9 +704,87 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 }
 .auth-guest:active{background:var(--card2)}
 .auth-err{color:var(--red);font-size:13px;margin-bottom:9px;text-align:center;min-height:18px}
+/* social login */
+.auth-social{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
+.auth-social-btn{
+  width:100%;padding:14px;border-radius:13px;border:1.5px solid var(--border2);
+  background:var(--card2);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.auth-social-btn:active{opacity:.8;transform:scale(.98)}
+.auth-google{border-color:#4285f4;background:rgba(66,133,244,.1)}
+.auth-apple{border-color:#fff;background:rgba(255,255,255,.08)}
 </style>
+<!-- Google Analytics -->
+<script>
+  var GA_ID = 'G-XXXXXXXXXX'; // Replace with your real GA4 Measurement ID
+  (function(){
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  })();
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', GA_ID);
+</script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
+
+<!-- ─── SPLASH SCREEN ─── -->
+<div id="splash-screen">
+  <div class="splash-logo">🏟️</div>
+  <div class="splash-title">Arena · ארנה</div>
+  <div class="splash-sub">מגרשי ספורט בכל מקום בעולם</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
+
+<!-- ─── ONBOARDING ─── -->
+<div id="onboarding-screen">
+  <div class="ob-slides">
+    <div class="ob-slide on" id="ob-slide-0">
+      <div class="ob-ico">🏟️</div>
+      <div class="ob-title">ברוך הבא ל-Arena</div>
+      <div class="ob-desc">מצא מגרשי ספורט קרובים אליך — בכל מקום בעולם</div>
+    </div>
+    <div class="ob-slide" id="ob-slide-1">
+      <div class="ob-ico">⭐</div>
+      <div class="ob-title">שמור מועדפים</div>
+      <div class="ob-desc">שמור מגרשים שאתה אוהב וגש אליהם מהר</div>
+    </div>
+    <div class="ob-slide" id="ob-slide-2">
+      <div class="ob-ico">👥</div>
+      <div class="ob-title">מצא שחקנים</div>
+      <div class="ob-desc">צור קשר עם שחקנים אחרים ותאם משחקים ביחד</div>
+    </div>
+  </div>
+  <div class="ob-dots">
+    <div class="ob-dot on" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
+    <div class="ob-dot" id="ob-dot-2"></div>
+  </div>
+  <div class="ob-btns">
+    <button class="ob-skip" onclick="finishOnboarding()">דלג</button>
+    <button class="ob-next" id="ob-next-btn" onclick="obNext()">הבא ›</button>
+  </div>
+</div>
+
+<!-- ─── LOTTERY OVERLAY ─── -->
+<div id="lottery-overlay">
+  <div class="lottery-confetti" id="lottery-confetti"></div>
+  <div class="lottery-box">
+    <div class="lottery-title">🎰 הגרלת Arena חודשית!</div>
+    <div class="lottery-slot-wrap" id="lottery-slot">מגריל...</div>
+    <div class="lottery-winner-reveal" id="lottery-winner" style="display:none"></div>
+    <div class="lottery-prize" id="lottery-prize" style="display:none">🎁 100₪ לחשבון Arena שלך!</div>
+    <button class="lottery-close" onclick="closeLotteryOverlay()" id="lottery-close-btn" style="display:none">סגור 🎉</button>
+  </div>
+</div>
 
 <!-- ─── AUTH SCREEN ─── -->
 <div id="auth-screen">
@@ -245,7 +802,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <input class="auth-inp" id="auth-pass"  type="password" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="new-password" dir="ltr" />
     <button class="auth-btn" id="auth-submit" onclick="authSubmit()">הרשמה</button>
     <div class="auth-div">— או —</div>
+    <div class="auth-social">
+      <button class="auth-social-btn auth-google" onclick="signInWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        המשך עם Google
+      </button>
+      <button class="auth-social-btn auth-apple" onclick="signInWithApple()">
+        <svg width="20" height="20" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.5 0 286.9 0 200.5 0 112.5 53.4 44.9 150.6 44.9c52.6 0 97.1 30.3 130.3 30.3 32.2 0 82.7-30.3 141.3-30.3 22.4 0 108.2 2.6 168.7 99.5z"/></svg>
+        המשך עם Apple
+      </button>
+    </div>
     <button class="auth-guest" onclick="continueAsGuest()">👤 המשך בלי חשבון</button>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
+      <button onclick="applyLang('he')" style="background:none;border:none;font-size:20px;cursor:pointer" title="עברית">🇮🇱</button>
+      <button onclick="applyLang('en')" style="background:none;border:none;font-size:20px;cursor:pointer" title="English">🇺🇸</button>
+      <button onclick="applyLang('ar')" style="background:none;border:none;font-size:20px;cursor:pointer" title="العربية">🇸🇦</button>
+    </div>
   </div>
 </div>
 
@@ -256,6 +828,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
+    <button class="hdr-btn" id="heat-btn" onclick="toggleHeatmap()" title="מפת חום">🔥</button>
+    <button class="hdr-btn" onclick="openRentalPanel()" title="השכרת ציוד">🎾</button>
+    <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
+    <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
+    <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
+    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
+    <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
+    <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
+    <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
+    <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
+    <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום">🌙</button>
+    <button id="share-loc-btn" onclick="toggleLocationShare()" title="שיתוף מיקום חי" style="background:var(--card);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;">📍</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
@@ -270,9 +855,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
       <!-- נוצר דינמית לפי מדינה -->
     </div>
     <div class="city-row">
-      <input class="city-inp" id="city-inp" type="text" placeholder="🔍 חפש עיר — תל אביב, חיפה..." dir="rtl"
-        onkeydown="if(event.key==='Enter')searchCity()" />
-      <button class="city-btn" onclick="searchCity()">→</button>
+      <button class="history-btn" onclick="toggleHistoryList()" title="חיפושים אחרונים">🕐</button>
+      <input class="city-inp" id="city-inp" type="text" placeholder="🔍 חפש עיר או כתובת..." dir="rtl"
+        oninput="onSearchInput(this.value)"
+        onkeydown="if(event.key==='Enter'){closeAutocomplete();closeHistoryList();searchCity()}"
+        onfocus="closeHistoryList()" />
+      <button class="city-btn" onclick="closeAutocomplete();closeHistoryList();searchCity()">→</button>
+      <div id="history-list"></div>
+      <div id="autocomplete-list"></div>
     </div>
     <div class="sheet-meta">
       <span class="count-lbl" id="cnt">טוען...</span>
@@ -308,6 +898,274 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   </div>
 </div>
 
+<!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── BIZ DASHBOARD ─── -->
+<div id="biz-panel" onclick="if(event.target===this)closeBizPanel()">
+  <div class="biz-card">
+    <div class="lb-head">
+      <div class="lb-title">📊 דשבורד עסקי</div>
+      <button class="fav-close" onclick="closeBizPanel()">✕</button>
+    </div>
+    <div class="biz-body" id="biz-body"></div>
+  </div>
+</div>
+
+<!-- ─── CHAT PANEL ─── -->
+<div id="chat-panel">
+  <div class="chat-hdr">
+    <button class="chat-back" onclick="closeChatPanel()">‹</button>
+    <div class="chat-title" id="chat-title">💬 צ'אט מגרש</div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chat-inp" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter')sendMsg()" />
+    <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+</div>
+
+<!-- ─── EVENTS PANEL ─── -->
+<div id="events-panel" onclick="if(event.target===this)closeEventsPanel()">
+  <div class="events-card">
+    <div class="lb-head">
+      <div class="lb-title">📅 אירועים</div>
+      <button class="fav-close" onclick="closeEventsPanel()">✕</button>
+    </div>
+    <div class="events-tabs">
+      <button class="ev-tab on" onclick="switchEvTab(this,'list')">📋 כל האירועים</button>
+      <button class="ev-tab"   onclick="switchEvTab(this,'create')">➕ צור אירוע</button>
+    </div>
+    <div class="events-body" id="events-body"></div>
+  </div>
+</div>
+
+<!-- ─── RENTAL PANEL ─── -->
+<div id="rental-panel" onclick="if(event.target===this)closeRentalPanel()">
+  <div class="rental-card">
+    <div class="lb-head">
+      <div class="lb-title">🎾 השכרת ציוד ספורט</div>
+      <button class="fav-close" onclick="closeRentalPanel()">✕</button>
+    </div>
+    <div class="rental-body" id="rental-body"></div>
+  </div>
+</div>
+
+<!-- ─── SETTINGS PANEL ─── -->
+<div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
+  <div class="settings-card">
+    <div class="lb-head">
+      <div class="lb-title">⚙️ הגדרות</div>
+      <button class="fav-close" onclick="closeSettingsPanel()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section">♿ נגישות</div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-lbl">גודל גופן</div>
+          <div class="settings-sub">בחר גודל טקסט מועדף</div>
+          <div class="font-size-row">
+            <button class="font-size-btn" data-size="normal"  onclick="setFontSize('normal')">רגיל</button>
+            <button class="font-size-btn" data-size="large"   onclick="setFontSize('large')">גדול</button>
+            <button class="font-size-btn" data-size="xlarge"  onclick="setFontSize('xlarge')">ענק</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">ניגודיות גבוהה</div><div class="settings-sub">צבעים בהירים יותר</div></div>
+        <div class="toggle" id="toggle-contrast" onclick="toggleA11y('contrast')"></div>
+      </div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">כפתורים גדולים</div><div class="settings-sub">אזורי לחיצה גדולים יותר</div></div>
+        <div class="toggle" id="toggle-big-btns" onclick="toggleA11y('big-btns')"></div>
+      </div>
+
+      <div class="settings-section">🗺️ מפה</div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">מצב לילה אוטומטי</div><div class="settings-sub">מפה כהה בשעות הלילה</div></div>
+        <div class="toggle" id="toggle-auto-dark" onclick="toggleAutoDark()"></div>
+      </div>
+
+      <div class="settings-section">🔔 התראות</div>
+
+      <div class="settings-row">
+        <div><div class="settings-lbl">תזכורת יומית</div><div class="settings-sub">בשעה 17:00</div></div>
+        <div class="toggle" id="toggle-reminder" onclick="toggleReminder()"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── COUPONS PANEL ─── -->
+<div id="coupons-panel" onclick="if(event.target===this)closeCouponsPanel()">
+  <div class="coupons-card">
+    <div class="lb-head">
+      <div class="lb-title">🏷️ קופונים והנחות</div>
+      <button class="fav-close" onclick="closeCouponsPanel()">✕</button>
+    </div>
+    <div class="coupons-body" id="coupons-body"></div>
+  </div>
+</div>
+
+<!-- ─── QR OVERLAY ─── -->
+<div id="qr-overlay" onclick="closeQr()">
+  <canvas id="qr-canvas" width="200" height="200"></canvas>
+  <div class="qr-code-val" id="qr-val"></div>
+  <button class="qr-close" onclick="closeQr()">סגור</button>
+</div>
+
+<!-- ─── MAP PIN OVERLAY ─── -->
+<div id="map-pin-overlay">
+  <div class="pin-cross">📍</div>
+  <button class="pin-confirm" onclick="confirmPinLocation()">✓ אשר מיקום</button>
+  <button class="pin-cancel"  onclick="cancelPinMode()">ביטול</button>
+</div>
+
+<!-- ─── ADD FIELD PANEL ─── -->
+<div id="add-panel" onclick="if(event.target===this)closeAddPanel()">
+  <div class="add-card">
+    <div class="add-head">
+      <div class="lb-title">➕ הוסף מגרש חדש</div>
+      <button class="fav-close" onclick="closeAddPanel()">✕</button>
+    </div>
+    <div class="add-body">
+      <div>
+        <div class="add-label">שם המגרש</div>
+        <input class="add-inp" id="af-name" placeholder="לדוגמה: מגרש הכדורסל בפארק" />
+      </div>
+      <div>
+        <div class="add-label">ענף ספורט</div>
+        <select class="add-sel" id="af-sport">
+          <option value="soccer">⚽ כדורגל</option>
+          <option value="basketball">🏀 כדורסל</option>
+          <option value="tennis">🎾 טניס</option>
+          <option value="volleyball">🏐 כדורעף</option>
+          <option value="fitness">💪 כושר</option>
+          <option value="swimming">🏊 שחייה</option>
+          <option value="athletics">🏃 ריצה</option>
+          <option value="skateboard">🛹 סקייטפארק</option>
+          <option value="table_tennis">🏓 פינג-פונג</option>
+          <option value="badminton">🏸 בדמינטון</option>
+          <option value="padel">🎾 פאדל</option>
+          <option value="climbing">🧗 טיפוס</option>
+          <option value="playground">🎠 גן שעשועים</option>
+          <option value="multi">🏅 רב-ספורטיבי</option>
+        </select>
+      </div>
+      <div>
+        <div class="add-label">פרטים נוספים (אופציונלי)</div>
+        <select class="add-sel" id="af-lit" style="margin-bottom:8px">
+          <option value="">תאורה לילית — לא ידוע</option>
+          <option value="yes">💡 יש תאורה לילית</option>
+          <option value="no">🌑 אין תאורה</option>
+        </select>
+        <select class="add-sel" id="af-fee">
+          <option value="">כניסה — לא ידוע</option>
+          <option value="no">🆓 כניסה חינם</option>
+          <option value="yes">💰 בתשלום</option>
+        </select>
+      </div>
+      <div>
+        <div class="add-label">מיקום</div>
+        <div class="add-loc-row">
+          <div class="add-loc-val" id="af-loc-val">לא נבחר עדיין</div>
+          <button class="add-loc-btn" onclick="startPinMode()">📍 בחר במפה</button>
+        </div>
+        <div class="add-map-hint">לחץ "בחר במפה" ואז גרור למיקום המדויק</div>
+      </div>
+      <button class="add-submit" onclick="submitNewField()">➕ הוסף מגרש</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PREMIUM PANEL ─── -->
+<div id="premium-panel" onclick="if(event.target===this)closePremiumPanel()">
+  <div class="premium-card">
+    <div class="premium-hero">
+      <div class="premium-crown">👑</div>
+      <div class="premium-title">Arena PRO</div>
+      <div class="premium-sub">שדרג את החוויה שלך<br>וקבל גישה לכל היתרונות</div>
+    </div>
+    <div class="premium-perks">
+      <div class="perk-row"><div class="perk-ico">🚫</div><div><div class="perk-name">ללא פרסומות</div><div class="perk-desc">גלה מגרשים בלי הפרעות</div></div></div>
+      <div class="perk-row"><div class="perk-ico">👑</div><div><div class="perk-name">סמל PRO בטבלת הדירוג</div><div class="perk-desc">הופע עם עיצוב מיוחד בין המובילים</div></div></div>
+      <div class="perk-row"><div class="perk-ico">🎰</div><div><div class="perk-name">הגרלה חודשית — 100₪</div><div class="perk-desc">כל מנוי PRO נכנס אוטומטית להגרלה</div></div></div>
+      <div class="perk-row"><div class="perk-ico">🏷️</div><div><div class="perk-name">הנחות למגרשים ועסקי ספורט</div><div class="perk-desc">קופונים בלעדיים לעסקים ממומנים</div></div></div>
+      <div class="perk-row"><div class="perk-ico">📋</div><div><div class="perk-name">200 מגרשים ברשימה</div><div class="perk-desc">פי 4 יותר תוצאות בחיפוש</div></div></div>
+    </div>
+    <div class="premium-price">
+      <div class="premium-amount">₪9.90</div>
+      <div class="premium-period">לחודש · ביטול בכל עת</div>
+    </div>
+    <div style="padding:0 16px 4px">
+      <button class="dbtn" style="background:#635bff;color:white;width:100%;padding:14px;font-size:16px;border-radius:12px;border:none;cursor:pointer;margin-bottom:8px;" onclick="subscribePremium('monthly')">
+        💳 חודשי — 9.90₪ לחודש
+      </button>
+      <button class="dbtn" style="background:#4CAF50;color:white;width:100%;padding:14px;font-size:16px;border-radius:12px;border:none;cursor:pointer;" onclick="subscribePremium('yearly')">
+        🏆 שנתי — 79₪ לשנה <span style="background:rgba(255,255,255,.2);border-radius:8px;padding:2px 8px;font-size:12px;">חסכון 40%</span>
+      </button>
+      <button class="premium-restore" onclick="restorePremium()">שחזר רכישה קיימת</button>
+      <button class="premium-restore" onclick="closePremiumPanel()">לא עכשיו</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── STATS PANEL ─── -->
+<div id="stats-panel" onclick="if(event.target===this)closeStatsPanel()">
+  <div class="stats-card">
+    <div class="stats-head">
+      <div class="lb-title">📊 הסטטיסטיקות שלי</div>
+      <button class="fav-close" onclick="closeStatsPanel()">✕</button>
+    </div>
+    <div class="stats-body" id="stats-body"></div>
+  </div>
+</div>
+
+<!-- ─── LEADERBOARD PANEL ─── -->
+<div id="lb-panel" onclick="if(event.target===this)closeLbPanel()">
+  <div class="lb-card">
+    <div class="lb-head">
+      <div class="lb-title">🏆 טבלת דירוג שכונתית</div>
+      <button class="fav-close" onclick="closeLbPanel()">✕</button>
+    </div>
+    <div class="lb-tabs">
+      <button class="lb-tab on" onclick="switchLbTab(this,'fields')">🏟️ מגרשים מובילים</button>
+      <button class="lb-tab"   onclick="switchLbTab(this,'users')">👥 משתמשים פעילים</button>
+    </div>
+    <div class="lb-body" id="lb-body"></div>
+  </div>
+</div>
+
+<!-- ─── PLAYERS PANEL ─── -->
+<div id="players-panel" onclick="if(event.target===this)closePlayersPanel()">
+  <div class="players-card">
+    <div class="players-head">
+      <div class="players-title" id="players-title">👥 חיפוש שחקנים</div>
+      <button class="fav-close" onclick="closePlayersPanel()">✕</button>
+    </div>
+    <div class="players-body" id="players-body"></div>
+  </div>
+</div>
+
+<!-- ─── LIGHTBOX ─── -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div id="fav-panel" onclick="if(event.target===this)closeFavPanel()">
+  <div class="fav-card">
+    <div class="fav-head">
+      <div class="fav-head-title">⭐ המועדפים שלי</div>
+      <button class="fav-close" onclick="closeFavPanel()">✕</button>
+    </div>
+    <div class="fav-sport-tabs" id="fav-sport-tabs"></div>
+    <div class="fav-body" id="fav-body"></div>
+  </div>
+</div>
+
 <div id="overlay" onclick="if(event.target===this)closeDetail()">
   <div class="dcard">
     <div class="dhead">
@@ -332,6 +1190,826 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── STRIPE CONFIG ───
+const STRIPE_CONFIG = {
+  publishableKey: 'pk_test_YOUR_PUBLISHABLE_KEY',
+  monthlyPriceId: 'price_MONTHLY_ID',   // 9.90₪/month
+  yearlyPriceId:  'price_YEARLY_ID',    // 79₪/year
+  successUrl: window.location.origin + window.location.pathname + '?premium=success',
+  cancelUrl:  window.location.origin + window.location.pathname + '?premium=cancel',
+};
+
+function stripeEnabled() {
+  return STRIPE_CONFIG.publishableKey !== 'pk_test_YOUR_PUBLISHABLE_KEY';
+}
+
+// ─── FIREBASE CONFIG (replace with your project values) ───
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+} catch(e) { console.warn('Firebase not configured, using localStorage fallback'); }
+
+function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
+
+// ─── GOOGLE ANALYTICS 4 ──────────────────────────────────
+// GA_ID is defined in the <head> script block above
+
+function track(eventName, params = {}) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', eventName, params);
+  }
+}
+
+// ─── WORD FILTER ─────────────────────────────────────────
+const BANNED_WORDS = [
+  // Hebrew
+  'זין','תזדיין','כוסאמק','בן זונה','זונה','מזדיין','מניאק','בן שרמוטה','שרמוטה','כוס אמא','לך תזדיין',
+  // Arabic
+  'كس','زب','شرموطة','منيوك','يلعن','كلب','حمار',
+  // English
+  'fuck','shit','bitch','asshole','cunt','nigger','faggot'
+];
+
+function containsBannedWord(text) {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(w => lower.includes(w.toLowerCase()));
+}
+
+// ─── BIZ DASHBOARD ──────────────────────────────────────
+function openBizPanel() {
+  renderBizDashboard();
+  document.getElementById('biz-panel').classList.add('on');
+}
+function closeBizPanel() { document.getElementById('biz-panel').classList.remove('on'); }
+
+function renderBizDashboard() {
+  // נתונים מה-localStorage — בעולם אמיתי אלה יגיעו מ-backend
+  const rentalClicks  = JSON.parse(localStorage.getItem('pg_rental_clicks') || '[]');
+  const sponsoredViews= parseInt(localStorage.getItem('pg_sp_views') || '0');
+
+  // קבץ לפי קוד affiliate
+  const byCode = {};
+  rentalClicks.forEach(c => {
+    if (!byCode[c.code]) byCode[c.code] = { shop: c.shop, count: 0, lastTs: 0 };
+    byCode[c.code].count++;
+    byCode[c.code].lastTs = Math.max(byCode[c.code].lastTs, c.ts);
+  });
+
+  const totalClicks  = rentalClicks.length;
+  const uniqueCodes  = Object.keys(byCode).length;
+  const totalRevenue = totalClicks * 8; // הדגמה: 8₪ עמלה ממוצעת לקליק
+
+  const codeRows = Object.entries(byCode).map(([code, d]) => `
+    <div class="biz-row">
+      <div>
+        <div style="font-size:13px;font-weight:700">${d.shop}</div>
+        <div style="font-size:11px;color:var(--muted)">${code} · ${new Date(d.lastTs).toLocaleDateString('he-IL')}</div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:#ff9f0a">${d.count} קליקים</div>
+    </div>`).join('') || '<div style="font-size:13px;color:var(--muted)">אין נתונים עדיין</div>';
+
+  document.getElementById('biz-body').innerHTML = `
+    <div class="biz-hero">
+      <div style="font-size:32px">📊</div>
+      <div class="biz-hero-name">Arena Business Dashboard</div>
+      <div class="biz-hero-sub">נתוני עמלות ב-30 הימים האחרונים</div>
+    </div>
+
+    <div class="biz-grid">
+      <div class="biz-stat"><div class="biz-stat-num">${totalClicks}</div><div class="biz-stat-lbl">קליקי affiliate</div></div>
+      <div class="biz-stat"><div class="biz-stat-num">${sponsoredViews}</div><div class="biz-stat-lbl">הצפות עסקים</div></div>
+      <div class="biz-stat"><div class="biz-stat-num">₪${totalRevenue}</div><div class="biz-stat-lbl">עמלות משוערות</div></div>
+    </div>
+
+    <div>
+      <div class="biz-section">📋 פירוט לפי קוד Affiliate</div>
+      ${codeRows}
+    </div>
+
+    <div class="biz-tip">
+      💡 <strong>איך להגדיל הכנסות?</strong><br>
+      • הוסף עוד עסקים לרשימת ה-RENTAL_SHOPS<br>
+      • גבה ₪200-500/חודש לכל עסק ממומן<br>
+      • כל קליק על "להזמנה" = עמלה מהעסק<br>
+      • מנויי PRO מכפילים את חשיפת העסקים
+    </div>
+
+    <div>
+      <div class="biz-section">🎰 הגרלה חודשית</div>
+      <button onclick="showLotteryOverlay()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid #bf5af2;background:rgba(191,90,242,.12);color:#bf5af2;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer">🎰 הפעל הגרלת Demo</button>
+    </div>
+  `;
+
+  // עדכן צפיות (בכל פתיחה)
+  localStorage.setItem('pg_sp_views', sponsoredViews + 1);
+}
+
+// ─── AVAILABILITY ───────────────────────────────────────
+function availKey(f) { return `pg_avail_${f.lat}_${f.lon}`; }
+
+function getAvailability(f) {
+  // 1. בדוק אירועים פעילים כרגע (±30 דק')
+  const now = Date.now();
+  const events = getEvents().filter(e =>
+    Math.abs(e.lat - f.lat) < 0.001 && Math.abs(e.lon - f.lon) < 0.001 &&
+    now >= e.dateTs - 30*60*1000 && now <= e.dateTs + 90*60*1000
+  );
+  if (events.length) return { status:'busy', source:'event', label:`תפוס — ${events[0].title}` };
+
+  // 2. דיווח משתמש אחרון (בתוך 30 דק')
+  const report = JSON.parse(localStorage.getItem(availKey(f)) || 'null');
+  if (report && now - report.ts < 30*60*1000) {
+    return { status: report.status, source:'user', label: report.status==='free'?'פנוי — לפי דיווח':'תפוס — לפי דיווח' };
+  }
+  return { status:'unknown', label:'לא ידוע' };
+}
+
+function reportAvailability(f, status) {
+  localStorage.setItem(availKey(f), JSON.stringify({ status, ts: Date.now() }));
+}
+
+function buildAvailBlock(f) {
+  const av = getAvailability(f);
+  const cls = av.status;
+  const icon = cls==='free'?'🟢':cls==='busy'?'🔴':'⚪';
+  return `<div class="avail-badge ${cls}"><span class="avail-dot"></span>${icon} ${av.label}</div>
+  <div class="avail-btns">
+    <button class="avail-btn free-btn${av.status==='free'?' on':''}" onclick="reportAvailability(selected,'free');rebuildDetail()">✅ פנוי עכשיו</button>
+    <button class="avail-btn busy-btn${av.status==='busy'?' on':''}" onclick="reportAvailability(selected,'busy');rebuildDetail()">🔴 תפוס</button>
+  </div>`;
+}
+
+function rebuildDetail() {
+  if (!selected) return;
+  const i = shownFields.indexOf(selected);
+  if (i>=0) openDetail(i);
+}
+
+// ─── CHAT ───────────────────────────────────────────────
+let chatField = null;
+
+function chatKey(f) { return `pg_chat_${f.lat}_${f.lon}`; }
+function getChat(f) { return JSON.parse(localStorage.getItem(chatKey(f)) || '[]'); }
+
+function openChatPanel(f) {
+  chatField = f || selected; if (!chatField) return;
+  document.getElementById('chat-title').textContent = `💬 ${chatField.name}`;
+  renderChat();
+  document.getElementById('chat-panel').classList.add('on');
+  setTimeout(() => {
+    const msgs = document.getElementById('chat-msgs');
+    msgs.scrollTop = msgs.scrollHeight;
+    document.getElementById('chat-inp').focus();
+  }, 100);
+}
+
+function closeChatPanel() {
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  document.getElementById('chat-panel').classList.remove('on');
+}
+
+let chatUnsub = null;
+function renderChat() {
+  const myId = currentUser?.email || 'guest';
+  const el   = document.getElementById('chat-msgs');
+  if (!el) return;
+
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+
+  if (fsEnabled() && chatField) {
+    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
+    chatUnsub = db.collection('chats').doc(fieldId).collection('messages')
+      .orderBy('ts').limitToLast(60)
+      .onSnapshot(snap => {
+        if (!snap.docs.length) {
+          el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
+          return;
+        }
+        el.innerHTML = snap.docs.map(d => {
+          const m = d.data();
+          const me = m.uid === myId;
+          const ts = m.ts?.toMillis ? m.ts.toMillis() : (m.ts || 0);
+          const time = new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+          return `<div class="msg-row ${me?'me':'them'}">
+            <div class="msg-bubble">${m.text}</div>
+            <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+          </div>`;
+        }).join('');
+        el.scrollTop = el.scrollHeight;
+      });
+    return;
+  }
+
+  // localStorage fallback
+  const msgs = getChat(chatField);
+  if (!msgs.length) {
+    el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const me = m.uid === myId;
+    const time = new Date(m.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="msg-row ${me?'me':'them'}">
+      <div class="msg-bubble">${m.text}</div>
+      <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMsg() {
+  const inp  = document.getElementById('chat-inp');
+  const text = inp.value.trim(); if (!text || !chatField) return;
+  if (containsBannedWord(text)) {
+    inp.style.borderColor = 'red';
+    inp.placeholder = '⚠️ הודעה לא הולמת';
+    setTimeout(() => { inp.style.borderColor = ''; inp.placeholder = 'כתוב הודעה...'; }, 2000);
+    return;
+  }
+  inp.value = '';
+  track('send_chat_message');
+  const msg = {
+    text,
+    uid:  currentUser?.email || 'guest',
+    name: currentUser?.name  || 'אורח',
+    ts:   Date.now(),
+  };
+  if (fsEnabled()) {
+    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
+    await db.collection('chats').doc(fieldId).collection('messages').add({
+      ...msg,
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // renderChat is driven by onSnapshot listener — no manual call needed
+  } else {
+    const msgs = getChat(chatField);
+    msgs.push(msg);
+    localStorage.setItem(chatKey(chatField), JSON.stringify(msgs.slice(-100)));
+    renderChat();
+  }
+}
+
+// ─── EVENTS ─────────────────────────────────────────────
+let curEvTab = 'list';
+
+function openEventsPanel(preField) {
+  curEvTab = preField ? 'create' : 'list';
+  renderEventsPanel(preField);
+  document.getElementById('events-panel').classList.add('on');
+}
+function closeEventsPanel() { document.getElementById('events-panel').classList.remove('on'); }
+
+function switchEvTab(btn, tab) {
+  curEvTab = tab;
+  document.querySelectorAll('.ev-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderEventsPanel();
+}
+
+function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
+function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
+
+function renderEventsFromList(evs, body) {
+  if (!evs.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>אין אירועים קרובים<br><small>צור את הראשון!</small></div>';
+    return;
+  }
+  body.innerHTML = evs.map((e,i) => {
+    const joined = (e.rsvp||[]).includes(currentUser?.email||'guest');
+    const d = new Date(e.dateTs);
+    const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="ev-card">
+      <div class="ev-title">${e.title}</div>
+      <div class="ev-field">🏟️ ${e.fieldName}</div>
+      <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
+      <div class="ev-actions">
+        <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
+        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
+      </div>
+      <div class="ev-count">👥 ${(e.rsvp||[]).length} מצטרפים</div>
+    </div>`;
+  }).join('');
+}
+
+function renderEventsPanel(preField) {
+  const body = document.getElementById('events-body');
+  if (curEvTab === 'list') {
+    if (fsEnabled()) {
+      db.collectionGroup('list')
+        .where('dateTs', '>', Date.now() - 7*24*60*60*1000)
+        .orderBy('dateTs')
+        .get().then(snap => {
+          const evs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderEventsFromList(evs, body);
+        }).catch(() => {
+          // fallback to localStorage
+          const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+          renderEventsFromList(evs, body);
+        });
+    } else {
+      const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+      renderEventsFromList(evs, body);
+    }
+    return;
+  }
+
+  // create form
+  const f = preField || selected;
+  body.innerHTML = `<div class="ev-form">
+    <div class="ev-form-title">📅 צור אירוע חדש</div>
+    <input class="add-inp" id="ev-title" placeholder="שם האירוע (לדוגמה: משחק כדורסל 3x3)" />
+    ${f ? `<div style="font-size:13px;color:var(--blue);font-weight:700">🏟️ ${f.name}</div>` : `<input class="add-inp" id="ev-field" placeholder="שם המגרש" />`}
+    <select class="add-sel" id="ev-sport">
+      ${Object.keys(ICONS).filter(k=>k!=='default').slice(0,14).map(k=>`<option value="${k}">${ico(k)} ${he(k)}</option>`).join('')}
+    </select>
+    <input class="add-inp" id="ev-date" type="datetime-local" style="color-scheme:dark" />
+    <input class="add-inp" id="ev-desc" placeholder="פרטים נוספים (אופציונלי)" />
+    <select class="add-sel" id="ev-reminder">
+      <option value="0">🔕 ללא תזכורת</option>
+      <option value="15">⏰ 15 דקות לפני</option>
+      <option value="30" selected>⏰ 30 דקות לפני</option>
+      <option value="60">⏰ שעה לפני</option>
+      <option value="120">⏰ שעתיים לפני</option>
+      <option value="1440">⏰ יום לפני (בבוקר)</option>
+    </select>
+    <button class="add-submit" onclick="createEvent()">📅 צור אירוע ושתף</button>
+  </div>`;
+  // set default datetime to tomorrow 18:00
+  const tmr = new Date(); tmr.setDate(tmr.getDate()+1); tmr.setHours(18,0,0,0);
+  const el = document.getElementById('ev-date');
+  if (el) el.value = tmr.toISOString().slice(0,16);
+}
+
+function createEvent() {
+  const title      = document.getElementById('ev-title')?.value.trim();
+  const fieldName  = selected?.name || document.getElementById('ev-field')?.value.trim() || 'מגרש';
+  const sport      = document.getElementById('ev-sport')?.value || 'multi';
+  const dateVal    = document.getElementById('ev-date')?.value;
+  const reminderMin= parseInt(document.getElementById('ev-reminder')?.value || '0');
+  if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
+  track('create_event');
+  const dateTs = new Date(dateVal).getTime();
+  const ev = {
+    id: Date.now(), title, fieldName,
+    sport, dateTs,
+    lat: selected?.lat, lon: selected?.lon,
+    creator: currentUser?.name || 'אנונימי',
+    rsvp: [currentUser?.email || 'guest'],
+    reminderMin,
+    ts: Date.now(),
+  };
+  // קבע תזכורת אם נבחרה
+  if (reminderMin > 0) scheduleEventReminder(ev);
+  const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
+  if (fsEnabled()) {
+    const fieldId = selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global');
+    db.collection('events').doc(fieldId).collection('list').add(ev).catch(console.warn);
+  }
+  // שתף קישור
+  const text = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
+  if (navigator.share) navigator.share({ title, text }).catch(()=>{});
+  else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  curEvTab = 'list';
+  document.querySelectorAll('.ev-tab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  renderEventsPanel();
+  setStatus('✅ האירוע נוצר ושותף!', true);
+}
+
+function scheduleEventReminder(ev) {
+  if (!ev.reminderMin || ev.reminderMin <= 0) return;
+  const delay = ev.dateTs - ev.reminderMin * 60 * 1000 - Date.now();
+  if (delay <= 0) return; // עבר כבר
+  setTimeout(() => {
+    sendLocalNotification(
+      `⏰ ${ev.title} — בעוד ${ev.reminderMin < 60 ? ev.reminderMin+'דק\'' : ev.reminderMin/60+'שע\''}`,
+      `🏟️ ${ev.fieldName} · ${new Date(ev.dateTs).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}`
+    );
+  }, delay);
+  // שמור גם בlocalStorage לטעינה עתידית
+  const reminders = JSON.parse(localStorage.getItem('pg_reminders') || '[]');
+  reminders.push({ evId: ev.id, fireTs: ev.dateTs - ev.reminderMin * 60 * 1000, title: ev.title, fieldName: ev.fieldName, dateTs: ev.dateTs });
+  localStorage.setItem('pg_reminders', JSON.stringify(reminders.filter(r => r.fireTs > Date.now())));
+}
+
+function restoreReminders() {
+  const reminders = JSON.parse(localStorage.getItem('pg_reminders') || '[]');
+  reminders.forEach(r => {
+    const delay = r.fireTs - Date.now();
+    if (delay > 0) setTimeout(() => sendLocalNotification(`⏰ ${r.title}`, `🏟️ ${r.fieldName}`), delay);
+  });
+}
+
+function rsvpEvent(i) {
+  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
+  const ev  = evs[i]; if (!ev) return;
+  const uid = currentUser?.email || 'guest';
+  if (!ev.rsvp) ev.rsvp = [];
+  const idx = ev.rsvp.indexOf(uid);
+  if (idx >= 0) ev.rsvp.splice(idx, 1);
+  else ev.rsvp.push(uid);
+  // update in storage
+  const all = getEvents();
+  const ai  = all.findIndex(e => e.id === ev.id);
+  if (ai >= 0) { all[ai] = ev; saveEvents(all); }
+  renderEventsPanel();
+}
+
+function shareEvent(i) {
+  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
+  const ev  = evs[i]; if (!ev) return;
+  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
+  if (navigator.share) navigator.share({ title: ev.title, text }).catch(()=>{});
+  else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// ─── HEATMAP ────────────────────────────────────────────
+let heatLayer = null, heatMode = false;
+
+function fieldHeat(f) {
+  const rKey = `pg_rating_${f.lat}_${f.lon}`;
+  const pKey = `pg_photos_${f.lat}_${f.lon}`;
+  const plKey = `pg_players_${f.lat}_${f.lon}`;
+  const vKey  = `pg_visits_${f.lat}_${f.lon}`;
+  const ratings = JSON.parse(localStorage.getItem('pg_all_ratings')||'{}')[rKey];
+  const photos  = JSON.parse(localStorage.getItem(pKey)||'[]').length;
+  const players = JSON.parse(localStorage.getItem(plKey)||'[]').length;
+  const visits  = parseInt(localStorage.getItem(vKey)||'0');
+  return (ratings ? ratings.count * 3 : 0) + photos * 2 + players * 2 + visits;
+}
+
+function toggleHeatmap() {
+  heatMode = !heatMode;
+  const btn = document.getElementById('heat-btn');
+  if (btn) { btn.style.color = heatMode ? '#ff453a' : ''; btn.style.borderColor = heatMode ? '#ff453a' : ''; }
+  if (!heatMode) { if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; } return; }
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  if (heatLayer) map.removeLayer(heatLayer);
+  const group = L.layerGroup();
+  const heats = allFields.map(f => ({ f, h: fieldHeat(f) })).filter(x => x.h > 0);
+  const maxH  = Math.max(...heats.map(x => x.h), 1);
+  heats.forEach(({ f, h }) => {
+    const ratio = h / maxH;
+    const size  = Math.round(20 + ratio * 40);
+    // interpolate green → yellow → red
+    const r = Math.round(ratio < .5 ? ratio * 2 * 255 : 255);
+    const g = Math.round(ratio < .5 ? 255 : (1 - (ratio - .5) * 2) * 255);
+    const color = `rgb(${r},${g},0)`;
+    L.circleMarker([f.lat, f.lon], {
+      radius: size / 2,
+      fillColor: color, fillOpacity: 0.45,
+      color: color, weight: 0,
+    }).addTo(group);
+  });
+  heatLayer = group;
+  map.addLayer(heatLayer);
+}
+
+// ─── RENTAL ─────────────────────────────────────────────
+// כדי להוסיף עסק: מלא בלוק כאן, גבה X₪/חודש תשלום קבוע + קוד affiliate
+// כל לחיצה על "אתר" תוסיף ?ref=ARENA לקישור — העסק עוקב ומשלם עמלה
+const RENTAL_SHOPS = [
+  {
+    name: 'Sport Rent IL',
+    sub: 'השכרת ציוד ספורט · תל אביב',
+    ico: '🎾',
+    items: ['מחבטי טניס', 'כדורים', 'ציוד פאדל', 'אופניים'],
+    price: 'מ-₪25 לשעה',
+    lat: 32.0853, lon: 34.7818,
+    phone: '03-1234567',
+    website: 'https://sportrental.co.il',
+    affiliateCode: 'ARENA10',  // קוד שהעסק מזהה ומשלם עמלה עליו
+    paidListing: true,         // משלם תשלום קבוע חודשי
+    countries: ['IL'],
+  },
+  {
+    name: 'BikeShare TLV',
+    sub: 'השכרת אופניים וקורקינטים',
+    ico: '🚴',
+    items: ['אופניים', 'אופני הרים', 'קורקינט חשמלי', 'קסדות'],
+    price: 'מ-₪15 לשעה',
+    lat: 32.0661, lon: 34.7748,
+    phone: '050-9876543',
+    website: 'https://bikeshare.co.il',
+    affiliateCode: 'ARENA15',
+    paidListing: true,
+    countries: ['IL'],
+  },
+  {
+    name: 'NYC Sports Rentals',
+    sub: 'Equipment rental · Manhattan',
+    ico: '🏀',
+    items: ['Basketballs', 'Tennis rackets', 'Soccer balls', 'Frisbees'],
+    price: 'From $10/hr',
+    lat: 40.7580, lon: -73.9855,
+    phone: '+1-212-555-0199',
+    website: 'https://nycsportsrentals.com',
+    affiliateCode: 'ARENA10',
+    paidListing: false,
+    countries: ['US'],
+  },
+];
+
+const ARENA_AFFILIATE_ID = 'ARENA'; // מזהה ה-affiliate שלך
+
+function openRentalPanel() {
+  renderRental();
+  document.getElementById('rental-panel').classList.add('on');
+}
+function closeRentalPanel() { document.getElementById('rental-panel').classList.remove('on'); }
+
+function renderRental() {
+  const shops = RENTAL_SHOPS.filter(s =>
+    s.countries === 'all' || s.countries.includes(curCountry) || curCountry === 'default'
+  ).map(s => ({ ...s, dist: uLat != null ? km(uLat, uLon, s.lat, s.lon) : null }))
+    .sort((a,b) => (a.dist||9999) - (b.dist||9999));
+
+  if (!shops.length) {
+    document.getElementById('rental-body').innerHTML =
+      '<div class="empty"><div class="empty-ico">🎾</div>אין חנויות השכרה באזורך כרגע</div>';
+    return;
+  }
+
+  document.getElementById('rental-body').innerHTML = shops.map((s,i) => `
+    <div class="rental-item">
+      ${s.paidListing ? '<div class="rental-paid-badge">⭐ ממומן</div>' : ''}
+      <div class="rental-biz-row">
+        <div class="rental-biz-ico">${s.ico}</div>
+        <div>
+          <div class="rental-biz-name">${s.name}</div>
+          <div class="rental-biz-sub">${s.sub}</div>
+        </div>
+      </div>
+      ${s.dist != null ? `<div class="rental-dist">📍 ${fmt(s.dist)} ממיקומך</div>` : ''}
+      <div class="rental-items-grid">${s.items.map(it=>`<span class="rental-tag">${it}</span>`).join('')}</div>
+      <div class="rental-price">💰 ${s.price}</div>
+      <div class="rental-affiliate-note">קוד הנחה: <strong>${s.affiliateCode}</strong> · Arena מקבלת עמלה על כל הזמנה</div>
+      <div class="rental-actions">
+        <button class="rental-call" onclick="window.open('tel:${s.phone}')">📞 התקשר</button>
+        <button class="rental-web"  onclick="trackRentalClick(${i})">🌐 להזמנה</button>
+        <button class="rental-waze" onclick="window.open('https://waze.com/ul?ll=${s.lat},${s.lon}&navigate=yes')">🔵</button>
+      </div>
+    </div>`).join('');
+}
+
+let _rentalShopsFiltered = [];
+function trackRentalClick(i) {
+  // צרף ref=ARENA לקישור — ה-affiliate tracking
+  const shops = RENTAL_SHOPS.filter(s =>
+    s.countries === 'all' || s.countries.includes(curCountry) || curCountry === 'default'
+  ).sort((a,b) => (uLat!=null?km(uLat,uLon,a.lat,a.lon):0)-(uLat!=null?km(uLat,uLon,b.lat,b.lon):0));
+  const s = shops[i]; if (!s) return;
+  const url = `${s.website}?ref=${ARENA_AFFILIATE_ID}&coupon=${s.affiliateCode}`;
+  window.open(url, '_blank');
+  // לוג מקומי לסטטיסטיקות
+  const clicks = JSON.parse(localStorage.getItem('pg_rental_clicks') || '[]');
+  clicks.push({ shop: s.name, code: s.affiliateCode, ts: Date.now() });
+  localStorage.setItem('pg_rental_clicks', JSON.stringify(clicks.slice(-50)));
+}
+
+// ─── SETTINGS / ACCESSIBILITY ───────────────────────────
+function openSettingsPanel() {
+  syncSettingsUI();
+  document.getElementById('settings-panel').classList.add('on');
+}
+function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
+
+function syncSettingsUI() {
+  const prefs = getA11yPrefs();
+  document.querySelectorAll('.font-size-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.size === (prefs.fontSize || 'normal')));
+  document.getElementById('toggle-contrast').classList.toggle('on', !!prefs.contrast);
+  document.getElementById('toggle-big-btns').classList.toggle('on', !!prefs.bigBtns);
+  document.getElementById('toggle-auto-dark').classList.toggle('on', darkMode === null);
+  document.getElementById('toggle-reminder').classList.toggle('on', !!localStorage.getItem('pg_reminder'));
+}
+
+function getA11yPrefs() { return JSON.parse(localStorage.getItem('pg_a11y') || '{}'); }
+function saveA11yPrefs(p) { localStorage.setItem('pg_a11y', JSON.stringify(p)); }
+
+function setFontSize(size) {
+  const p = getA11yPrefs(); p.fontSize = size; saveA11yPrefs(p);
+  document.body.classList.remove('a11y-large','a11y-xlarge');
+  if (size === 'large')  document.body.classList.add('a11y-large');
+  if (size === 'xlarge') document.body.classList.add('a11y-xlarge');
+  syncSettingsUI();
+}
+
+function toggleA11y(key) {
+  const p = getA11yPrefs();
+  p[key === 'contrast' ? 'contrast' : 'bigBtns'] = !p[key === 'contrast' ? 'contrast' : 'bigBtns'];
+  saveA11yPrefs(p);
+  document.body.classList.toggle(`a11y-${key}`, !!p[key === 'contrast' ? 'contrast' : 'bigBtns']);
+  syncSettingsUI();
+}
+
+function toggleAutoDark() {
+  darkMode = darkMode === null ? !isNight() : null;
+  applyMapTheme(darkMode !== null ? darkMode : undefined);
+  syncSettingsUI();
+}
+
+function toggleReminder() {
+  if (localStorage.getItem('pg_reminder')) {
+    localStorage.removeItem('pg_reminder');
+  } else {
+    scheduleDailyReminder();
+  }
+  syncSettingsUI();
+}
+
+function applyA11yOnLoad() {
+  const p = getA11yPrefs();
+  if (p.fontSize === 'large')  document.body.classList.add('a11y-large');
+  if (p.fontSize === 'xlarge') document.body.classList.add('a11y-xlarge');
+  if (p.contrast)  document.body.classList.add('a11y-contrast');
+  if (p.bigBtns)   document.body.classList.add('a11y-big-btns');
+}
+
+// ─── i18n ────────────────────────────────────────────────
+const LANGS = {
+  he: {
+    dir:'rtl', lang:'he',
+    authTitle:'Arena · ארנה',
+    authSub:'גלה מגרשי ספורט קרובים אליך<br>בכל מקום בעולם',
+    register:'הרשמה', login:'כניסה', guest:'👤 המשך בלי חשבון',
+    namePh:'שם מלא', emailPh:'אימייל', passPh:'סיסמה (לפחות 6 תווים)',
+    searchPh:'🔍 חפש עיר או כתובת...',
+    locating:'🔍 מאתר מיקום...', loading:'טוען...',
+    noFields:'לא נמצאו מגרשים',
+    close:'סגור', cancel:'ביטול',
+    fav:'⭐ המועדפים שלי', noFavs:'אין מועדפים עדיין',
+    lb:'🏆 טבלת דירוג שכונתית',
+    stats:'📊 הסטטיסטיקות שלי',
+    addField:'➕ הוסף מגרש חדש',
+    coupons:'🏷️ קופונים והנחות',
+    players:'👥 חיפוש שחקנים',
+  },
+  en: {
+    dir:'ltr', lang:'en',
+    authTitle:'Arena · ארנה',
+    authSub:'Find sports fields near you<br>anywhere in the world',
+    register:'Sign Up', login:'Sign In', guest:'👤 Continue as Guest',
+    namePh:'Full Name', emailPh:'Email', passPh:'Password (min 6 chars)',
+    searchPh:'🔍 Search city or address...',
+    locating:'🔍 Locating...', loading:'Loading...',
+    noFields:'No fields found',
+    close:'Close', cancel:'Cancel',
+    fav:'⭐ My Favorites', noFavs:'No favorites yet',
+    lb:'🏆 Neighborhood Leaderboard',
+    stats:'📊 My Statistics',
+    addField:'➕ Add New Field',
+    coupons:'🏷️ Coupons & Deals',
+    players:'👥 Find Players',
+  },
+  ar: {
+    dir:'rtl', lang:'ar',
+    authTitle:'Arena · ارينا',
+    authSub:'اكتشف ملاعب رياضية قريبة منك<br>في أي مكان بالعالم',
+    register:'تسجيل', login:'دخول', guest:'👤 المتابعة بدون حساب',
+    namePh:'الاسم الكامل', emailPh:'البريد الإلكتروني', passPh:'كلمة المرور (6 أحرف على الأقل)',
+    searchPh:'🔍 ابحث عن مدينة أو عنوان...',
+    locating:'🔍 تحديد الموقع...', loading:'جارٍ التحميل...',
+    noFields:'لم يتم العثور على ملاعب',
+    close:'إغلاق', cancel:'إلغاء',
+    fav:'⭐ المفضلة', noFavs:'لا توجد مفضلة بعد',
+    lb:'🏆 لوحة الصدارة المحلية',
+    stats:'📊 إحصائياتي',
+    addField:'➕ إضافة ملعب جديد',
+    coupons:'🏷️ كوبونات وخصومات',
+    players:'👥 البحث عن لاعبين',
+  },
+};
+
+let curLang = localStorage.getItem('pg_lang') || 'he';
+
+function t(key) { return LANGS[curLang]?.[key] || LANGS.he[key] || key; }
+
+function applyLang(lang) {
+  curLang = lang;
+  localStorage.setItem('pg_lang', lang);
+  const L = LANGS[lang];
+  document.documentElement.lang = L.lang;
+  document.documentElement.dir  = L.dir;
+
+  // Auth screen
+  const authTitle = document.querySelector('.auth-title');
+  const authSub   = document.querySelector('.auth-sub');
+  if (authTitle) authTitle.textContent = L.authTitle;
+  if (authSub)   authSub.innerHTML     = L.authSub;
+  document.getElementById('auth-submit').textContent = authMode === 'register' ? L.register : L.login;
+  document.getElementById('tab-reg').textContent = L.register;
+  document.getElementById('tab-log').textContent = L.login;
+  document.querySelector('.auth-guest').textContent  = L.guest;
+  document.getElementById('auth-name').placeholder  = L.namePh;
+  document.getElementById('auth-email').placeholder = L.emailPh;
+  document.getElementById('auth-pass').placeholder  = L.passPh;
+  document.getElementById('city-inp').placeholder   = L.searchPh;
+
+  // lang button
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = lang === 'he' ? '🌐' : lang.toUpperCase();
+}
+
+function cycleLang() {
+  const order = ['he','en','ar'];
+  const next = order[(order.indexOf(curLang) + 1) % order.length];
+  applyLang(next);
+}
+
+// ─── SOCIAL AUTH CONFIG ──────────────────────────────────
+// כדי להפעיל: החלף את ה-IDs האמיתיים שלך מ-console.developers.google.com ו-developer.apple.com
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const APPLE_CLIENT_ID  = 'YOUR_APPLE_SERVICE_ID'; // e.g. com.yourapp.service
+
+function signInWithGoogle() {
+  if (GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
+    showAuthErr('⚙️ יש להגדיר GOOGLE_CLIENT_ID בקוד');
+    return;
+  }
+  if (!window.google?.accounts) {
+    // טען את ה-SDK בזמן ריצה
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = () => _googleSignIn();
+    document.head.appendChild(s);
+    return;
+  }
+  _googleSignIn();
+}
+
+function _googleSignIn() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: resp => {
+      try {
+        // decode JWT payload
+        const payload = JSON.parse(atob(resp.credential.split('.')[1]));
+        currentUser = { email: payload.email, name: payload.name, avatar: payload.picture };
+        localStorage.setItem('pg_user', JSON.stringify(currentUser));
+        track('login', { method: 'google' });
+        enterApp();
+      } catch { showAuthErr('❌ שגיאה בכניסה עם Google'); }
+    },
+  });
+  google.accounts.id.prompt(notification => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // fallback — popup
+      google.accounts.id.renderButton(
+        document.createElement('div'),
+        { theme:'filled_black', size:'large', width:340 }
+      );
+    }
+  });
+}
+
+function signInWithApple() {
+  if (APPLE_CLIENT_ID.startsWith('YOUR_')) {
+    showAuthErr('⚙️ יש להגדיר APPLE_CLIENT_ID בקוד');
+    return;
+  }
+  if (!window.AppleID) {
+    const s = document.createElement('script');
+    s.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+    s.onload = () => _appleSignIn();
+    document.head.appendChild(s);
+    return;
+  }
+  _appleSignIn();
+}
+
+async function _appleSignIn() {
+  AppleID.auth.init({
+    clientId: APPLE_CLIENT_ID,
+    scope: 'name email',
+    redirectURI: location.origin + '/playgrounds.html',
+    usePopup: true,
+  });
+  try {
+    const data = await AppleID.auth.signIn();
+    const email = data.authorization?.id_token
+      ? JSON.parse(atob(data.authorization.id_token.split('.')[1])).email
+      : 'apple-user@privaterelay.appleid.com';
+    const name = data.user ? `${data.user.name?.firstName || ''} ${data.user.name?.lastName || ''}`.trim() : 'Apple User';
+    currentUser = { email, name: name || email };
+    localStorage.setItem('pg_user', JSON.stringify(currentUser));
+    track('login', { method: 'apple' });
+    enterApp();
+  } catch { showAuthErr('❌ שגיאה בכניסה עם Apple'); }
+}
+
 // ─── AUTH (local-storage, no backend needed) ────────────
 let authMode = 'register', currentUser = null;
 
@@ -379,22 +2057,34 @@ function enterApp() {
   s.classList.add('hide');
   setTimeout(() => {
     s.style.display = 'none';
-    map.invalidateSize(); // חשוב — מאלץ Leaflet לחשב מחדש את גודל המפה
+    map.invalidateSize();
   }, 420);
   document.getElementById('user-btn').style.display = 'flex';
+  document.getElementById('share-loc-btn').style.display = 'flex';
+  if (fsEnabled()) {
+    const existingBadge = document.getElementById('fs-badge');
+    if (!existingBadge) {
+      const badge = document.createElement('span');
+      badge.id = 'fs-badge';
+      badge.textContent = '☁️';
+      badge.title = 'מסונכרן לענן';
+      badge.style.cssText = 'font-size:16px;cursor:default;';
+      document.getElementById('user-btn').after(badge);
+    }
+  }
   updateFilterPills('default');
   updateLocBtn();
   locateMe();
+  initPushNotifications();
 }
 
 function showUserMenu() {
   if (!currentUser) return;
-  const info = currentUser.guest
-    ? 'אתה גולש כאורח'
-    : `${currentUser.name}\n${currentUser.email}`;
-  if (confirm(`${info}\n\nהתנתק?`)) {
-    localStorage.removeItem('pg_user');
-    location.reload();
+  const info = currentUser.guest ? 'אתה גולש כאורח' : `${currentUser.name}\n${currentUser.email}`;
+  const choice = confirm(`${info}\n\n📊 לחץ אישור לדשבורד עסקי\nלחץ ביטול להתנתקות`);
+  if (choice) { openBizPanel(); }
+  else {
+    if (confirm('להתנתק?')) { localStorage.removeItem('pg_user'); location.reload(); }
   }
 }
 
@@ -617,12 +2307,38 @@ let curFilter = 'all', selected = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
 map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  detectRetina: true,
-  tileSize: 256,
-  zoomOffset: 0,
-}).addTo(map);
+
+// ─── DARK / LIGHT TILE LAYERS ───────────────────────────
+const TILES = {
+  light: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, detectRetina:true }),
+  dark:  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, detectRetina:true }),
+};
+
+let darkMode = null; // null = auto
+let tileLayer = null;
+
+function isNight() {
+  const h = new Date().getHours();
+  return h < 6 || h >= 21;
+}
+
+function applyMapTheme(forceDark) {
+  const useDark = forceDark !== undefined ? forceDark : isNight();
+  if (tileLayer) map.removeLayer(tileLayer);
+  tileLayer = useDark ? TILES.dark : TILES.light;
+  tileLayer.addTo(map);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = useDark ? '☀️' : '🌙';
+}
+
+function toggleDarkMode() {
+  if (darkMode === null) darkMode = !isNight();
+  else darkMode = !darkMode;
+  applyMapTheme(darkMode);
+}
+
+applyMapTheme(); // אוטומטי בטעינה
+
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
 
@@ -791,7 +2507,12 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       if (!sports.length) sports.push(primarySport);
       const name = t.name || t['name:he'] || he(primarySport);
       return { lat:clat, lon:clon, name, sport:primarySport, sports, tags:t, dist:km(lat,lon,clat,clon) };
-    }).filter(Boolean).sort((a,b) => a.dist - b.dist);
+    }).filter(Boolean);
+
+    // הוסף מגרשים שהמשתמש הוסיף ידנית
+    const userFields = JSON.parse(localStorage.getItem('pg_user_fields') || '[]')
+      .map(f => ({ ...f, dist: km(lat, lon, f.lat, f.lon) }));
+    allFields = [...userFields, ...allFields].sort((a,b) => a.dist - b.dist);
 
     renderMarkers(); renderList();
     // אם לא נמצא כלום ב-radius — הגדל אוטומטית
@@ -925,10 +2646,12 @@ function renderList() {
     const sportLabel = f.sports.length > 1
       ? f.sports.slice(0,3).map(s=>he(s)).join(' · ')
       : he(f.sport);
+    const av = getAvailability(f);
+    const avDot = av.status==='free'?'<span style="color:#30d158;font-size:9px">●</span>':av.status==='busy'?'<span style="color:#ff453a;font-size:9px">●</span>':'';
     return `<div class="frow" onclick="openDetail(${i})">
       <div class="fi" style="font-size:${f.sports.length>1?'20px':'32px'};line-height:1.4">${sportIcons}</div>
       <div style="flex:1;min-width:0">
-        <div class="fn">${f.name}</div>
+        <div class="fn">${avDot} ${f.name}</div>
         <div class="fs">${sportLabel}${extras?' · '+extras:''}</div>
       </div>
       <div class="fd">${fmt(f.dist)}</div>
@@ -940,22 +2663,782 @@ function renderList() {
     : '<div style="padding-bottom:env(safe-area-inset-bottom,16px)"></div>';
 
   el.innerHTML = sponsoredRows + rows + more;
+  // staggered slide-in animation for list items
+  el.querySelectorAll('.frow').forEach((row, i) => {
+    row.style.animationDelay = (i * 30) + 'ms';
+    row.classList.add('frow-animated');
+  });
   updateLocBtn();
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── COUPONS ────────────────────────────────────────────
+const COUPONS = [
+  { id:'C1', biz:'Gold\'s Gym', offer:'שבוע ניסיון חינם', desc:'הצג קוד בכניסה לאחד מסניפי Gold\'s Gym', code:'ARENA-GYM7', exp:'31.12.2025', proOnly:false, sport:'fitness' },
+  { id:'C2', biz:'WinSport', offer:'20% הנחה על השכרת מגרש', desc:'השכרת מגרש כדורגל קטן, תקף ימי חול', code:'WIN-ARENA20', exp:'30.06.2025', proOnly:false, sport:'soccer' },
+  { id:'C3', biz:'Pro Sport Store', offer:'15% על ציוד ספורט', desc:'רכישת ציוד בחנות הדגל בת"א', code:'PROSP-15', exp:'31.03.2025', proOnly:true, sport:'multi' },
+  { id:'C4', biz:'Padel IL', offer:'משחק ראשון ב-50₪', desc:'מגרשי פאדל מקורים, כולל ציוד', code:'PADEL-ARENA', exp:'30.09.2025', proOnly:true, sport:'padel' },
+];
+
+function openCouponsPanel() {
+  renderCoupons();
+  document.getElementById('coupons-panel').classList.add('on');
+}
+function closeCouponsPanel() { document.getElementById('coupons-panel').classList.remove('on'); }
+
+function renderCoupons() {
+  const pro = isPro();
+  document.getElementById('coupons-body').innerHTML = COUPONS.map(c => {
+    const locked = c.proOnly && !pro;
+    return `<div class="coupon-card${locked?' coupon-pro-only':''}">
+      <div class="coupon-biz">${ico(c.sport)} ${c.biz}</div>
+      <div class="coupon-offer">${c.offer}</div>
+      <div class="coupon-desc">${c.desc}</div>
+      <div class="coupon-actions">
+        <button class="coupon-copy" onclick="copyCoupon('${c.code}')">📋 ${c.code}</button>
+        <button class="coupon-qr"   onclick="showQr('${c.code}')">QR</button>
+      </div>
+      <div class="coupon-exp">בתוקף עד ${c.exp}</div>
+      ${locked ? `<div class="coupon-pro-lock" onclick="closeCouponsPanel();openPremiumPanel()">👑 למנויי PRO בלבד — שדרג</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function copyCoupon(code) {
+  navigator.clipboard?.writeText(code).catch(() => {});
+  setStatus(`✅ קוד "${code}" הועתק!`, true);
+}
+
+function showQr(code) {
+  document.getElementById('qr-val').textContent = code;
+  drawQr(code);
+  document.getElementById('qr-overlay').classList.add('on');
+}
+function closeQr() { document.getElementById('qr-overlay').classList.remove('on'); }
+
+function drawQr(text) {
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = 200;
+  canvas.width = canvas.height = size;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,size,size);
+
+  // QR פשוט — מטריצה מבוססת hash (לא QR אמיתי — לקוד אמיתי יש לשלב qrcode.js)
+  ctx.fillStyle = '#000';
+  const cells = 21, cell = Math.floor(size / cells);
+  const seed = text.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  for (let r = 0; r < cells; r++) for (let c2 = 0; c2 < cells; c2++) {
+    const val = ((seed * (r+1) * (c2+1)) ^ (r * 17 + c2 * 13)) % 3;
+    if (val === 0) ctx.fillRect(c2*cell, r*cell, cell-1, cell-1);
+  }
+  // finder patterns
+  [[0,0],[0,14],[14,0]].forEach(([rx,cx]) => {
+    ctx.fillStyle='#000'; ctx.fillRect(cx*cell,rx*cell,7*cell,7*cell);
+    ctx.fillStyle='#fff'; ctx.fillRect(cx*cell+cell,rx*cell+cell,5*cell,5*cell);
+    ctx.fillStyle='#000'; ctx.fillRect(cx*cell+2*cell,rx*cell+2*cell,3*cell,3*cell);
+  });
+  // הצג טקסט
+  ctx.fillStyle='#000'; ctx.font='bold 11px monospace'; ctx.textAlign='center';
+  ctx.fillText(text, size/2, size-4);
+}
+
+// ─── ADD FIELD ──────────────────────────────────────────
+let newFieldLat = null, newFieldLon = null;
+let pinMode = false;
+
+function openAddPanel() {
+  newFieldLat = uLat; newFieldLon = uLon;
+  updateAfLocVal();
+  document.getElementById('add-panel').classList.add('on');
+}
+function closeAddPanel() { document.getElementById('add-panel').classList.remove('on'); }
+
+function updateAfLocVal() {
+  const el = document.getElementById('af-loc-val');
+  if (newFieldLat != null)
+    el.textContent = `${newFieldLat.toFixed(5)}, ${newFieldLon.toFixed(5)}`;
+  else
+    el.textContent = 'לא נבחר עדיין';
+}
+
+function startPinMode() {
+  closeAddPanel();
+  pinMode = true;
+  document.getElementById('map-pin-overlay').classList.add('on');
+  setStatus('📍 גרור את המפה למיקום המגרש ואז לחץ "אשר מיקום"');
+}
+
+function confirmPinLocation() {
+  const center = map.getCenter();
+  newFieldLat = center.lat;
+  newFieldLon = center.lng;
+  cancelPinMode();
+  updateAfLocVal();
+  document.getElementById('add-panel').classList.add('on');
+  setStatus('✅ מיקום נבחר', true);
+}
+
+function cancelPinMode() {
+  pinMode = false;
+  document.getElementById('map-pin-overlay').classList.remove('on');
+}
+
+function submitNewField() {
+  const name  = document.getElementById('af-name').value.trim();
+  const sport = document.getElementById('af-sel')?.value || document.getElementById('af-sport').value;
+  const lit   = document.getElementById('af-lit').value;
+  const fee   = document.getElementById('af-fee').value;
+
+  if (!name)              { setStatus('⚠️ יש לרשום שם למגרש', true); return; }
+  if (newFieldLat == null){ setStatus('⚠️ יש לבחור מיקום במפה', true); return; }
+
+  const newField = {
+    lat: newFieldLat, lon: newFieldLon,
+    name, sport, sports: [sport],
+    tags: { lit, fee, _user_added: 'yes' },
+    dist: uLat != null ? km(uLat, uLon, newFieldLat, newFieldLon) : 0,
+    _userAdded: true,
+  };
+
+  // שמור ב-localStorage
+  const userFields = JSON.parse(localStorage.getItem('pg_user_fields') || '[]');
+  userFields.unshift(newField);
+  localStorage.setItem('pg_user_fields', JSON.stringify(userFields));
+
+  // הוסף לרשימה הנוכחית
+  allFields.unshift(newField);
+  allFields.sort((a,b) => a.dist - b.dist);
+  renderMarkers(); renderList();
+
+  closeAddPanel();
+  map.flyTo([newFieldLat, newFieldLon], 17, { duration: 0.6 });
+  setStatus(`✅ "${name}" נוסף בהצלחה!`, true);
+
+  // אפס טופס
+  document.getElementById('af-name').value = '';
+  newFieldLat = null; newFieldLon = null;
+}
+
+// ─── PREMIUM ────────────────────────────────────────────
+function isPro() { return localStorage.getItem('pg_pro') === '1'; }
+
+function openPremiumPanel() {
+  document.getElementById('premium-panel').classList.add('on');
+}
+function closePremiumPanel() {
+  document.getElementById('premium-panel').classList.remove('on');
+}
+
+async function subscribePremium(plan = 'monthly') {
+  track('begin_checkout', { value: plan === 'monthly' ? 9.90 : 79, currency: 'ILS', plan });
+
+  if (stripeEnabled()) {
+    try {
+      const stripe = Stripe(STRIPE_CONFIG.publishableKey);
+      const priceId = plan === 'yearly' ? STRIPE_CONFIG.yearlyPriceId : STRIPE_CONFIG.monthlyPriceId;
+      await stripe.redirectToCheckout({
+        lineItems: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        successUrl: STRIPE_CONFIG.successUrl,
+        cancelUrl: STRIPE_CONFIG.cancelUrl,
+        customerEmail: currentUser?.email || undefined,
+      });
+    } catch(e) {
+      alert('שגיאה בחיבור לתשלום: ' + e.message);
+    }
+    return;
+  }
+
+  // Fallback: mock subscription (when Stripe not configured)
+  localStorage.setItem('pg_pro', '1');
+  localStorage.setItem('pg_pro_plan', plan);
+  localStorage.setItem('pg_pro_since', Date.now());
+  applyProPerks();
+  alert(plan === 'yearly' ? '🏆 שנתי — 79₪ לשנה' : '✅ פרמיום חודשי — 9.90₪');
+  const panel = document.getElementById('premium-panel');
+  if (panel) panel.classList.remove('on');
+}
+
+function restorePremium() {
+  const pro = localStorage.getItem('pg_pro');
+  if (pro === '1') { applyProPerks(); setStatus('👑 PRO שוחזר בהצלחה', true); closePremiumPanel(); }
+  else             { setStatus('לא נמצא מנוי קיים', true); }
+}
+
+function applyProPerks() {
+  // הסר פרסומות
+  document.querySelectorAll('.ad-wrap').forEach(el => el.style.display = 'none');
+  // סמל PRO בכותרת
+  const userBtn = document.getElementById('user-btn');
+  if (userBtn) userBtn.textContent = '👑';
+}
+
+// ─── VISIT TRACKER ──────────────────────────────────────
+function trackVisit(f) {
+  const key = `pg_visits_${f.lat}_${f.lon}`;
+  const count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  // שמור שם המגרש לסטטיסטיקה
+  const visits = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  visits.unshift({ name: f.name, sport: f.sport, lat: f.lat, lon: f.lon, ts: Date.now() });
+  localStorage.setItem('pg_visit_log', JSON.stringify(visits.slice(0, 100)));
+
+  if (fsEnabled() && currentUser && !currentUser.guest) {
+    const uid = currentUser.id || currentUser.email;
+    db.collection('visits').doc(uid).set({
+      name: currentUser.name || currentUser.email,
+      count: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(console.warn);
+  }
+}
+
+// ─── STATS ──────────────────────────────────────────────
+function openStatsPanel() {
+  renderStats();
+  document.getElementById('stats-panel').classList.add('on');
+}
+function closeStatsPanel() { document.getElementById('stats-panel').classList.remove('on'); }
+
+function renderStats() {
+  const visits = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+
+  // ספור תמונות
+  let photoCount = 0;
+  for (const key in localStorage) {
+    if (key.startsWith('pg_photos_')) {
+      try { photoCount += JSON.parse(localStorage.getItem(key) || '[]').length; } catch {}
+    }
+  }
+
+  // ספורט פופולרי באזור
+  const sportCount = {};
+  allFields.forEach(f => { sportCount[f.sport] = (sportCount[f.sport] || 0) + 1; });
+  const topSports = Object.entries(sportCount).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const maxSport = topSports[0]?.[1] || 1;
+
+  // ביקורים לפי מגרש
+  const visitMap = {};
+  visits.forEach(v => {
+    const k = `${v.lat}_${v.lon}`;
+    if (!visitMap[k]) visitMap[k] = { name: v.name, sport: v.sport, count: 0 };
+    visitMap[k].count++;
+  });
+  const topVisits = Object.values(visitMap).sort((a,b) => b.count - a.count).slice(0,5);
+  const maxVisit = topVisits[0]?.count || 1;
+
+  const barsVisit = topVisits.map(v => `
+    <div class="stat-bar-row">
+      <div class="stat-bar-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.name}">${ico(v.sport)} ${v.name.slice(0,10)}</div>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(v.count/maxVisit*100)}%"></div></div>
+      <div class="stat-bar-val">${v.count}x</div>
+    </div>`).join('');
+
+  const barsSport = topSports.map(([s,n]) => `
+    <div class="stat-bar-row">
+      <div class="stat-bar-name">${ico(s)} ${he(s).slice(0,8)}</div>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(n/maxSport*100)}%;background:var(--blue)"></div></div>
+      <div class="stat-bar-val">${n}</div>
+    </div>`).join('');
+
+  document.getElementById('stats-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="stat-box">
+        <div class="stat-box-title">ביקורים</div>
+        <div class="stat-big">${visits.length}</div>
+        <div class="stat-label">מגרשים שפתחת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">דירוגים</div>
+        <div class="stat-big">${Object.keys(ratings).length}</div>
+        <div class="stat-label">מגרשים דירגת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">תמונות</div>
+        <div class="stat-big">${photoCount}</div>
+        <div class="stat-label">תמונות העלאת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">מועדפים</div>
+        <div class="stat-big">${Object.values(getFavs()).flat().length}</div>
+        <div class="stat-label">מגרשים שמורים</div>
+      </div>
+    </div>
+    ${topVisits.length ? `<div class="stat-box"><div class="stat-box-title">🏟️ המגרשים שלך</div>${barsVisit}</div>` : ''}
+    ${topSports.length ? `<div class="stat-box"><div class="stat-box-title">🌍 ספורט פופולרי באזורך</div>${barsSport}</div>` : ''}
+  `;
+}
+
+// ─── LEADERBOARD ────────────────────────────────────────
+let curLbTab = 'fields';
+
+function openLbPanel() {
+  curLbTab = 'fields';
+  renderLb();
+  document.getElementById('lb-panel').classList.add('on');
+}
+function closeLbPanel() { document.getElementById('lb-panel').classList.remove('on'); }
+
+function switchLbTab(btn, tab) {
+  curLbTab = tab;
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLb();
+}
+
+function renderLb() {
+  const body = document.getElementById('lb-body');
+
+  if (curLbTab === 'fields') {
+    // דרג מגרשים לפי הממוצע השמור
+    const allRatings = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+    // שלב עם allFields
+    const scored = allFields.map(f => {
+      const key = `pg_rating_${f.lat}_${f.lon}`;
+      const r = allRatings[key];
+      return { ...f, avg: r ? parseFloat(r.avg) : 0, rCount: r ? r.count : 0 };
+    }).filter(f => f.rCount > 0).sort((a,b) => b.avg - a.avg || b.rCount - a.rCount);
+
+    if (!scored.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ico">🏟️</div>אין דירוגים עדיין<br><small>דרג מגרשים כדי לראות כאן</small></div>';
+      return;
+    }
+    body.innerHTML = scored.slice(0,20).map((f,i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankClass}">${medal}</div>
+        <div style="font-size:28px;flex-shrink:0">${ico(f.sport)}</div>
+        <div class="lb-info">
+          <div class="lb-name">${f.name}</div>
+          <div class="lb-sub">${he(f.sport)} · ${f.rCount} דירוגים</div>
+        </div>
+        <div class="lb-score">${'★'.repeat(Math.round(f.avg))} ${f.avg}</div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // משתמשים — טען מ-Firestore אם זמין, אחרת localStorage
+  function renderLbUsers(leaders) {
+    if (!leaders.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ico">👥</div>אין נתוני משתמשים עדיין<br><small>דרג מגרשים כדי להופיע כאן!</small></div>';
+      return;
+    }
+    body.innerHTML = leaders.slice(0,20).map((u,i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankClass}">${medal}</div>
+        <div style="font-size:26px;flex-shrink:0">👤</div>
+        <div class="lb-info">
+          <div class="lb-name">${u.name}</div>
+          <div class="lb-sub">${u.actions ? u.actions.join(' · ') : 'משתמש פעיל'}</div>
+        </div>
+        <div class="lb-score">${u.score || u.count || 0} נק'</div>
+      </div>`;
+    }).join('');
+  }
+
+  if (fsEnabled()) {
+    db.collection('visits').orderBy('count', 'desc').limit(20)
+      .get().then(snap => {
+        const leaders = snap.docs.map(d => ({ name: d.data().name, count: d.data().count, score: d.data().count * 10 }));
+        renderLbUsers(leaders);
+      }).catch(() => {
+        // fallback to localStorage
+        const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+        const userActions = {};
+        if (currentUser && !currentUser.guest) {
+          const email = currentUser.email;
+          const name  = currentUser.name || email;
+          if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
+          userActions[email].score += Object.keys(ratings).length * 10;
+          if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
+        }
+        renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
+      });
+    return;
+  }
+
+  const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+  const userActions = {};
+  if (currentUser && !currentUser.guest) {
+    const email = currentUser.email;
+    const name  = currentUser.name || email;
+    if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
+    userActions[email].score += Object.keys(ratings).length * 10;
+    if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
+  }
+  renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
+}
+
+// ─── PLAYERS BOARD ──────────────────────────────────────
+function playersKey(f) { return `pg_players_${f.lat}_${f.lon}`; }
+function getPlayers(f) { return JSON.parse(localStorage.getItem(playersKey(f)) || '[]'); }
+
+function openPlayersPanel(f) {
+  if (!f) f = selected; if (!f) return;
+  document.getElementById('players-title').textContent = `👥 שחקנים — ${f.name}`;
+  renderPlayersBody(f);
+  document.getElementById('players-panel').classList.add('on');
+}
+
+function closePlayersPanel() {
+  document.getElementById('players-panel').classList.remove('on');
+}
+
+function buildPlayersHTML(f, players) {
+  const sportOpts = (f.sports || [f.sport]).map(s =>
+    `<option value="${s}">${ico(s)} ${he(s)}</option>`
+  ).join('');
+
+  const listHtml = players.length
+    ? players.map(p => `
+      <div class="player-card">
+        <span class="player-sport">${ico(p.sport)}</span>
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">${he(p.sport)} · ${p.level} · ${p.players} שחקנים</div>
+        <div class="player-time">⏰ ${new Date(p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('')
+    : '<div class="empty"><div class="empty-ico">👥</div>אין שחקנים כרגע<br><small>היה הראשון!</small></div>';
+
+  document.getElementById('players-body').innerHTML = `
+    <div class="pform">
+      <div class="pform-title">📢 פרסם שאתה מחפש שחקנים</div>
+      <div class="pform-row">
+        <input class="pinp" id="p-name" placeholder="השם שלך" />
+        <select class="pselect" id="p-sport">${sportOpts}</select>
+      </div>
+      <div class="pform-row">
+        <select class="pselect" id="p-level">
+          <option value="כל הרמות">כל הרמות</option>
+          <option value="מתחיל">מתחיל</option>
+          <option value="בינוני">בינוני</option>
+          <option value="מתקדם">מתקדם</option>
+        </select>
+        <select class="pselect" id="p-count">
+          <option value="1">1 שחקן</option>
+          <option value="2">2 שחקנים</option>
+          <option value="3+">3+ שחקנים</option>
+        </select>
+      </div>
+      <button class="ppost-btn" onclick="postPlayer()">📢 פרסם</button>
+    </div>
+    ${listHtml}
+  `;
+}
+
+function renderPlayersBody(f) {
+  if (fsEnabled()) {
+    const fieldId = f.id || `${f.lat}_${f.lon}`;
+    db.collection('players').doc(fieldId).collection('list')
+      .orderBy('ts', 'desc').limit(30)
+      .onSnapshot(snap => {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const players = snap.docs.map(d => d.data()).filter(p => p.ts > cutoff);
+        buildPlayersHTML(f, players);
+      }, () => {
+        // fallback
+        const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+        buildPlayersHTML(f, players);
+      });
+    return;
+  }
+  const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+  buildPlayersHTML(f, players);
+}
+
+async function postPlayer() {
+  const name    = document.getElementById('p-name').value.trim() || 'אנונימי';
+  const sport   = document.getElementById('p-sport').value;
+  const level   = document.getElementById('p-level').value;
+  const players = document.getElementById('p-count').value;
+  if (!selected) return;
+  const player = { name, sport, level, players, ts: Date.now() };
+  // localStorage fallback always
+  const list = getPlayers(selected);
+  list.unshift(player);
+  localStorage.setItem(playersKey(selected), JSON.stringify(list.slice(0, 20)));
+  if (fsEnabled()) {
+    const fieldId = selected.id || `${selected.lat}_${selected.lon}`;
+    await db.collection('players').doc(fieldId).collection('list').add(player).catch(console.warn);
+  }
+  renderPlayersBody(selected);
+}
+
+// ─── PHOTOS ─────────────────────────────────────────────
+function photoKey(f) { return `pg_photos_${f.lat}_${f.lon}`; }
+
+function getFieldPhotos(f) {
+  return JSON.parse(localStorage.getItem(photoKey(f)) || '[]');
+}
+
+function addFieldPhoto(f, dataUrl) {
+  const photos = getFieldPhotos(f);
+  photos.unshift(dataUrl);
+  // שמור עד 6 תמונות לכל מגרש
+  localStorage.setItem(photoKey(f), JSON.stringify(photos.slice(0, 6)));
+}
+
+function buildPhotosBlock(f) {
+  const photos = getFieldPhotos(f);
+  const gridHtml = photos.length
+    ? `<div class="photos-grid">${photos.map((p,i)=>`<img class="photo-thumb" src="${p}" onclick="openLightbox(${i})" alt="">`).join('')}</div>
+       <div class="photo-count">${photos.length} תמונות</div>`
+    : '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">אין תמונות עדיין — היה הראשון!</div>';
+  return `<div class="photos-wrap">
+    <div class="photos-label">📸 תמונות מהמגרש</div>
+    ${gridHtml}
+    <div class="photo-btns">
+      <button class="photo-btn" onclick="pickPhoto('camera')">📷 צלם</button>
+      <button class="photo-btn" onclick="pickPhoto('gallery')">🖼️ גלריה</button>
+    </div>
+  </div>`;
+}
+
+function pickPhoto(source) {
+  if (!selected) return;
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  if (source === 'camera') inp.capture = 'environment';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if (!confirm('התמונה חייבת להיות קשורה למגרש הספורט. אישור?')) return;
+      addFieldPhoto(selected, ev.target.result);
+      // רענן את בלוק התמונות
+      const wrap = document.querySelector('.photos-wrap');
+      if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+let lightboxPhotos = [];
+function openLightbox(i) {
+  if (!selected) return;
+  lightboxPhotos = getFieldPhotos(selected);
+  document.getElementById('lightbox-img').src = lightboxPhotos[i] || '';
+  document.getElementById('lightbox').classList.add('on');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('on');
+}
+
+// ─── RATINGS ────────────────────────────────────────────
+const RATING_TAGS = ['מצב טוב','תאורה','שמישה','ניקיון','נגישות','חינמי','צל','חניה'];
+
+function ratingKey(f) { return `pg_rating_${f.lat}_${f.lon}`; }
+function getRatings()  { return JSON.parse(localStorage.getItem('pg_ratings') || '{}'); }
+
+function getFieldRating(f) {
+  const all = getRatings();
+  return all[ratingKey(f)] || null;
+}
+
+function getFieldAvg(f) {
+  const all = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+  const key = ratingKey(f);
+  return all[key] || null; // { avg, count }
+}
+
+async function saveRating(f, stars, tags) {
+  // always save locally too
+  const all = getRatings();
+  all[ratingKey(f)] = { stars, tags };
+  localStorage.setItem('pg_ratings', JSON.stringify(all));
+
+  const avg = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+  const key = ratingKey(f);
+  if (!avg[key]) avg[key] = { sum: 0, count: 0 };
+  avg[key].sum   += stars;
+  avg[key].count += 1;
+  avg[key].avg    = (avg[key].sum / avg[key].count).toFixed(1);
+  localStorage.setItem('pg_all_ratings', JSON.stringify(avg));
+
+  if (fsEnabled()) {
+    const fieldId = f.id || `${f.lat}_${f.lon}`;
+    const rating = { stars, tags, user: currentUser?.name || 'אורח', uid: currentUser?.email || 'guest', ts: Date.now() };
+    await db.collection('ratings').doc(fieldId).collection('entries').add(rating);
+    // update aggregate
+    const agg = await db.collection('ratings').doc(fieldId).get();
+    const data = agg.exists ? agg.data() : { total: 0, count: 0 };
+    await db.collection('ratings').doc(fieldId).set({
+      total: (data.total || 0) + stars,
+      count: (data.count || 0) + 1,
+      avg: (((data.total || 0) + stars) / ((data.count || 0) + 1)).toFixed(1)
+    });
+  }
+}
+
+let curStars = 0, curRatingTags = new Set();
+
+function buildRatingBlock(f) {
+  const saved = getFieldRating(f);
+  const avgData = getFieldAvg(f);
+  const avgStr = avgData ? `${avgData.avg}⭐ (${avgData.count} דירוגים)` : '';
+
+  if (saved) {
+    const tagStr = saved.tags.length ? saved.tags.join(' · ') : '';
+    return `<div class="rating-wrap">
+      <div class="saved-rating">הדירוג שלך: ${'★'.repeat(saved.stars)}${'☆'.repeat(5-saved.stars)} ${tagStr ? '· ' + tagStr : ''}</div>
+      ${avgStr ? `<div class="avg-stars">${avgStr}</div>` : ''}
+    </div>`;
+  }
+
+  curStars = 0; curRatingTags = new Set();
+  const tagsHtml = RATING_TAGS.map(t =>
+    `<button class="rtag" onclick="toggleRTag(this,'${t}')">${t}</button>`
+  ).join('');
+  return `<div class="rating-wrap">
+    <div class="rating-label">דרג את המגרש${avgStr ? ' · ' + avgStr : ''}</div>
+    <div class="stars-row" id="stars-row">
+      ${[1,2,3,4,5].map(n=>`<span class="star" data-n="${n}" onclick="setStars(${n})">★</span>`).join('')}
+    </div>
+    <div class="rtag-row">${tagsHtml}</div>
+    <button class="rating-submit" onclick="submitRating()">שמור דירוג</button>
+  </div>`;
+}
+
+function setStars(n) {
+  curStars = n;
+  document.querySelectorAll('#stars-row .star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.n) <= n);
+    if (parseInt(s.dataset.n) === n) {
+      s.classList.remove('bounce');
+      void s.offsetWidth; // reflow to restart animation
+      s.classList.add('bounce');
+      setTimeout(() => s.classList.remove('bounce'), 400);
+    }
+  });
+}
+
+function toggleRTag(btn, tag) {
+  if (curRatingTags.has(tag)) { curRatingTags.delete(tag); btn.classList.remove('on'); }
+  else                        { curRatingTags.add(tag);    btn.classList.add('on'); }
+}
+
+function submitRating() {
+  if (!curStars || !selected) return;
+  track('submit_rating', { stars: curStars });
+  saveRating(selected, curStars, [...curRatingTags]);
+  // רענן חלון פרטים
+  const ratingEl = document.querySelector('.rating-wrap');
+  if (ratingEl) {
+    const saved = getFieldRating(selected);
+    const tagStr = saved.tags.length ? saved.tags.join(' · ') : '';
+    ratingEl.innerHTML = `<div class="saved-rating">הדירוג שלך: ${'★'.repeat(saved.stars)}${'☆'.repeat(5-saved.stars)} ${tagStr ? '· ' + tagStr : ''}</div>`;
+  }
+}
+
+// ─── FAVORITES ──────────────────────────────────────────
+function getFavs() { return JSON.parse(localStorage.getItem('pg_favs') || '{}'); }
+function saveFavs(f) { localStorage.setItem('pg_favs', JSON.stringify(f)); }
+
+function isFav(field) {
+  const favs = getFavs();
+  const sport = field.sport || 'default';
+  return !!(favs[sport] || []).find(f => f.lat === field.lat && f.lon === field.lon);
+}
+
+function toggleFav(field, evt) {
+  const favs = getFavs();
+  const sport = field.sport || 'default';
+  if (!favs[sport]) favs[sport] = [];
+  const idx = favs[sport].findIndex(f => f.lat === field.lat && f.lon === field.lon);
+  if (idx >= 0) {
+    favs[sport].splice(idx, 1);
+    if (!favs[sport].length) delete favs[sport];
+  } else {
+    favs[sport].push({ lat: field.lat, lon: field.lon, name: field.name, sport, dist: field.dist });
+    track('add_favorite', { field_name: field.name });
+  }
+  saveFavs(favs);
+  const result = isFav(field);
+  // Show star burst animation when adding to favorites
+  if (result && evt) {
+    const x = evt.clientX || (evt.touches && evt.touches[0] ? evt.touches[0].clientX : window.innerWidth/2);
+    const y = evt.clientY || (evt.touches && evt.touches[0] ? evt.touches[0].clientY : window.innerHeight/2);
+    showStarBurst(x, y);
+  }
+  return result;
+}
+
+let curFavSport = 'all';
+
+function openFavPanel() {
+  curFavSport = 'all';
+  renderFavPanel();
+  document.getElementById('fav-panel').classList.add('on');
+}
+
+function closeFavPanel() {
+  document.getElementById('fav-panel').classList.remove('on');
+}
+
+function renderFavPanel() {
+  const favs = getFavs();
+  const sports = Object.keys(favs);
+  const tabsEl = document.getElementById('fav-sport-tabs');
+  const bodyEl = document.getElementById('fav-body');
+
+  // tabs
+  const allCount = sports.reduce((s, k) => s + favs[k].length, 0);
+  tabsEl.innerHTML = [
+    `<button class="fav-stab${curFavSport==='all'?' on':''}" onclick="setFavSport('all')">🏟️ הכל (${allCount})</button>`,
+    ...sports.map(s => `<button class="fav-stab${curFavSport===s?' on':''}" onclick="setFavSport('${s}')">${ico(s)} ${he(s)} (${favs[s].length})</button>`)
+  ].join('');
+
+  // items
+  const items = curFavSport === 'all'
+    ? sports.flatMap(s => favs[s].map(f => ({ ...f, sport: s })))
+    : (favs[curFavSport] || []);
+
+  if (!items.length) {
+    bodyEl.innerHTML = '<div class="empty"><div class="empty-ico">⭐</div>אין מועדפים עדיין<br><small>לחץ ⭐ בחלון פרטי המגרש</small></div>';
+    return;
+  }
+  bodyEl.innerHTML = items.map((f, i) => `
+    <div class="fav-item" onclick="closeFavPanel();goToLatLon(${f.lat},${f.lon})">
+      <div style="font-size:28px">${ico(f.sport)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fn">${f.name}</div>
+        <div class="fs">${he(f.sport)}${f.dist ? ' · ' + fmt(f.dist) : ''}</div>
+      </div>
+      <button class="fav-del" onclick="event.stopPropagation();removeFav('${f.sport}',${f.lat},${f.lon})" title="הסר">🗑️</button>
+    </div>`).join('');
+}
+
+function setFavSport(sport) {
+  curFavSport = sport;
+  renderFavPanel();
+}
+
+function removeFav(sport, lat, lon) {
+  const favs = getFavs();
+  if (!favs[sport]) return;
+  favs[sport] = favs[sport].filter(f => f.lat !== lat || f.lon !== lon);
+  if (!favs[sport].length) delete favs[sport];
+  saveFavs(favs);
+  renderFavPanel();
+}
+
 function openDetail(i) {
   const f = shownFields[i]; if (!f) return;
   selected = f;
+  track('view_field', { field_name: f.name, sport: f.sport || '' });
+  trackVisit(f);
   map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
   document.getElementById('d-ico').textContent  = ico(f.sport);
   document.getElementById('d-name').textContent = f.name;
   document.getElementById('d-sub').textContent  = `${fmt(f.dist)} ממיקומך`;
   const tags = [];
-  // כל הספורטים כ-chips ראשונים
   f.sports.filter(s=>s!=='default').forEach(s => tags.push(`${ico(s)} ${he(s)}`));
   if (!f.sports.filter(s=>s!=='default').length) tags.push(`${ico(f.sport)} ${he(f.sport)}`);
-  // מידע נוסף
   if (f.tags?.surface)              tags.push(`🌱 ${f.tags.surface}`);
   if (f.tags?.lit === 'yes')        tags.push('💡 תאורה לילית');
   if (f.tags?.fee === 'no')         tags.push('🆓 כניסה חינם');
@@ -966,17 +3449,48 @@ function openDetail(i) {
   if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
   if (f.tags?.website)              tags.push(`🌐 אתר`);
-  document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
+    + buildAvailBlock(f)
+    + buildPhotosBlock(f)
+    + buildRatingBlock(f);
+  const favSaved = isFav(f);
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
     <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-share" onclick="shareField()">📤</button>
+    <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
+    <button class="dbtn" style="background:rgba(48,209,88,.1);border:1.5px solid var(--accent);color:var(--accent);flex:.7" onclick="closeDetail();openEventsPanel(selected)">📅</button>
+    <button class="dbtn" style="background:rgba(10,132,255,.1);border:1.5px solid var(--blue);color:var(--blue);flex:.7" onclick="closeDetail();openChatPanel(selected)">💬</button>
+    <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick(event)">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
   document.getElementById('overlay').classList.add('on');
 }
 
+function onFavClick(evt) {
+  if (!selected || selected._sponsored) return;
+  const saved = toggleFav(selected, evt);
+  const btn = document.getElementById('fav-btn');
+  btn.textContent = saved ? '★' : '☆';
+  btn.classList.toggle('saved', saved);
+}
+
 function closeDetail() {
   document.getElementById('overlay').classList.remove('on'); selected = null;
+}
+
+function shareField() {
+  if (!selected) return;
+  const f = selected;
+  const mapsUrl = `https://www.google.com/maps?q=${f.lat},${f.lon}`;
+  const text = `🏟️ ${f.name}\n${he(f.sport)} · ${fmt(f.dist)} ממיקומי\n${mapsUrl}`;
+
+  if (navigator.share) {
+    navigator.share({ title: f.name, text, url: mapsUrl }).catch(() => {});
+  } else {
+    // fallback — WhatsApp
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
 }
 
 function navTo(app) {
@@ -1021,10 +3535,104 @@ async function fetchBbox(level) {
   } catch { return null; }
 }
 
-// ─── CITY SEARCH ────────────────────────────────────────
+// ─── CITY SEARCH + AUTOCOMPLETE ─────────────────────────
+let acTimer = null;
+let acResults = [];
+
+async function onSearchInput(val) {
+  clearTimeout(acTimer);
+  if (val.trim().length < 2) { closeAutocomplete(); return; }
+  acTimer = setTimeout(() => fetchSuggestions(val.trim()), 300);
+}
+
+async function fetchSuggestions(q) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`,
+      { headers: { 'Accept-Language': 'he,en' } }
+    );
+    acResults = await res.json();
+    const list = document.getElementById('autocomplete-list');
+    if (!acResults.length) { closeAutocomplete(); return; }
+    list.innerHTML = acResults.map((r, i) => {
+      const label = r.display_name.split(',').slice(0,3).join(', ');
+      return `<div class="ac-item" onclick="selectSuggestion(${i})">📍 ${label}</div>`;
+    }).join('');
+    list.classList.add('open');
+  } catch { closeAutocomplete(); }
+}
+
+function selectSuggestion(i) {
+  const r = acResults[i]; if (!r) return;
+  const label = r.display_name.split(',').slice(0,3).join(', ');
+  document.getElementById('city-inp').value = label;
+  closeAutocomplete();
+  addToHistory(label, parseFloat(r.lat), parseFloat(r.lon));
+  goToLatLon(parseFloat(r.lat), parseFloat(r.lon));
+}
+
+function closeAutocomplete() {
+  document.getElementById('autocomplete-list').classList.remove('open');
+  clearTimeout(acTimer);
+}
+
+// ─── SEARCH HISTORY ─────────────────────────────────────
+const MAX_HIST = 8;
+function getHistory() { return JSON.parse(localStorage.getItem('pg_history') || '[]'); }
+function addToHistory(label, lat, lon) {
+  let h = getHistory().filter(x => x.label !== label);
+  h.unshift({ label, lat, lon });
+  if (h.length > MAX_HIST) h = h.slice(0, MAX_HIST);
+  localStorage.setItem('pg_history', JSON.stringify(h));
+}
+function clearHistory() { localStorage.removeItem('pg_history'); renderHistoryList(); }
+
+function renderHistoryList() {
+  const h = getHistory();
+  const el = document.getElementById('history-list');
+  if (!h.length) { el.classList.remove('open'); return; }
+  el.innerHTML = `<div class="hist-head">חיפושים אחרונים <button class="hist-clear" onclick="clearHistory()">נקה</button></div>`
+    + h.map((x,i) => `<div class="hist-item" onclick="selectHistory(${i})">🕐 ${x.label}</div>`).join('');
+  el.classList.add('open');
+}
+
+function toggleHistoryList() {
+  const el = document.getElementById('history-list');
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+  closeAutocomplete();
+  renderHistoryList();
+}
+
+function closeHistoryList() {
+  document.getElementById('history-list').classList.remove('open');
+}
+
+function selectHistory(i) {
+  const h = getHistory()[i]; if (!h) return;
+  document.getElementById('city-inp').value = h.label;
+  closeHistoryList();
+  goToLatLon(h.lat, h.lon);
+}
+
+async function goToLatLon(lat, lon) {
+  uLat = lat; uLon = lon;
+  map.setView([lat, lon], 15);
+  if (uMarker) map.removeLayer(uMarker);
+  uMarker = L.circleMarker([lat, lon], {
+    radius:11, fillColor:'#0a84ff', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
+  }).addTo(map);
+  curCountry = await getCountry(lat, lon);
+  updateFilterPills(curCountry);
+  document.getElementById('city-inp').blur();
+  loadFields(lat, lon);
+}
+
 async function searchCity() {
   const q = document.getElementById('city-inp').value.trim();
   if (!q) return;
+  // אם כבר יש תוצאות מה-autocomplete — השתמש בראשונה
+  if (acResults.length) { selectSuggestion(0); return; }
+  track('search', { query: q });
   setStatus('🔍 מחפש ' + q + '...');
   try {
     const res = await fetch(
@@ -1032,26 +3640,346 @@ async function searchCity() {
       { headers: { 'Accept-Language': 'he,en' } }
     );
     const data = await res.json();
-    if (!data[0]) { setStatus('❌ לא נמצאה עיר — נסה שם אחר'); return; }
-    const lat = parseFloat(data[0].lat);
-    const lon = parseFloat(data[0].lon);
-    uLat = lat; uLon = lon;
-    map.setView([lat, lon], 14);
-    if (uMarker) map.removeLayer(uMarker);
-    uMarker = L.circleMarker([lat, lon], {
-      radius:11, fillColor:'#0a84ff', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
-    }).addTo(map);
-    curCountry = await getCountry(lat, lon);
-    updateFilterPills(curCountry);
-    document.getElementById('city-inp').blur();
-    loadFields(lat, lon);
+    if (!data[0]) { setStatus('❌ לא נמצאה כתובת — נסה שוב'); return; }
+    goToLatLon(parseFloat(data[0].lat), parseFloat(data[0].lon));
   } catch(e) { setStatus('❌ שגיאה בחיפוש'); }
 }
+
+// סגור autocomplete/history בלחיצה מחוץ
+document.addEventListener('click', e => {
+  if (!e.target.closest('.city-row')) { closeAutocomplete(); closeHistoryList(); }
+});
+
+// ─── PUSH NOTIFICATIONS ─────────────────────────────────
+async function requestPushPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function sendLocalNotification(title, body, icon = '🏟️') {
+  if (Notification.permission !== 'granted') return;
+  navigator.serviceWorker.ready.then(sw => {
+    sw.showNotification(title, {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: 'arena-' + Date.now(),
+      vibrate: [100, 50, 100],
+    });
+  }).catch(() => {
+    new Notification(title, { body, icon: '/icon-192.png' });
+  });
+}
+
+function scheduleDailyReminder() {
+  // שמור שעת שליחה (אחה"צ 5)
+  const now = new Date();
+  const target = new Date();
+  target.setHours(17, 0, 0, 0);
+  if (now > target) target.setDate(target.getDate() + 1);
+  const delay = target - now;
+  setTimeout(() => {
+    sendLocalNotification('🏟️ Arena', 'יצאת לשחק היום? יש מגרשים פנויים קרוב אליך!');
+    scheduleDailyReminder(); // שלח שוב מחר
+  }, delay);
+  localStorage.setItem('pg_reminder', '1');
+}
+
+function checkFavoritesOpen() {
+  const favs = getFavs();
+  const allFavs = Object.values(favs).flat();
+  if (!allFavs.length) return;
+  const now = new Date().getHours();
+  // בדוק אם שעות פתיחה סבירות (6-22)
+  if (now >= 6 && now <= 22) {
+    const sample = allFavs[Math.floor(Math.random() * allFavs.length)];
+    sendLocalNotification(
+      `✅ ${sample.name} פתוח כעת`,
+      'המגרש המועדף שלך פתוח — לך לשחק! 🏃'
+    );
+  }
+}
+
+async function initPushNotifications() {
+  const granted = await requestPushPermission();
+  if (!granted) return;
+  // תזכורת יומית
+  if (!localStorage.getItem('pg_reminder')) scheduleDailyReminder();
+  // בדיקת מועדפים פתוחים פעם ביום
+  const lastCheck = parseInt(localStorage.getItem('pg_fav_check') || '0');
+  const nowMs = Date.now();
+  if (nowMs - lastCheck > 24 * 60 * 60 * 1000) {
+    localStorage.setItem('pg_fav_check', nowMs);
+    checkFavoritesOpen();
+  }
+}
+
+// ─── OFFLINE DETECTION ──────────────────────────────────
+function updateOnlineStatus() {
+  const online = navigator.onLine;
+  let bar = document.getElementById('offline-bar');
+  if (!online) {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'offline-bar';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff453a;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:8px;safe-area-inset-top:8px';
+      bar.textContent = '📴 אין חיבור לאינטרנט — מוצגים נתונים שמורים';
+      document.body.prepend(bar);
+    }
+  } else {
+    if (bar) bar.remove();
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
 
 // ─── SERVICE WORKER ─────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw-playgrounds.js');
 }
+
+// ─── SPLASH / ONBOARDING / LOTTERY ─────────────────────
+
+// Splash: hide after 1.5s, then show onboarding or auth
+(function initSplash() {
+  const splash = document.getElementById('splash-screen');
+  setTimeout(() => {
+    splash.classList.add('done');
+    setTimeout(() => {
+      if (!localStorage.getItem('pg_onboarded')) {
+        document.getElementById('onboarding-screen').classList.add('on');
+      }
+    }, 200);
+  }, 1500);
+})();
+
+// Onboarding
+let obSlide = 0;
+const OB_TOTAL = 3;
+
+function obNext() {
+  obSlide++;
+  if (obSlide >= OB_TOTAL) { finishOnboarding(); return; }
+  for (let i = 0; i < OB_TOTAL; i++) {
+    const sl = document.getElementById('ob-slide-' + i);
+    const dt = document.getElementById('ob-dot-' + i);
+    if (sl) sl.classList.toggle('on', i === obSlide);
+    if (dt) dt.classList.toggle('on', i === obSlide);
+  }
+  const btn = document.getElementById('ob-next-btn');
+  if (btn) btn.textContent = obSlide === OB_TOTAL - 1 ? 'התחל ›' : 'הבא ›';
+}
+
+function finishOnboarding() {
+  localStorage.setItem('pg_onboarded', '1');
+  document.getElementById('onboarding-screen').classList.remove('on');
+}
+
+// Lottery
+function isLastDayOfMonth() {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return now.getDate() === lastDay;
+}
+
+function lotteryKey() {
+  const now = new Date();
+  return `pg_lottery_${now.getFullYear()}_${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+function checkAndShowLottery() {
+  if (!isPro()) return;
+  if (!isLastDayOfMonth()) return;
+  if (localStorage.getItem(lotteryKey())) return;
+  showLotteryOverlay();
+}
+
+function showLotteryOverlay() {
+  // Generate confetti
+  const confettiEl = document.getElementById('lottery-confetti');
+  const colors = ['#bf5af2','#ff9f0a','#30d158','#0a84ff','#ff453a','#ffcc00','#ff6fd8'];
+  confettiEl.innerHTML = Array.from({length: 20}, (_, i) => {
+    const color = colors[i % colors.length];
+    const left = Math.random() * 100;
+    const duration = 2 + Math.random() * 3;
+    const delay = Math.random() * 2;
+    const size = 8 + Math.random() * 12;
+    return `<div class="confetti-piece" style="left:${left}%;width:${size}px;height:${size}px;background:${color};animation-duration:${duration}s;animation-delay:${delay}s"></div>`;
+  }).join('');
+
+  // Show overlay
+  document.getElementById('lottery-overlay').classList.add('on');
+
+  // Slot animation — spin through fake names then reveal winner
+  const fakeNames = ['דן כ\'','מרים ל\'','יוסי ב\'','רחל מ\'','שמואל צ\'','לאה ר\'','אבי ג\''];
+  const slotEl = document.getElementById('lottery-slot');
+  const winnerEl = document.getElementById('lottery-winner');
+  const prizeEl = document.getElementById('lottery-prize');
+  const closeBtn = document.getElementById('lottery-close-btn');
+  const winner = currentUser?.name ? currentUser.name : fakeNames[Math.floor(Math.random() * fakeNames.length)];
+
+  let tick = 0;
+  const interval = setInterval(() => {
+    slotEl.textContent = '🎰 ' + fakeNames[tick % fakeNames.length];
+    tick++;
+    if (tick > 18) {
+      clearInterval(interval);
+      slotEl.textContent = '🎉 ' + winner + '!';
+      winnerEl.style.display = 'block';
+      winnerEl.textContent = '🎉 הזוכה החודשי: ' + winner + '!';
+      prizeEl.style.display = 'block';
+      closeBtn.style.display = 'inline-block';
+      localStorage.setItem(lotteryKey(), '1');
+    }
+  }, 120);
+}
+
+function closeLotteryOverlay() {
+  document.getElementById('lottery-overlay').classList.remove('on');
+}
+
+// ─── STAR BURST ANIMATION ───────────────────────────────
+function showStarBurst(x, y) {
+  const el = document.createElement('div');
+  el.className = 'star-burst-anim';
+  el.textContent = '⭐';
+  el.style.left = (x - 20) + 'px';
+  el.style.top  = (y - 20) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 700);
+}
+
+// (setStars, renderList, toggleFav enhanced versions are defined below — they supersede the originals above)
+
+// ─── LIVE LOCATION (BUMP-STYLE) ───
+let liveShareActive = false;
+let liveShareInterval = null;
+let liveShareTimeout = null;
+let liveMarkers = {}; // userId → Leaflet marker
+
+function toggleLocationShare() {
+  if (liveShareActive) {
+    stopLocationShare();
+  } else {
+    startLocationShare();
+  }
+}
+
+function startLocationShare() {
+  if (!currentUser) return;
+  liveShareActive = true;
+  const btn = document.getElementById('share-loc-btn');
+  if (btn) { btn.classList.add('share-btn-active'); btn.textContent = '🟢'; }
+
+  broadcastLocation();
+  liveShareInterval = setInterval(broadcastLocation, 15000);
+
+  // Auto-stop after 10 minutes
+  liveShareTimeout = setTimeout(stopLocationShare, 10 * 60 * 1000);
+
+  // Start watching others
+  watchLiveUsers();
+}
+
+function stopLocationShare() {
+  liveShareActive = false;
+  clearInterval(liveShareInterval);
+  clearTimeout(liveShareTimeout);
+  liveShareInterval = null;
+
+  const btn = document.getElementById('share-loc-btn');
+  if (btn) { btn.classList.remove('share-btn-active'); btn.textContent = '📍'; }
+
+  // Remove own presence from Firestore
+  if (fsEnabled() && currentUser) {
+    db.collection('live_users').doc(currentUser.id || currentUser.email || currentUser.name).delete().catch(() => {});
+  }
+
+  // Remove live markers
+  Object.values(liveMarkers).forEach(m => map.removeLayer(m));
+  liveMarkers = {};
+
+  if (liveWatchUnsub) { liveWatchUnsub(); liveWatchUnsub = null; }
+}
+
+function broadcastLocation() {
+  if (!currentUser || !liveShareActive) return;
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    const userId = currentUser.id || currentUser.email || currentUser.name;
+    const payload = {
+      name: currentUser.name || 'שחקן',
+      lat, lon,
+      ts: Date.now(),
+      expires: Date.now() + 10 * 60 * 1000
+    };
+
+    if (fsEnabled()) {
+      db.collection('live_users').doc(userId).set(payload);
+    } else {
+      // localStorage fallback — store own location
+      localStorage.setItem('pg_live_me', JSON.stringify(payload));
+    }
+  }, () => {});
+}
+
+let liveWatchUnsub = null;
+
+function watchLiveUsers() {
+  if (!fsEnabled()) return;
+
+  if (liveWatchUnsub) liveWatchUnsub();
+
+  const myId = currentUser?.id || currentUser?.email || currentUser?.name;
+
+  liveWatchUnsub = db.collection('live_users').onSnapshot(snap => {
+    const now = Date.now();
+    const activeIds = new Set();
+
+    snap.docs.forEach(doc => {
+      const u = doc.data();
+      const id = doc.id;
+
+      // Skip own marker and expired
+      if (id === myId) return;
+      if (u.expires && u.expires < now) return;
+
+      activeIds.add(id);
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="live-dot" title="${u.name}">${u.name.charAt(0).toUpperCase()}</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      if (liveMarkers[id]) {
+        liveMarkers[id].setLatLng([u.lat, u.lon]);
+      } else {
+        liveMarkers[id] = L.marker([u.lat, u.lon], { icon })
+          .addTo(map)
+          .bindTooltip(u.name, { permanent: false, direction: 'top' });
+      }
+    });
+
+    // Remove markers for users who left
+    Object.keys(liveMarkers).forEach(id => {
+      if (!activeIds.has(id)) {
+        map.removeLayer(liveMarkers[id]);
+        delete liveMarkers[id];
+      }
+    });
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  if (liveShareActive) stopLocationShare();
+});
 
 // ─── BOOT ───────────────────────────────────────────────
 {
@@ -1066,6 +3994,26 @@ if ('serviceWorker' in navigator) {
     locateMe();
   }
   // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
+  if (isPro()) applyProPerks();
+  applyLang(curLang);
+  applyA11yOnLoad();
+  restoreReminders();
+  // Handle Stripe redirect return
+  (function handleStripeReturn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('premium') === 'success') {
+      localStorage.setItem('pg_pro', '1');
+      localStorage.setItem('pg_pro_since', Date.now());
+      applyProPerks();
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => alert('🎉 ברוך הבא לפרמיום!'), 500);
+    } else if (params.get('premium') === 'cancel') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  })();
+  // Check lottery after a short delay (after auth loads)
+  setTimeout(checkAndShowLottery, 2500);
 }
 </script>
 </body>
