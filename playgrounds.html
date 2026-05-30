@@ -368,7 +368,10 @@ function continueAsGuest() {
 function enterApp() {
   const s = document.getElementById('auth-screen');
   s.classList.add('hide');
-  setTimeout(() => { s.style.display = 'none'; }, 400);
+  setTimeout(() => {
+    s.style.display = 'none';
+    map.invalidateSize(); // חשוב — מאלץ Leaflet לחשב מחדש את גודל המפה
+  }, 420);
   document.getElementById('user-btn').style.display = 'flex';
   updateFilterPills('default');
   updateLocBtn();
@@ -452,7 +455,7 @@ const ICONS = {
   gymnastics:'🤸',rhythmic_gymnastics:'🤸',
   padel:'🎾',paddle:'🎾',squash:'🎾',
   multi:'🏅',
-  playground:'🎡',
+  playground:'🎠',
   default:'🏟️'
 };
 const HE = {
@@ -501,7 +504,7 @@ const ALL_FILTERS = [
   { id:'table_tennis',     label:'🏓 פינג-פונג',          countries:'all' },
   { id:'badminton',        label:'🏸 בדמינטון',           countries:'all' },
   { id:'climbing',         label:'🧗 טיפוס',              countries:'all' },
-  { id:'playground',       label:'🎡 גן שעשועים',         countries:'all' },
+  { id:'playground',       label:'🎠 גן שעשועים',         countries:'all' },
   // ישראל + אירופה
   { id:'handball',         label:'🤾 כדוריד',             countries:['IL','DE','FR','ES','PT','DK','NO','SE','HR','PL','HU','RO','RS','AT','CH','GR','TN','EG','MA'] },
   { id:'padel',            label:'🎾 פאדל',               countries:['IL','ES','IT','AR','SE','BE','PT','MX','AE','SA','QA'] },
@@ -572,8 +575,13 @@ let allFields = [], shownFields = [], markerCluster = null;
 let curFilter = 'all', selected = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
-map = L.map('map', { zoomControl: false, attributionControl: false }).setView([31.7683, 35.2137], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  detectRetina: true,
+  tileSize: 256,
+  zoomOffset: 0,
+}).addTo(map);
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
 
