@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx vercel *)",
+      "Bash(node --check *)",
+      "Bash(curl -s *)",
+      "Bash(curl --silent *)",
+      "Bash(vercel *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git merge *)",
+      "Bash(git stash *)",
+      "Bash(git reset *)",
+      "Bash(npm install *)",
+      "Bash(npm ci)",
+      "Bash(npm install)"
+    ]
+  }
+}
