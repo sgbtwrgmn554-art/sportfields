@@ -507,6 +507,24 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   .hdr{right:380px}
 }
 
+/* ─── LIVE USER DOTS ─── */
+.live-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--accent, #4fc);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: bold; color: #111;
+  cursor: pointer;
+  animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+  0%,100% { box-shadow: 0 0 0 0 rgba(79,252,136,.5); }
+  50% { box-shadow: 0 0 0 10px rgba(79,252,136,0); }
+}
+.share-btn-active { background: #4fc !important; color: #111 !important; }
+
 /* ─── MAP MARKERS ─── */
 .map-pin{
   width:42px;height:42px;border-radius:50%;
@@ -807,6 +825,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
     <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום">🌙</button>
+    <button id="share-loc-btn" onclick="toggleLocationShare()" title="שיתוף מיקום חי" style="background:var(--card);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;">📍</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
