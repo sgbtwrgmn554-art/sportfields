@@ -269,6 +269,26 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── CHAT ─── */
+#chat-panel{position:fixed;inset:0;z-index:750;background:var(--bg);display:none;flex-direction:column}
+#chat-panel.on{display:flex}
+.chat-hdr{padding:calc(env(safe-area-inset-top,0px)+14px) 16px 12px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chat-back{background:none;border:none;font-size:22px;color:var(--text);cursor:pointer;padding:0}
+.chat-title{font-size:16px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.msg-row{display:flex;flex-direction:column;max-width:80%}
+.msg-row.me{align-self:flex-end;align-items:flex-end}
+.msg-row.them{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:9px 13px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word}
+.msg-row.me   .msg-bubble{background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.msg-row.them .msg-bubble{background:var(--card2);color:var(--text);border-bottom-left-radius:4px}
+.msg-meta{font-size:10px;color:var(--muted);margin-top:2px;padding:0 4px}
+.chat-inp-row{display:flex;gap:8px;padding:10px 14px calc(env(safe-area-inset-bottom,0px)+10px);background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.chat-inp{flex:1;padding:10px 14px;border-radius:22px;background:var(--card2);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:14px;outline:none}
+.chat-inp:focus{border-color:var(--accent)}
+.chat-send{width:42px;height:42px;border-radius:50%;border:none;background:var(--accent);color:#000;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.chat-send:active{transform:scale(.9)}
+
 /* ─── EVENTS ─── */
 #events-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #events-panel.on{display:flex}
@@ -649,6 +669,19 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── CHAT PANEL ─── -->
+<div id="chat-panel">
+  <div class="chat-hdr">
+    <button class="chat-back" onclick="closeChatPanel()">‹</button>
+    <div class="chat-title" id="chat-title">💬 צ'אט מגרש</div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chat-inp" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter')sendMsg()" />
+    <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+</div>
+
 <!-- ─── EVENTS PANEL ─── -->
 <div id="events-panel" onclick="if(event.target===this)closeEventsPanel()">
   <div class="events-card">
@@ -911,6 +944,62 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── CHAT ───────────────────────────────────────────────
+let chatField = null;
+
+function chatKey(f) { return `pg_chat_${f.lat}_${f.lon}`; }
+function getChat(f) { return JSON.parse(localStorage.getItem(chatKey(f)) || '[]'); }
+
+function openChatPanel(f) {
+  chatField = f || selected; if (!chatField) return;
+  document.getElementById('chat-title').textContent = `💬 ${chatField.name}`;
+  renderChat();
+  document.getElementById('chat-panel').classList.add('on');
+  setTimeout(() => {
+    const msgs = document.getElementById('chat-msgs');
+    msgs.scrollTop = msgs.scrollHeight;
+    document.getElementById('chat-inp').focus();
+  }, 100);
+}
+
+function closeChatPanel() {
+  document.getElementById('chat-panel').classList.remove('on');
+}
+
+function renderChat() {
+  const msgs = getChat(chatField);
+  const myId = currentUser?.email || 'guest';
+  const el   = document.getElementById('chat-msgs');
+  if (!msgs.length) {
+    el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const me = m.uid === myId;
+    const time = new Date(m.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="msg-row ${me?'me':'them'}">
+      <div class="msg-bubble">${m.text}</div>
+      <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function sendMsg() {
+  const inp  = document.getElementById('chat-inp');
+  const text = inp.value.trim(); if (!text || !chatField) return;
+  const msgs = getChat(chatField);
+  msgs.push({
+    text,
+    uid:  currentUser?.email || 'guest',
+    name: currentUser?.name  || 'אורח',
+    ts:   Date.now(),
+  });
+  localStorage.setItem(chatKey(chatField), JSON.stringify(msgs.slice(-100)));
+  inp.value = '';
+  renderChat();
+}
+
 // ─── EVENTS ─────────────────────────────────────────────
 let curEvTab = 'list';
 
@@ -2730,6 +2819,7 @@ function openDetail(i) {
     <button class="dbtn dbtn-share" onclick="shareField()">📤</button>
     <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
     <button class="dbtn" style="background:rgba(48,209,88,.1);border:1.5px solid var(--accent);color:var(--accent);flex:.7" onclick="closeDetail();openEventsPanel(selected)">📅</button>
+    <button class="dbtn" style="background:rgba(10,132,255,.1);border:1.5px solid var(--blue);color:var(--blue);flex:.7" onclick="closeDetail();openChatPanel(selected)">💬</button>
     <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
