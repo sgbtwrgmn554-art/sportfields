@@ -484,6 +484,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
       </button>
     </div>
     <button class="auth-guest" onclick="continueAsGuest()">👤 המשך בלי חשבון</button>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
+      <button onclick="applyLang('he')" style="background:none;border:none;font-size:20px;cursor:pointer" title="עברית">🇮🇱</button>
+      <button onclick="applyLang('en')" style="background:none;border:none;font-size:20px;cursor:pointer" title="English">🇺🇸</button>
+      <button onclick="applyLang('ar')" style="background:none;border:none;font-size:20px;cursor:pointer" title="العربية">🇸🇦</button>
+    </div>
   </div>
 </div>
 
@@ -494,6 +499,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
     <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
     <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
     <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
@@ -746,6 +752,97 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── i18n ────────────────────────────────────────────────
+const LANGS = {
+  he: {
+    dir:'rtl', lang:'he',
+    authTitle:'Arena · ארנה',
+    authSub:'גלה מגרשי ספורט קרובים אליך<br>בכל מקום בעולם',
+    register:'הרשמה', login:'כניסה', guest:'👤 המשך בלי חשבון',
+    namePh:'שם מלא', emailPh:'אימייל', passPh:'סיסמה (לפחות 6 תווים)',
+    searchPh:'🔍 חפש עיר או כתובת...',
+    locating:'🔍 מאתר מיקום...', loading:'טוען...',
+    noFields:'לא נמצאו מגרשים',
+    close:'סגור', cancel:'ביטול',
+    fav:'⭐ המועדפים שלי', noFavs:'אין מועדפים עדיין',
+    lb:'🏆 טבלת דירוג שכונתית',
+    stats:'📊 הסטטיסטיקות שלי',
+    addField:'➕ הוסף מגרש חדש',
+    coupons:'🏷️ קופונים והנחות',
+    players:'👥 חיפוש שחקנים',
+  },
+  en: {
+    dir:'ltr', lang:'en',
+    authTitle:'Arena · ארנה',
+    authSub:'Find sports fields near you<br>anywhere in the world',
+    register:'Sign Up', login:'Sign In', guest:'👤 Continue as Guest',
+    namePh:'Full Name', emailPh:'Email', passPh:'Password (min 6 chars)',
+    searchPh:'🔍 Search city or address...',
+    locating:'🔍 Locating...', loading:'Loading...',
+    noFields:'No fields found',
+    close:'Close', cancel:'Cancel',
+    fav:'⭐ My Favorites', noFavs:'No favorites yet',
+    lb:'🏆 Neighborhood Leaderboard',
+    stats:'📊 My Statistics',
+    addField:'➕ Add New Field',
+    coupons:'🏷️ Coupons & Deals',
+    players:'👥 Find Players',
+  },
+  ar: {
+    dir:'rtl', lang:'ar',
+    authTitle:'Arena · ارينا',
+    authSub:'اكتشف ملاعب رياضية قريبة منك<br>في أي مكان بالعالم',
+    register:'تسجيل', login:'دخول', guest:'👤 المتابعة بدون حساب',
+    namePh:'الاسم الكامل', emailPh:'البريد الإلكتروني', passPh:'كلمة المرور (6 أحرف على الأقل)',
+    searchPh:'🔍 ابحث عن مدينة أو عنوان...',
+    locating:'🔍 تحديد الموقع...', loading:'جارٍ التحميل...',
+    noFields:'لم يتم العثور على ملاعب',
+    close:'إغلاق', cancel:'إلغاء',
+    fav:'⭐ المفضلة', noFavs:'لا توجد مفضلة بعد',
+    lb:'🏆 لوحة الصدارة المحلية',
+    stats:'📊 إحصائياتي',
+    addField:'➕ إضافة ملعب جديد',
+    coupons:'🏷️ كوبونات وخصومات',
+    players:'👥 البحث عن لاعبين',
+  },
+};
+
+let curLang = localStorage.getItem('pg_lang') || 'he';
+
+function t(key) { return LANGS[curLang]?.[key] || LANGS.he[key] || key; }
+
+function applyLang(lang) {
+  curLang = lang;
+  localStorage.setItem('pg_lang', lang);
+  const L = LANGS[lang];
+  document.documentElement.lang = L.lang;
+  document.documentElement.dir  = L.dir;
+
+  // Auth screen
+  const authTitle = document.querySelector('.auth-title');
+  const authSub   = document.querySelector('.auth-sub');
+  if (authTitle) authTitle.textContent = L.authTitle;
+  if (authSub)   authSub.innerHTML     = L.authSub;
+  document.getElementById('auth-submit').textContent = authMode === 'register' ? L.register : L.login;
+  document.getElementById('tab-reg').textContent = L.register;
+  document.getElementById('tab-log').textContent = L.login;
+  document.querySelector('.auth-guest').textContent  = L.guest;
+  document.getElementById('auth-name').placeholder  = L.namePh;
+  document.getElementById('auth-email').placeholder = L.emailPh;
+  document.getElementById('auth-pass').placeholder  = L.passPh;
+  document.getElementById('city-inp').placeholder   = L.searchPh;
+
+  // lang button
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = lang === 'he' ? '🌐' : lang.toUpperCase();
+}
+
+function cycleLang() {
+  const order = ['he','en','ar'];
+  const next = order[(order.indexOf(curLang) + 1) % order.length];
+  applyLang(next);
+}
+
 // ─── SOCIAL AUTH CONFIG ──────────────────────────────────
 // כדי להפעיל: החלף את ה-IDs האמיתיים שלך מ-console.developers.google.com ו-developer.apple.com
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
@@ -2446,6 +2543,7 @@ if ('serviceWorker' in navigator) {
   }
   // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
   if (isPro()) applyProPerks();
+  applyLang(curLang);
 }
 </script>
 </body>
