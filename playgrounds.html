@@ -92,6 +92,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   font-family:inherit;cursor:pointer;flex-shrink:0;transition:.15s;
 }
 .city-btn:active{opacity:.8}
+/* history button */
+.history-btn{
+  flex-shrink:0;width:40px;height:40px;border-radius:11px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  color:var(--muted);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.history-btn:active{background:var(--card);color:var(--text)}
+/* history dropdown */
+#history-list{
+  position:absolute;top:100%;right:0;left:0;z-index:1000;
+  background:var(--card);border:1.5px solid var(--border2);border-radius:12px;
+  margin-top:4px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);
+  display:none;
+}
+#history-list.open{display:block}
+.hist-head{padding:8px 14px 4px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center}
+.hist-clear{background:none;border:none;font-size:11px;color:var(--red);cursor:pointer;font-family:inherit;font-weight:700;padding:0}
+.hist-item{padding:10px 14px;font-size:13px;color:var(--text2);cursor:pointer;border-top:.5px solid var(--border);display:flex;align-items:center;gap:8px;transition:.12s}
+.hist-item:active,.hist-item:hover{background:var(--card2);color:var(--text)}
+
 /* autocomplete dropdown */
 #autocomplete-list{
   position:absolute;top:100%;right:0;left:0;z-index:999;
@@ -313,10 +334,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
       <!-- נוצר דינמית לפי מדינה -->
     </div>
     <div class="city-row">
+      <button class="history-btn" onclick="toggleHistoryList()" title="חיפושים אחרונים">🕐</button>
       <input class="city-inp" id="city-inp" type="text" placeholder="🔍 חפש עיר או כתובת..." dir="rtl"
         oninput="onSearchInput(this.value)"
-        onkeydown="if(event.key==='Enter'){closeAutocomplete();searchCity()}" />
-      <button class="city-btn" onclick="closeAutocomplete();searchCity()">→</button>
+        onkeydown="if(event.key==='Enter'){closeAutocomplete();closeHistoryList();searchCity()}"
+        onfocus="closeHistoryList()" />
+      <button class="city-btn" onclick="closeAutocomplete();closeHistoryList();searchCity()">→</button>
+      <div id="history-list"></div>
       <div id="autocomplete-list"></div>
     </div>
     <div class="sheet-meta">
@@ -1202,12 +1226,51 @@ function selectSuggestion(i) {
   const label = r.display_name.split(',').slice(0,3).join(', ');
   document.getElementById('city-inp').value = label;
   closeAutocomplete();
+  addToHistory(label, parseFloat(r.lat), parseFloat(r.lon));
   goToLatLon(parseFloat(r.lat), parseFloat(r.lon));
 }
 
 function closeAutocomplete() {
   document.getElementById('autocomplete-list').classList.remove('open');
   clearTimeout(acTimer);
+}
+
+// ─── SEARCH HISTORY ─────────────────────────────────────
+const MAX_HIST = 8;
+function getHistory() { return JSON.parse(localStorage.getItem('pg_history') || '[]'); }
+function addToHistory(label, lat, lon) {
+  let h = getHistory().filter(x => x.label !== label);
+  h.unshift({ label, lat, lon });
+  if (h.length > MAX_HIST) h = h.slice(0, MAX_HIST);
+  localStorage.setItem('pg_history', JSON.stringify(h));
+}
+function clearHistory() { localStorage.removeItem('pg_history'); renderHistoryList(); }
+
+function renderHistoryList() {
+  const h = getHistory();
+  const el = document.getElementById('history-list');
+  if (!h.length) { el.classList.remove('open'); return; }
+  el.innerHTML = `<div class="hist-head">חיפושים אחרונים <button class="hist-clear" onclick="clearHistory()">נקה</button></div>`
+    + h.map((x,i) => `<div class="hist-item" onclick="selectHistory(${i})">🕐 ${x.label}</div>`).join('');
+  el.classList.add('open');
+}
+
+function toggleHistoryList() {
+  const el = document.getElementById('history-list');
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+  closeAutocomplete();
+  renderHistoryList();
+}
+
+function closeHistoryList() {
+  document.getElementById('history-list').classList.remove('open');
+}
+
+function selectHistory(i) {
+  const h = getHistory()[i]; if (!h) return;
+  document.getElementById('city-inp').value = h.label;
+  closeHistoryList();
+  goToLatLon(h.lat, h.lon);
 }
 
 async function goToLatLon(lat, lon) {
@@ -1240,9 +1303,9 @@ async function searchCity() {
   } catch(e) { setStatus('❌ שגיאה בחיפוש'); }
 }
 
-// סגור autocomplete בלחיצה מחוץ
+// סגור autocomplete/history בלחיצה מחוץ
 document.addEventListener('click', e => {
-  if (!e.target.closest('.city-row')) closeAutocomplete();
+  if (!e.target.closest('.city-row')) { closeAutocomplete(); closeHistoryList(); }
 });
 
 // ─── SERVICE WORKER ─────────────────────────────────────
