@@ -595,12 +595,13 @@ function enterApp() {
   s.classList.add('hide');
   setTimeout(() => {
     s.style.display = 'none';
-    map.invalidateSize(); // חשוב — מאלץ Leaflet לחשב מחדש את גודל המפה
+    map.invalidateSize();
   }, 420);
   document.getElementById('user-btn').style.display = 'flex';
   updateFilterPills('default');
   updateLocBtn();
   locateMe();
+  initPushNotifications();
 }
 
 function showUserMenu() {
@@ -1616,6 +1617,72 @@ async function searchCity() {
 document.addEventListener('click', e => {
   if (!e.target.closest('.city-row')) { closeAutocomplete(); closeHistoryList(); }
 });
+
+// ─── PUSH NOTIFICATIONS ─────────────────────────────────
+async function requestPushPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function sendLocalNotification(title, body, icon = '🏟️') {
+  if (Notification.permission !== 'granted') return;
+  navigator.serviceWorker.ready.then(sw => {
+    sw.showNotification(title, {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: 'arena-' + Date.now(),
+      vibrate: [100, 50, 100],
+    });
+  }).catch(() => {
+    new Notification(title, { body, icon: '/icon-192.png' });
+  });
+}
+
+function scheduleDailyReminder() {
+  // שמור שעת שליחה (אחה"צ 5)
+  const now = new Date();
+  const target = new Date();
+  target.setHours(17, 0, 0, 0);
+  if (now > target) target.setDate(target.getDate() + 1);
+  const delay = target - now;
+  setTimeout(() => {
+    sendLocalNotification('🏟️ Arena', 'יצאת לשחק היום? יש מגרשים פנויים קרוב אליך!');
+    scheduleDailyReminder(); // שלח שוב מחר
+  }, delay);
+  localStorage.setItem('pg_reminder', '1');
+}
+
+function checkFavoritesOpen() {
+  const favs = getFavs();
+  const allFavs = Object.values(favs).flat();
+  if (!allFavs.length) return;
+  const now = new Date().getHours();
+  // בדוק אם שעות פתיחה סבירות (6-22)
+  if (now >= 6 && now <= 22) {
+    const sample = allFavs[Math.floor(Math.random() * allFavs.length)];
+    sendLocalNotification(
+      `✅ ${sample.name} פתוח כעת`,
+      'המגרש המועדף שלך פתוח — לך לשחק! 🏃'
+    );
+  }
+}
+
+async function initPushNotifications() {
+  const granted = await requestPushPermission();
+  if (!granted) return;
+  // תזכורת יומית
+  if (!localStorage.getItem('pg_reminder')) scheduleDailyReminder();
+  // בדיקת מועדפים פתוחים פעם ביום
+  const lastCheck = parseInt(localStorage.getItem('pg_fav_check') || '0');
+  const nowMs = Date.now();
+  if (nowMs - lastCheck > 24 * 60 * 60 * 1000) {
+    localStorage.setItem('pg_fav_check', nowMs);
+    checkFavoritesOpen();
+  }
+}
 
 // ─── OFFLINE DETECTION ──────────────────────────────────
 function updateOnlineStatus() {
