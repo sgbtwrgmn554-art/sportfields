@@ -269,6 +269,13 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── HEATMAP ─── */
+.heat-marker{
+  border-radius:50%;opacity:.55;
+  box-shadow:0 0 12px 4px currentColor;
+  pointer-events:none;
+}
+
 /* ─── RENTAL PANEL ─── */
 #rental-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #rental-panel.on{display:flex}
@@ -551,6 +558,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" id="heat-btn" onclick="toggleHeatmap()" title="מפת חום">🔥</button>
     <button class="hdr-btn" onclick="openRentalPanel()" title="השכרת ציוד">🎾</button>
     <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
     <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
@@ -866,6 +874,51 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── HEATMAP ────────────────────────────────────────────
+let heatLayer = null, heatMode = false;
+
+function fieldHeat(f) {
+  const rKey = `pg_rating_${f.lat}_${f.lon}`;
+  const pKey = `pg_photos_${f.lat}_${f.lon}`;
+  const plKey = `pg_players_${f.lat}_${f.lon}`;
+  const vKey  = `pg_visits_${f.lat}_${f.lon}`;
+  const ratings = JSON.parse(localStorage.getItem('pg_all_ratings')||'{}')[rKey];
+  const photos  = JSON.parse(localStorage.getItem(pKey)||'[]').length;
+  const players = JSON.parse(localStorage.getItem(plKey)||'[]').length;
+  const visits  = parseInt(localStorage.getItem(vKey)||'0');
+  return (ratings ? ratings.count * 3 : 0) + photos * 2 + players * 2 + visits;
+}
+
+function toggleHeatmap() {
+  heatMode = !heatMode;
+  const btn = document.getElementById('heat-btn');
+  if (btn) { btn.style.color = heatMode ? '#ff453a' : ''; btn.style.borderColor = heatMode ? '#ff453a' : ''; }
+  if (!heatMode) { if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; } return; }
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  if (heatLayer) map.removeLayer(heatLayer);
+  const group = L.layerGroup();
+  const heats = allFields.map(f => ({ f, h: fieldHeat(f) })).filter(x => x.h > 0);
+  const maxH  = Math.max(...heats.map(x => x.h), 1);
+  heats.forEach(({ f, h }) => {
+    const ratio = h / maxH;
+    const size  = Math.round(20 + ratio * 40);
+    // interpolate green → yellow → red
+    const r = Math.round(ratio < .5 ? ratio * 2 * 255 : 255);
+    const g = Math.round(ratio < .5 ? 255 : (1 - (ratio - .5) * 2) * 255);
+    const color = `rgb(${r},${g},0)`;
+    L.circleMarker([f.lat, f.lon], {
+      radius: size / 2,
+      fillColor: color, fillOpacity: 0.45,
+      color: color, weight: 0,
+    }).addTo(group);
+  });
+  heatLayer = group;
+  map.addLayer(heatLayer);
+}
+
 // ─── RENTAL ─────────────────────────────────────────────
 // כדי להוסיף עסק: מלא בלוק כאן, גבה X₪/חודש תשלום קבוע + קוד affiliate
 // כל לחיצה על "אתר" תוסיף ?ref=ARENA לקישור — העסק עוקב ומשלם עמלה
