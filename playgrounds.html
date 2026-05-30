@@ -211,6 +211,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-phone{background:#30d158;color:#000}
 .dbtn-web{background:#ff9f0a;color:#000}
 
+/* ─── RATING ─── */
+.rating-wrap{margin:12px 0 4px}
+.rating-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.stars-row{display:flex;gap:6px;margin-bottom:10px}
+.star{font-size:28px;cursor:pointer;transition:.15s;opacity:.35;line-height:1}
+.star.on{opacity:1}
+.rtag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.rtag{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s}
+.rtag.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
+.rating-submit{width:100%;padding:11px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:.15s}
+.rating-submit:active{opacity:.8}
+.saved-rating{font-size:13px;color:var(--accent);font-weight:700;margin-top:4px}
+.avg-stars{font-size:13px;color:#ffcc00;font-weight:700}
+
 /* ─── DESKTOP LAYOUT ─── */
 @media (min-width: 700px) {
   .sheet{
@@ -1052,6 +1066,92 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── RATINGS ────────────────────────────────────────────
+const RATING_TAGS = ['מצב טוב','תאורה','שמישה','ניקיון','נגישות','חינמי','צל','חניה'];
+
+function ratingKey(f) { return `pg_rating_${f.lat}_${f.lon}`; }
+function getRatings()  { return JSON.parse(localStorage.getItem('pg_ratings') || '{}'); }
+
+function getFieldRating(f) {
+  const all = getRatings();
+  return all[ratingKey(f)] || null;
+}
+
+function getFieldAvg(f) {
+  const all = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+  const key = ratingKey(f);
+  return all[key] || null; // { avg, count }
+}
+
+function saveRating(f, stars, tags) {
+  // שמור דירוג של המשתמש הנוכחי
+  const all = getRatings();
+  all[ratingKey(f)] = { stars, tags };
+  localStorage.setItem('pg_ratings', JSON.stringify(all));
+
+  // עדכן ממוצע (מדמה שמירה מקומית של כל הדירוגים)
+  const avg = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+  const key = ratingKey(f);
+  if (!avg[key]) avg[key] = { sum: 0, count: 0 };
+  avg[key].sum   += stars;
+  avg[key].count += 1;
+  avg[key].avg    = (avg[key].sum / avg[key].count).toFixed(1);
+  localStorage.setItem('pg_all_ratings', JSON.stringify(avg));
+}
+
+let curStars = 0, curRatingTags = new Set();
+
+function buildRatingBlock(f) {
+  const saved = getFieldRating(f);
+  const avgData = getFieldAvg(f);
+  const avgStr = avgData ? `${avgData.avg}⭐ (${avgData.count} דירוגים)` : '';
+
+  if (saved) {
+    const tagStr = saved.tags.length ? saved.tags.join(' · ') : '';
+    return `<div class="rating-wrap">
+      <div class="saved-rating">הדירוג שלך: ${'★'.repeat(saved.stars)}${'☆'.repeat(5-saved.stars)} ${tagStr ? '· ' + tagStr : ''}</div>
+      ${avgStr ? `<div class="avg-stars">${avgStr}</div>` : ''}
+    </div>`;
+  }
+
+  curStars = 0; curRatingTags = new Set();
+  const tagsHtml = RATING_TAGS.map(t =>
+    `<button class="rtag" onclick="toggleRTag(this,'${t}')">${t}</button>`
+  ).join('');
+  return `<div class="rating-wrap">
+    <div class="rating-label">דרג את המגרש${avgStr ? ' · ' + avgStr : ''}</div>
+    <div class="stars-row" id="stars-row">
+      ${[1,2,3,4,5].map(n=>`<span class="star" data-n="${n}" onclick="setStars(${n})">★</span>`).join('')}
+    </div>
+    <div class="rtag-row">${tagsHtml}</div>
+    <button class="rating-submit" onclick="submitRating()">שמור דירוג</button>
+  </div>`;
+}
+
+function setStars(n) {
+  curStars = n;
+  document.querySelectorAll('#stars-row .star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.n) <= n);
+  });
+}
+
+function toggleRTag(btn, tag) {
+  if (curRatingTags.has(tag)) { curRatingTags.delete(tag); btn.classList.remove('on'); }
+  else                        { curRatingTags.add(tag);    btn.classList.add('on'); }
+}
+
+function submitRating() {
+  if (!curStars || !selected) return;
+  saveRating(selected, curStars, [...curRatingTags]);
+  // רענן חלון פרטים
+  const ratingEl = document.querySelector('.rating-wrap');
+  if (ratingEl) {
+    const saved = getFieldRating(selected);
+    const tagStr = saved.tags.length ? saved.tags.join(' · ') : '';
+    ratingEl.innerHTML = `<div class="saved-rating">הדירוג שלך: ${'★'.repeat(saved.stars)}${'☆'.repeat(5-saved.stars)} ${tagStr ? '· ' + tagStr : ''}</div>`;
+  }
+}
+
 // ─── FAVORITES ──────────────────────────────────────────
 function getFavs() { return JSON.parse(localStorage.getItem('pg_favs') || '{}'); }
 function saveFavs(f) { localStorage.setItem('pg_favs', JSON.stringify(f)); }
@@ -1156,7 +1256,8 @@ function openDetail(i) {
   if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
   if (f.tags?.website)              tags.push(`🌐 אתר`);
-  document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
+    + buildRatingBlock(f);
   const favSaved = isFav(f);
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
