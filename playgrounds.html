@@ -715,6 +715,20 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .auth-google{border-color:#4285f4;background:rgba(66,133,244,.1)}
 .auth-apple{border-color:#fff;background:rgba(255,255,255,.08)}
 </style>
+<!-- Google Analytics -->
+<script>
+  var GA_ID = 'G-XXXXXXXXXX'; // Replace with your real GA4 Measurement ID
+  (function(){
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  })();
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', GA_ID);
+</script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -1188,6 +1202,15 @@ try {
 
 function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
 
+// ─── GOOGLE ANALYTICS 4 ──────────────────────────────────
+// GA_ID is defined in the <head> script block above
+
+function track(eventName, params = {}) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', eventName, params);
+  }
+}
+
 // ─── WORD FILTER ─────────────────────────────────────────
 const BANNED_WORDS = [
   // Hebrew
@@ -1395,6 +1418,7 @@ async function sendMsg() {
     return;
   }
   inp.value = '';
+  track('send_chat_message');
   const msg = {
     text,
     uid:  currentUser?.email || 'guest',
@@ -1514,6 +1538,7 @@ function createEvent() {
   const dateVal    = document.getElementById('ev-date')?.value;
   const reminderMin= parseInt(document.getElementById('ev-reminder')?.value || '0');
   if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
+  track('create_event');
   const dateTs = new Date(dateVal).getTime();
   const ev = {
     id: Date.now(), title, fieldName,
@@ -1915,6 +1940,7 @@ function _googleSignIn() {
         const payload = JSON.parse(atob(resp.credential.split('.')[1]));
         currentUser = { email: payload.email, name: payload.name, avatar: payload.picture };
         localStorage.setItem('pg_user', JSON.stringify(currentUser));
+        track('login', { method: 'google' });
         enterApp();
       } catch { showAuthErr('❌ שגיאה בכניסה עם Google'); }
     },
@@ -1960,6 +1986,7 @@ async function _appleSignIn() {
     const name = data.user ? `${data.user.name?.firstName || ''} ${data.user.name?.lastName || ''}`.trim() : 'Apple User';
     currentUser = { email, name: name || email };
     localStorage.setItem('pg_user', JSON.stringify(currentUser));
+    track('login', { method: 'apple' });
     enterApp();
   } catch { showAuthErr('❌ שגיאה בכניסה עם Apple'); }
 }
@@ -2785,6 +2812,7 @@ function closePremiumPanel() {
 }
 
 function subscribePremium() {
+  track('begin_checkout', { value: 9.90, currency: 'ILS' });
   // כאן יש לשלב עם Stripe / Apple IAP / Google Play Billing
   // לצורך הדגמה — מסמן כ-PRO מיד
   localStorage.setItem('pg_pro', '1');
@@ -3258,6 +3286,7 @@ function toggleRTag(btn, tag) {
 
 function submitRating() {
   if (!curStars || !selected) return;
+  track('submit_rating', { stars: curStars });
   saveRating(selected, curStars, [...curRatingTags]);
   // רענן חלון פרטים
   const ratingEl = document.querySelector('.rating-wrap');
@@ -3288,6 +3317,7 @@ function toggleFav(field, evt) {
     if (!favs[sport].length) delete favs[sport];
   } else {
     favs[sport].push({ lat: field.lat, lon: field.lon, name: field.name, sport, dist: field.dist });
+    track('add_favorite', { field_name: field.name });
   }
   saveFavs(favs);
   const result = isFav(field);
@@ -3362,6 +3392,7 @@ function removeFav(sport, lat, lon) {
 function openDetail(i) {
   const f = shownFields[i]; if (!f) return;
   selected = f;
+  track('view_field', { field_name: f.name, sport: f.sport || '' });
   trackVisit(f);
   map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
   document.getElementById('d-ico').textContent  = ico(f.sport);
@@ -3563,6 +3594,7 @@ async function searchCity() {
   if (!q) return;
   // אם כבר יש תוצאות מה-autocomplete — השתמש בראשונה
   if (acResults.length) { selectSuggestion(0); return; }
+  track('search', { query: q });
   setStatus('🔍 מחפש ' + q + '...');
   try {
     const res = await fetch(
