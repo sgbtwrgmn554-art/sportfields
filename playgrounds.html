@@ -94,6 +94,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .city-btn:active{opacity:.8}
 .count-lbl{font-size:13px;color:var(--muted);font-weight:600}
 .radius-sel{background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;outline:none}
+.scope-row{display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.scope-row::-webkit-scrollbar{display:none}
+.scope-btn{flex-shrink:0;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap}
+.scope-btn.on{border-color:var(--blue);background:rgba(10,132,255,.15);color:var(--blue)}
+.scope-btn:active{opacity:.8}
+.scope-sep{width:1px;flex-shrink:0;background:var(--border2);margin:2px 3px}
 .sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
 
 .frow{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
@@ -271,14 +277,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="sheet-meta">
       <span class="count-lbl" id="cnt">טוען...</span>
       <button class="radius-sel" onclick="locateMe()" style="background:var(--accent-s);border-color:var(--accent);color:var(--accent);font-size:15px">📍</button>
-      <select class="radius-sel" id="rad" onchange="onRadiusChange()">
-        <option value="500">500מ'</option>
-        <option value="1000">1ק"מ</option>
-        <option value="1500" selected>1.5ק"מ</option>
-        <option value="2000">2ק"מ</option>
-        <option value="3000">3ק"מ</option>
-        <option value="5000">5ק"מ</option>
-      </select>
+    </div>
+    <div class="scope-row" id="scope-row">
+      <button class="scope-btn on" data-r="500"   onclick="setRadius(500)">500מ'</button>
+      <button class="scope-btn"    data-r="1000"  onclick="setRadius(1000)">1ק"מ</button>
+      <button class="scope-btn"    data-r="2000"  onclick="setRadius(2000)">2ק"מ</button>
+      <button class="scope-btn"    data-r="5000"  onclick="setRadius(5000)">5ק"מ</button>
+      <button class="scope-btn"    data-r="10000" onclick="setRadius(10000)">10ק"מ</button>
+      <div class="scope-sep"></div>
+      <button class="scope-btn" data-s="city"    onclick="setScope('city')">🏙️ כל העיר</button>
+      <button class="scope-btn" data-s="country" onclick="setScope('country')">🌍 כל המדינה</button>
+      <button class="scope-btn" data-s="world"   onclick="setScope('world')">🌐 כל העולם</button>
     </div>
   </div>
   <!-- Google AdSense Banner — החלף YOUR_SLOT_ID -->
@@ -715,20 +724,45 @@ async function onLocation(lat, lon) {
 
 // ─── OVERPASS ───────────────────────────────────────────
 async function loadFields(lat, lon) {
-  const radius = parseInt(document.getElementById('rad').value);
-  setStatus(`🔍 מחפש מגרשים ב-${fmt(radius)}...`);
   document.getElementById('list').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
   document.getElementById('cnt').textContent = 'טוען...';
 
   const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing|stadium|horse_riding|bowling_alley|miniature_golf|sports_hall';
-  const q = `[out:json][timeout:45];(
-node["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
-way["leisure"~"^(${leisureTypes})$"](around:${radius},${lat},${lon});
-relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"](around:${radius},${lat},${lon});
-way["sport"~"."](around:${radius},${lat},${lon});
-node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby|baseball|american_football|hockey|field_hockey|lacrosse|golf|swimming|athletics|climbing|boxing|martial_arts|skateboard|table_tennis|badminton|pickleball|equestrian|surfing|rowing|sailing|bowling|petanque|archery|parkour|crossfit|shooting|yoga)$"](around:${radius},${lat},${lon});
-node["amenity"="gym"](around:${radius},${lat},${lon});
+  let q, timeout = 45;
+
+  if (searchScope === 'city' || searchScope === 'country' || searchScope === 'world') {
+    const level = searchScope === 'world' ? 'world' : searchScope;
+    const labels = { city:'🏙️ כל העיר', country:'🌍 כל המדינה', world:'🌐 כל העולם' };
+    setStatus(`${labels[searchScope]} — טוען...`);
+
+    let bbox;
+    if (searchScope === 'world') {
+      bbox = [-90, -180, 90, 180]; // כל העולם — מוגבל לתוצאות הראשונות
+      timeout = 30;
+    } else {
+      bbox = await fetchBbox(searchScope);
+      if (!bbox) { setStatus('❌ שגיאה בזיהוי גבולות'); return; }
+      timeout = searchScope === 'country' ? 90 : 45;
+    }
+    const [S, W, N, E] = bbox;
+    const bboxStr = `${S},${W},${N},${E}`;
+    q = `[out:json][timeout:${timeout}][bbox:${bboxStr}];(
+way["leisure"~"^(${leisureTypes})$"];
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"];
+way["sport"~"."];
+);out 300 center tags;`;
+  } else {
+    // radius mode
+    setStatus(`🔍 מחפש ב-${fmt(curRadius)}...`);
+    q = `[out:json][timeout:45];(
+node["leisure"~"^(${leisureTypes})$"](around:${curRadius},${lat},${lon});
+way["leisure"~"^(${leisureTypes})$"](around:${curRadius},${lat},${lon});
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"](around:${curRadius},${lat},${lon});
+way["sport"~"."](around:${curRadius},${lat},${lon});
+node["sport"~"^(soccer|basketball|tennis|volleyball|handball|padel|cricket|rugby|baseball|american_football|hockey|field_hockey|lacrosse|golf|swimming|athletics|climbing|boxing|martial_arts|skateboard|table_tennis|badminton|pickleball|equestrian|surfing|rowing|sailing|bowling|petanque|archery|parkour|crossfit|shooting|yoga)$"](around:${curRadius},${lat},${lon});
+node["amenity"="gym"](around:${curRadius},${lat},${lon});
 );out center tags;`;
+  }
 
   try {
     const res = await fetch('https://overpass-api.de/api/interpreter', {
@@ -760,10 +794,10 @@ node["amenity"="gym"](around:${radius},${lat},${lon});
     }).filter(Boolean).sort((a,b) => a.dist - b.dist);
 
     renderMarkers(); renderList();
-    // אם לא נמצא כלום — נסה אוטומטית עם רדיוס גדול יותר
-    if (allFields.length === 0 && radius < 5000) {
-      const radEl = document.getElementById('rad');
-      radEl.value = radius <= 1000 ? '3000' : '5000';
+    // אם לא נמצא כלום ב-radius — הגדל אוטומטית
+    if (allFields.length === 0 && searchScope === 'radius' && curRadius < 5000) {
+      const next = curRadius <= 1000 ? 2000 : 5000;
+      setRadius(next);
       setStatus('🔍 מרחיב חיפוש...');
       setTimeout(() => loadFields(lat, lon), 600);
       return;
@@ -791,9 +825,6 @@ function setFilter(btn, filter) {
   setStatus(`${getFiltered().length} מגרשים`, true);
 }
 
-function onRadiusChange() {
-  if (uLat != null) loadFields(uLat, uLon);
-}
 
 // ─── MARKERS ────────────────────────────────────────────
 function renderMarkers() {
@@ -953,6 +984,41 @@ function navTo(app) {
   const { lat, lon } = selected;
   if (app==='waze') window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`);
   else              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+}
+
+// ─── SCOPE (radius / city / country / world) ────────────
+let searchScope = 'radius';
+let curRadius   = 500;
+let bboxCache   = {};
+
+function setRadius(r) {
+  curRadius = r; searchScope = 'radius';
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
+  document.querySelector(`.scope-btn[data-r="${r}"]`)?.classList.add('on');
+  if (uLat != null) loadFields(uLat, uLon);
+}
+
+async function setScope(mode) {
+  searchScope = mode;
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
+  document.querySelector(`.scope-btn[data-s="${mode}"]`)?.classList.add('on');
+  if (!uLat) { locateMe(); return; }
+  loadFields(uLat, uLon);
+}
+
+async function fetchBbox(level) {
+  if (bboxCache[level]) return bboxCache[level];
+  const zoom = level === 'city' ? 10 : 3;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${uLat}&lon=${uLon}&format=json&zoom=${zoom}`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const d = await res.json();
+    const bb = d.boundingbox; // [S, N, W, E]
+    bboxCache[level] = [parseFloat(bb[0]), parseFloat(bb[2]), parseFloat(bb[1]), parseFloat(bb[3])];
+    return bboxCache[level];
+  } catch { return null; }
 }
 
 // ─── CITY SEARCH ────────────────────────────────────────
