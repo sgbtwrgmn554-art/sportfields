@@ -128,6 +128,18 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-phone{background:#30d158;color:#000}
 .dbtn-web{background:#ff9f0a;color:#000}
 
+/* ─── DESKTOP LAYOUT ─── */
+@media (min-width: 700px) {
+  .sheet{
+    top:0;left:auto;right:0;bottom:0;width:380px;height:100%!important;
+    border-radius:0;border-top:none;border-right:none;border-left:1px solid var(--border);
+  }
+  .handle-wrap{display:none}
+  #loc-btn{left:auto;right:396px;bottom:24px!important}
+  #status{left:auto;right:calc(380px + 50%);transform:translateX(50%)}
+  .hdr{right:380px}
+}
+
 /* ─── MAP MARKERS ─── */
 .map-pin{
   width:42px;height:42px;border-radius:50%;
@@ -566,10 +578,17 @@ handleEl.addEventListener('touchmove', e => {
 handleEl.addEventListener('touchend', () => { dStart = null; updateLocBtn(); });
 handleEl.addEventListener('mousedown', e => {
   dStart = e.clientY; dH0 = sheetEl.getBoundingClientRect().height;
-  const up = ev => {
-    sheetEl.style.height = Math.max(170, Math.min(window.innerHeight*.88, dH0+dStart-ev.clientY))+'px';
-    updateLocBtn(); document.removeEventListener('mouseup', up);
+  let dragging = false;
+  const move = ev => {
+    dragging = true;
+    const newH = Math.max(200, Math.min(window.innerHeight * .65, dH0 + dStart - ev.clientY));
+    sheetEl.style.height = newH + 'px'; updateLocBtn();
   };
+  const up = () => {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  };
+  document.addEventListener('mousemove', move);
   document.addEventListener('mouseup', up);
 });
 
