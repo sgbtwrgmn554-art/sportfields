@@ -258,6 +258,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
+/* ─── STATS PANEL ─── */
+#stats-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#stats-panel.on{display:flex}
+.stats-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.stats-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.stats-body{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.stat-box{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border)}
+.stat-box-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.stat-big{font-size:42px;font-weight:900;color:var(--accent);line-height:1}
+.stat-label{font-size:13px;color:var(--text2);margin-top:4px}
+.stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.stat-bar-name{font-size:13px;font-weight:700;width:80px;flex-shrink:0}
+.stat-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .6s}
+.stat-bar-val{font-size:12px;font-weight:700;color:var(--accent);width:28px;text-align:left;flex-shrink:0}
+
 /* ─── LEADERBOARD ─── */
 #lb-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #lb-panel.on{display:flex}
@@ -409,6 +425,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
     <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
     <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום">🌙</button>
@@ -470,6 +487,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── STATS PANEL ─── -->
+<div id="stats-panel" onclick="if(event.target===this)closeStatsPanel()">
+  <div class="stats-card">
+    <div class="stats-head">
+      <div class="lb-title">📊 הסטטיסטיקות שלי</div>
+      <button class="fav-close" onclick="closeStatsPanel()">✕</button>
+    </div>
+    <div class="stats-body" id="stats-body"></div>
+  </div>
+</div>
+
 <!-- ─── LEADERBOARD PANEL ─── -->
 <div id="lb-panel" onclick="if(event.target===this)closeLbPanel()">
   <div class="lb-card">
@@ -1255,6 +1283,94 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── VISIT TRACKER ──────────────────────────────────────
+function trackVisit(f) {
+  const key = `pg_visits_${f.lat}_${f.lon}`;
+  const count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  // שמור שם המגרש לסטטיסטיקה
+  const visits = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  visits.unshift({ name: f.name, sport: f.sport, lat: f.lat, lon: f.lon, ts: Date.now() });
+  localStorage.setItem('pg_visit_log', JSON.stringify(visits.slice(0, 100)));
+}
+
+// ─── STATS ──────────────────────────────────────────────
+function openStatsPanel() {
+  renderStats();
+  document.getElementById('stats-panel').classList.add('on');
+}
+function closeStatsPanel() { document.getElementById('stats-panel').classList.remove('on'); }
+
+function renderStats() {
+  const visits = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+
+  // ספור תמונות
+  let photoCount = 0;
+  for (const key in localStorage) {
+    if (key.startsWith('pg_photos_')) {
+      try { photoCount += JSON.parse(localStorage.getItem(key) || '[]').length; } catch {}
+    }
+  }
+
+  // ספורט פופולרי באזור
+  const sportCount = {};
+  allFields.forEach(f => { sportCount[f.sport] = (sportCount[f.sport] || 0) + 1; });
+  const topSports = Object.entries(sportCount).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const maxSport = topSports[0]?.[1] || 1;
+
+  // ביקורים לפי מגרש
+  const visitMap = {};
+  visits.forEach(v => {
+    const k = `${v.lat}_${v.lon}`;
+    if (!visitMap[k]) visitMap[k] = { name: v.name, sport: v.sport, count: 0 };
+    visitMap[k].count++;
+  });
+  const topVisits = Object.values(visitMap).sort((a,b) => b.count - a.count).slice(0,5);
+  const maxVisit = topVisits[0]?.count || 1;
+
+  const barsVisit = topVisits.map(v => `
+    <div class="stat-bar-row">
+      <div class="stat-bar-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.name}">${ico(v.sport)} ${v.name.slice(0,10)}</div>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(v.count/maxVisit*100)}%"></div></div>
+      <div class="stat-bar-val">${v.count}x</div>
+    </div>`).join('');
+
+  const barsSport = topSports.map(([s,n]) => `
+    <div class="stat-bar-row">
+      <div class="stat-bar-name">${ico(s)} ${he(s).slice(0,8)}</div>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(n/maxSport*100)}%;background:var(--blue)"></div></div>
+      <div class="stat-bar-val">${n}</div>
+    </div>`).join('');
+
+  document.getElementById('stats-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="stat-box">
+        <div class="stat-box-title">ביקורים</div>
+        <div class="stat-big">${visits.length}</div>
+        <div class="stat-label">מגרשים שפתחת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">דירוגים</div>
+        <div class="stat-big">${Object.keys(ratings).length}</div>
+        <div class="stat-label">מגרשים דירגת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">תמונות</div>
+        <div class="stat-big">${photoCount}</div>
+        <div class="stat-label">תמונות העלאת</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-title">מועדפים</div>
+        <div class="stat-big">${Object.values(getFavs()).flat().length}</div>
+        <div class="stat-label">מגרשים שמורים</div>
+      </div>
+    </div>
+    ${topVisits.length ? `<div class="stat-box"><div class="stat-box-title">🏟️ המגרשים שלך</div>${barsVisit}</div>` : ''}
+    ${topSports.length ? `<div class="stat-box"><div class="stat-box-title">🌍 ספורט פופולרי באזורך</div>${barsSport}</div>` : ''}
+  `;
+}
+
 // ─── LEADERBOARD ────────────────────────────────────────
 let curLbTab = 'fields';
 
@@ -1642,6 +1758,7 @@ function removeFav(sport, lat, lon) {
 function openDetail(i) {
   const f = shownFields[i]; if (!f) return;
   selected = f;
+  trackVisit(f);
   map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
   document.getElementById('d-ico').textContent  = ico(f.sport);
   document.getElementById('d-name').textContent = f.name;
