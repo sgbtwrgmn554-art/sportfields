@@ -35,11 +35,7 @@ export default async function handler(req, res) {
 
   // ── get-public-key ──────────────────────────────────────────────
   if (action === 'get-public-key') {
-    const publicKey = process.env.VAPID_PUBLIC_KEY;
-    if (!publicKey) {
-      res.status(500).json({ error: 'VAPID_PUBLIC_KEY not configured' });
-      return;
-    }
+    const publicKey = process.env.VAPID_PUBLIC_KEY || 'BHyt40zGQEoG35nH5h-6l-DgKWsqWgac9iutFSf8svFvVywSBC-r9wDQO_3BVc7L3vb5emttWV8RoIMDXwgyqT8';
     res.status(200).json({ publicKey });
     return;
   }

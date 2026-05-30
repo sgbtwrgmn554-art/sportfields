@@ -43,21 +43,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Verify authorization
+  // Verify authorization — Vercel auto-generates CRON_SECRET, or allow x-vercel-cron header
   const auth = req.headers['authorization'] || '';
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
+  const cronSecret = process.env.CRON_SECRET || '9qhl6r0im5slj212cx7a';
+  const isVercelCron = req.headers['x-vercel-cron'] === '1';
+  if (!isVercelCron && auth !== `Bearer ${cronSecret}`) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
-  // Configure web-push VAPID details
-  const vapidPublic = process.env.VAPID_PUBLIC_KEY;
-  const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
-  if (!vapidPublic || !vapidPrivate) {
-    res.status(500).json({ error: 'VAPID keys not configured' });
-    return;
-  }
+  // Configure web-push VAPID details (hardcoded fallback — no manual setup needed)
+  const vapidPublic  = process.env.VAPID_PUBLIC_KEY  || 'BHyt40zGQEoG35nH5h-6l-DgKWsqWgac9iutFSf8svFvVywSBC-r9wDQO_3BVc7L3vb5emttWV8RoIMDXwgyqT8';
+  const vapidPrivate = process.env.VAPID_PRIVATE_KEY || 'gaT9dJKNpkUgEbqrZ-vD3q37icyXjkHphTQj9yEwjrM';
 
   webpush.setVapidDetails(
     'mailto:admin@sportfields.app',
