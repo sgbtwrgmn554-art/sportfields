@@ -752,10 +752,11 @@ node["amenity"="gym"](around:${radius},${lat},${lon});
       const clon = el.lon || el.center?.lon;
       if (!clat || !clon) return null;
       const t = el.tags || {};
-      const rawSport = (t.sport||'').split(';')[0].trim();
-      const sport = rawSport || leisureMap[t.leisure] || 'default';
-      const name = t.name || t['name:he'] || he(sport);
-      return { lat:clat, lon:clon, name, sport, tags:t, dist:km(lat,lon,clat,clon) };
+      const sports = (t.sport||'').split(';').map(s=>s.trim().toLowerCase()).filter(Boolean);
+      const primarySport = sports[0] || leisureMap[t.leisure] || 'default';
+      if (!sports.length) sports.push(primarySport);
+      const name = t.name || t['name:he'] || he(primarySport);
+      return { lat:clat, lon:clon, name, sport:primarySport, sports, tags:t, dist:km(lat,lon,clat,clon) };
     }).filter(Boolean).sort((a,b) => a.dist - b.dist);
 
     renderMarkers(); renderList();
@@ -779,7 +780,7 @@ node["amenity"="gym"](around:${radius},${lat},${lon});
 function getFiltered() {
   if (curFilter === 'all') return allFields;
   const group = FILTER_GROUPS[curFilter] || [curFilter];
-  return allFields.filter(f => group.includes(f.sport));
+  return allFields.filter(f => f.sports.some(s => group.includes(s)));
 }
 
 function setFilter(btn, filter) {
@@ -811,8 +812,11 @@ function renderMarkers() {
     map.addLayer(markerCluster);
   }
   getFiltered().forEach((f, i) => {
+    const badge = f.sports.length > 1
+      ? `<span style="position:absolute;top:-4px;left:-4px;background:var(--accent);color:#000;border-radius:50%;width:17px;height:17px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1.5px solid #0a1628">${f.sports.length}</span>`
+      : '';
     const icon = L.divIcon({
-      html: `<div class="map-pin">${ico(f.sport)}</div>`,
+      html: `<div class="map-pin" style="position:relative">${ico(f.sport)}${badge}</div>`,
       className: '', iconSize: [42,42], iconAnchor: [21,21]
     });
     const m = L.marker([f.lat, f.lon], { icon });
@@ -884,11 +888,17 @@ function renderList() {
       f.tags?.lit === 'yes' ? '💡' : '',
       f.tags?.access === 'private' ? '🔒' : ''
     ].filter(Boolean).join(' ');
+    const sportIcons = f.sports.length > 1
+      ? f.sports.slice(0,4).map(s=>ico(s)).join('')
+      : ico(f.sport);
+    const sportLabel = f.sports.length > 1
+      ? f.sports.slice(0,3).map(s=>he(s)).join(' · ')
+      : he(f.sport);
     return `<div class="frow" onclick="openDetail(${i})">
-      <div class="fi">${ico(f.sport)}</div>
+      <div class="fi" style="font-size:${f.sports.length>1?'20px':'32px'};line-height:1.4">${sportIcons}</div>
       <div style="flex:1;min-width:0">
         <div class="fn">${f.name}</div>
-        <div class="fs">${he(f.sport)}${extras?' · '+extras:''}</div>
+        <div class="fs">${sportLabel}${extras?' · '+extras:''}</div>
       </div>
       <div class="fd">${fmt(f.dist)}</div>
     </div>`;
@@ -909,8 +919,12 @@ function openDetail(i) {
   map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
   document.getElementById('d-ico').textContent  = ico(f.sport);
   document.getElementById('d-name').textContent = f.name;
-  document.getElementById('d-sub').textContent  = `${he(f.sport)} · ${fmt(f.dist)} ממיקומך`;
+  document.getElementById('d-sub').textContent  = `${fmt(f.dist)} ממיקומך`;
   const tags = [];
+  // כל הספורטים כ-chips ראשונים
+  f.sports.filter(s=>s!=='default').forEach(s => tags.push(`${ico(s)} ${he(s)}`));
+  if (!f.sports.filter(s=>s!=='default').length) tags.push(`${ico(f.sport)} ${he(f.sport)}`);
+  // מידע נוסף
   if (f.tags?.surface)              tags.push(`🌱 ${f.tags.surface}`);
   if (f.tags?.lit === 'yes')        tags.push('💡 תאורה לילית');
   if (f.tags?.fee === 'no')         tags.push('🆓 כניסה חינם');
@@ -919,6 +933,8 @@ function openDetail(i) {
   else                              tags.push('✅ פתוח לציבור');
   if (f.tags?.opening_hours)        tags.push(`🕐 ${f.tags.opening_hours}`);
   if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
+  if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
+  if (f.tags?.website)              tags.push(`🌐 אתר`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('');
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
