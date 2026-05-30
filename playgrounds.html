@@ -257,6 +257,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .player-time{font-size:11px;color:var(--accent);font-weight:700;margin-top:4px}
 .dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
+
+/* ─── LEADERBOARD ─── */
+#lb-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#lb-panel.on{display:flex}
+.lb-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.lb-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.lb-title{font-size:17px;font-weight:900;flex:1}
+.lb-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.lb-tab{flex:1;padding:11px;background:transparent;border:none;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;border-bottom:2px solid transparent}
+.lb-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.lb-body{overflow-y:auto;flex:1;padding:8px 0;-webkit-overflow-scrolling:touch}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:.5px solid var(--border)}
+.lb-rank{font-size:18px;font-weight:900;width:32px;text-align:center;flex-shrink:0}
+.lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.lb-score{font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0}
 /* lightbox */
 #lightbox{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column}
 #lightbox.on{display:flex}
@@ -391,6 +409,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
     <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום">🌙</button>
     <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
@@ -451,6 +470,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── LEADERBOARD PANEL ─── -->
+<div id="lb-panel" onclick="if(event.target===this)closeLbPanel()">
+  <div class="lb-card">
+    <div class="lb-head">
+      <div class="lb-title">🏆 טבלת דירוג שכונתית</div>
+      <button class="fav-close" onclick="closeLbPanel()">✕</button>
+    </div>
+    <div class="lb-tabs">
+      <button class="lb-tab on" onclick="switchLbTab(this,'fields')">🏟️ מגרשים מובילים</button>
+      <button class="lb-tab"   onclick="switchLbTab(this,'users')">👥 משתמשים פעילים</button>
+    </div>
+    <div class="lb-body" id="lb-body"></div>
+  </div>
+</div>
+
 <!-- ─── PLAYERS PANEL ─── -->
 <div id="players-panel" onclick="if(event.target===this)closePlayersPanel()">
   <div class="players-card">
@@ -1221,6 +1255,91 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── LEADERBOARD ────────────────────────────────────────
+let curLbTab = 'fields';
+
+function openLbPanel() {
+  curLbTab = 'fields';
+  renderLb();
+  document.getElementById('lb-panel').classList.add('on');
+}
+function closeLbPanel() { document.getElementById('lb-panel').classList.remove('on'); }
+
+function switchLbTab(btn, tab) {
+  curLbTab = tab;
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLb();
+}
+
+function renderLb() {
+  const body = document.getElementById('lb-body');
+
+  if (curLbTab === 'fields') {
+    // דרג מגרשים לפי הממוצע השמור
+    const allRatings = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
+    // שלב עם allFields
+    const scored = allFields.map(f => {
+      const key = `pg_rating_${f.lat}_${f.lon}`;
+      const r = allRatings[key];
+      return { ...f, avg: r ? parseFloat(r.avg) : 0, rCount: r ? r.count : 0 };
+    }).filter(f => f.rCount > 0).sort((a,b) => b.avg - a.avg || b.rCount - a.rCount);
+
+    if (!scored.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ico">🏟️</div>אין דירוגים עדיין<br><small>דרג מגרשים כדי לראות כאן</small></div>';
+      return;
+    }
+    body.innerHTML = scored.slice(0,20).map((f,i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankClass}">${medal}</div>
+        <div style="font-size:28px;flex-shrink:0">${ico(f.sport)}</div>
+        <div class="lb-info">
+          <div class="lb-name">${f.name}</div>
+          <div class="lb-sub">${he(f.sport)} · ${f.rCount} דירוגים</div>
+        </div>
+        <div class="lb-score">${'★'.repeat(Math.round(f.avg))} ${f.avg}</div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // משתמשים — ספור פעולות (דירוגים + תמונות + שחקנים שפרסמו)
+  const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+  const userActions = {};
+
+  // ספור דירוגים לפי אימייל
+  if (currentUser && !currentUser.guest) {
+    const email = currentUser.email;
+    const name  = currentUser.name || email;
+    if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
+    userActions[email].score += Object.keys(ratings).length * 10;
+    if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
+  }
+
+  const entries = Object.values(userActions).sort((a,b) => b.score - a.score);
+
+  // אם אין נתונים — הצג placeholder
+  if (!entries.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ico">👥</div>אין נתוני משתמשים עדיין<br><small>דרג מגרשים כדי להופיע כאן!</small></div>';
+    return;
+  }
+  body.innerHTML = entries.slice(0,20).map((u,i) => {
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return `<div class="lb-row">
+      <div class="lb-rank ${rankClass}">${medal}</div>
+      <div style="font-size:26px;flex-shrink:0">👤</div>
+      <div class="lb-info">
+        <div class="lb-name">${u.name}</div>
+        <div class="lb-sub">${u.actions.join(' · ') || 'משתמש פעיל'}</div>
+      </div>
+      <div class="lb-score">${u.score} נק'</div>
+    </div>`;
+  }).join('');
+}
+
 // ─── PLAYERS BOARD ──────────────────────────────────────
 function playersKey(f) { return `pg_players_${f.lat}_${f.lon}`; }
 function getPlayers(f) { return JSON.parse(localStorage.getItem(playersKey(f)) || '[]'); }
