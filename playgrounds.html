@@ -269,6 +269,27 @@ body.a11y-big-btns .scope-btn { padding:10px 16px!important;font-size:14px!impor
 body.a11y-big-btns .frow      { padding:18px 16px!important }
 body.a11y-big-btns .fn        { font-size:18px!important }
 
+/* ─── RENTAL PANEL ─── */
+#rental-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#rental-panel.on{display:flex}
+.rental-card{width:100%;max-height:90vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.rental-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px}
+.rental-item{background:var(--card2);border-radius:16px;padding:16px;border:1px solid var(--border);position:relative}
+.rental-biz-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rental-biz-ico{font-size:36px}
+.rental-biz-name{font-size:15px;font-weight:800}
+.rental-biz-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.rental-items-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.rental-tag{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.3);color:var(--blue)}
+.rental-price{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.rental-affiliate-note{font-size:10px;color:var(--muted);margin-bottom:8px}
+.rental-actions{display:flex;gap:8px}
+.rental-call{flex:1;padding:11px;border-radius:11px;border:none;background:#30d158;color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.rental-web{flex:1;padding:11px;border-radius:11px;border:none;background:#ff9f0a;color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.rental-waze{flex:0.7;padding:11px;border-radius:11px;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.rental-paid-badge{position:absolute;top:12px;left:12px;font-size:9px;font-weight:800;color:#bf5af2;background:rgba(191,90,242,.15);border:1px solid rgba(191,90,242,.3);border-radius:4px;padding:2px 6px}
+.rental-dist{font-size:12px;color:var(--muted);margin-bottom:6px}
+
 /* ─── SETTINGS PANEL ─── */
 #settings-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #settings-panel.on{display:flex}
@@ -530,6 +551,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
+    <button class="hdr-btn" onclick="openRentalPanel()" title="השכרת ציוד">🎾</button>
     <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
     <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
     <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
@@ -597,6 +619,17 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── RENTAL PANEL ─── -->
+<div id="rental-panel" onclick="if(event.target===this)closeRentalPanel()">
+  <div class="rental-card">
+    <div class="lb-head">
+      <div class="lb-title">🎾 השכרת ציוד ספורט</div>
+      <button class="fav-close" onclick="closeRentalPanel()">✕</button>
+    </div>
+    <div class="rental-body" id="rental-body"></div>
+  </div>
+</div>
+
 <!-- ─── SETTINGS PANEL ─── -->
 <div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
   <div class="settings-card">
@@ -833,6 +866,108 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── RENTAL ─────────────────────────────────────────────
+// כדי להוסיף עסק: מלא בלוק כאן, גבה X₪/חודש תשלום קבוע + קוד affiliate
+// כל לחיצה על "אתר" תוסיף ?ref=ARENA לקישור — העסק עוקב ומשלם עמלה
+const RENTAL_SHOPS = [
+  {
+    name: 'Sport Rent IL',
+    sub: 'השכרת ציוד ספורט · תל אביב',
+    ico: '🎾',
+    items: ['מחבטי טניס', 'כדורים', 'ציוד פאדל', 'אופניים'],
+    price: 'מ-₪25 לשעה',
+    lat: 32.0853, lon: 34.7818,
+    phone: '03-1234567',
+    website: 'https://sportrental.co.il',
+    affiliateCode: 'ARENA10',  // קוד שהעסק מזהה ומשלם עמלה עליו
+    paidListing: true,         // משלם תשלום קבוע חודשי
+    countries: ['IL'],
+  },
+  {
+    name: 'BikeShare TLV',
+    sub: 'השכרת אופניים וקורקינטים',
+    ico: '🚴',
+    items: ['אופניים', 'אופני הרים', 'קורקינט חשמלי', 'קסדות'],
+    price: 'מ-₪15 לשעה',
+    lat: 32.0661, lon: 34.7748,
+    phone: '050-9876543',
+    website: 'https://bikeshare.co.il',
+    affiliateCode: 'ARENA15',
+    paidListing: true,
+    countries: ['IL'],
+  },
+  {
+    name: 'NYC Sports Rentals',
+    sub: 'Equipment rental · Manhattan',
+    ico: '🏀',
+    items: ['Basketballs', 'Tennis rackets', 'Soccer balls', 'Frisbees'],
+    price: 'From $10/hr',
+    lat: 40.7580, lon: -73.9855,
+    phone: '+1-212-555-0199',
+    website: 'https://nycsportsrentals.com',
+    affiliateCode: 'ARENA10',
+    paidListing: false,
+    countries: ['US'],
+  },
+];
+
+const ARENA_AFFILIATE_ID = 'ARENA'; // מזהה ה-affiliate שלך
+
+function openRentalPanel() {
+  renderRental();
+  document.getElementById('rental-panel').classList.add('on');
+}
+function closeRentalPanel() { document.getElementById('rental-panel').classList.remove('on'); }
+
+function renderRental() {
+  const shops = RENTAL_SHOPS.filter(s =>
+    s.countries === 'all' || s.countries.includes(curCountry) || curCountry === 'default'
+  ).map(s => ({ ...s, dist: uLat != null ? km(uLat, uLon, s.lat, s.lon) : null }))
+    .sort((a,b) => (a.dist||9999) - (b.dist||9999));
+
+  if (!shops.length) {
+    document.getElementById('rental-body').innerHTML =
+      '<div class="empty"><div class="empty-ico">🎾</div>אין חנויות השכרה באזורך כרגע</div>';
+    return;
+  }
+
+  document.getElementById('rental-body').innerHTML = shops.map((s,i) => `
+    <div class="rental-item">
+      ${s.paidListing ? '<div class="rental-paid-badge">⭐ ממומן</div>' : ''}
+      <div class="rental-biz-row">
+        <div class="rental-biz-ico">${s.ico}</div>
+        <div>
+          <div class="rental-biz-name">${s.name}</div>
+          <div class="rental-biz-sub">${s.sub}</div>
+        </div>
+      </div>
+      ${s.dist != null ? `<div class="rental-dist">📍 ${fmt(s.dist)} ממיקומך</div>` : ''}
+      <div class="rental-items-grid">${s.items.map(it=>`<span class="rental-tag">${it}</span>`).join('')}</div>
+      <div class="rental-price">💰 ${s.price}</div>
+      <div class="rental-affiliate-note">קוד הנחה: <strong>${s.affiliateCode}</strong> · Arena מקבלת עמלה על כל הזמנה</div>
+      <div class="rental-actions">
+        <button class="rental-call" onclick="window.open('tel:${s.phone}')">📞 התקשר</button>
+        <button class="rental-web"  onclick="trackRentalClick(${i})">🌐 להזמנה</button>
+        <button class="rental-waze" onclick="window.open('https://waze.com/ul?ll=${s.lat},${s.lon}&navigate=yes')">🔵</button>
+      </div>
+    </div>`).join('');
+}
+
+let _rentalShopsFiltered = [];
+function trackRentalClick(i) {
+  // צרף ref=ARENA לקישור — ה-affiliate tracking
+  const shops = RENTAL_SHOPS.filter(s =>
+    s.countries === 'all' || s.countries.includes(curCountry) || curCountry === 'default'
+  ).sort((a,b) => (uLat!=null?km(uLat,uLon,a.lat,a.lon):0)-(uLat!=null?km(uLat,uLon,b.lat,b.lon):0));
+  const s = shops[i]; if (!s) return;
+  const url = `${s.website}?ref=${ARENA_AFFILIATE_ID}&coupon=${s.affiliateCode}`;
+  window.open(url, '_blank');
+  // לוג מקומי לסטטיסטיקות
+  const clicks = JSON.parse(localStorage.getItem('pg_rental_clicks') || '[]');
+  clicks.push({ shop: s.name, code: s.affiliateCode, ts: Date.now() });
+  localStorage.setItem('pg_rental_clicks', JSON.stringify(clicks.slice(-50)));
+}
+
 // ─── SETTINGS / ACCESSIBILITY ───────────────────────────
 function openSettingsPanel() {
   syncSettingsUI();
