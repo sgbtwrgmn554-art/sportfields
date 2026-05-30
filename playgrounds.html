@@ -234,6 +234,28 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
 .photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;border:1.5px solid var(--border)}
 .photo-count{font-size:11px;color:var(--muted);font-weight:700}
+
+/* ─── PLAYERS BOARD ─── */
+#players-panel{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#players-panel.on{display:flex}
+.players-card{width:100%;max-height:88vh;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.players-head{padding:16px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.players-title{font-size:17px;font-weight:900;flex:1}
+.players-body{overflow-y:auto;flex:1;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.pform{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:14px}
+.pform-title{font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px}
+.pform-row{display:flex;gap:8px;margin-bottom:8px}
+.pinp{flex:1;padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:.2s}
+.pinp:focus{border-color:var(--accent)}
+.pselect{padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+.ppost-btn{width:100%;padding:12px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:.15s}
+.ppost-btn:active{opacity:.8}
+.player-card{background:var(--card2);border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid var(--border)}
+.player-sport{font-size:22px;float:left;margin-left:10px}
+.player-name{font-size:14px;font-weight:800}
+.player-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.player-time{font-size:11px;color:var(--accent);font-weight:700;margin-top:4px}
+.dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 /* lightbox */
 #lightbox{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column}
 #lightbox.on{display:flex}
@@ -428,6 +450,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 </div>
 
 <!-- ─── FAVORITES PANEL ─── -->
+<!-- ─── PLAYERS PANEL ─── -->
+<div id="players-panel" onclick="if(event.target===this)closePlayersPanel()">
+  <div class="players-card">
+    <div class="players-head">
+      <div class="players-title" id="players-title">👥 חיפוש שחקנים</div>
+      <button class="fav-close" onclick="closePlayersPanel()">✕</button>
+    </div>
+    <div class="players-body" id="players-body"></div>
+  </div>
+</div>
+
 <!-- ─── LIGHTBOX ─── -->
 <div id="lightbox" onclick="closeLightbox()">
   <button id="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1187,6 +1220,75 @@ function renderList() {
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
+// ─── PLAYERS BOARD ──────────────────────────────────────
+function playersKey(f) { return `pg_players_${f.lat}_${f.lon}`; }
+function getPlayers(f) { return JSON.parse(localStorage.getItem(playersKey(f)) || '[]'); }
+
+function openPlayersPanel(f) {
+  if (!f) f = selected; if (!f) return;
+  document.getElementById('players-title').textContent = `👥 שחקנים — ${f.name}`;
+  renderPlayersBody(f);
+  document.getElementById('players-panel').classList.add('on');
+}
+
+function closePlayersPanel() {
+  document.getElementById('players-panel').classList.remove('on');
+}
+
+function renderPlayersBody(f) {
+  const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000); // 24 שעות
+  const sportOpts = (f.sports || [f.sport]).map(s =>
+    `<option value="${s}">${ico(s)} ${he(s)}</option>`
+  ).join('');
+
+  const listHtml = players.length
+    ? players.map(p => `
+      <div class="player-card">
+        <span class="player-sport">${ico(p.sport)}</span>
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">${he(p.sport)} · ${p.level} · ${p.players} שחקנים</div>
+        <div class="player-time">⏰ ${new Date(p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('')
+    : '<div class="empty"><div class="empty-ico">👥</div>אין שחקנים כרגע<br><small>היה הראשון!</small></div>';
+
+  document.getElementById('players-body').innerHTML = `
+    <div class="pform">
+      <div class="pform-title">📢 פרסם שאתה מחפש שחקנים</div>
+      <div class="pform-row">
+        <input class="pinp" id="p-name" placeholder="השם שלך" />
+        <select class="pselect" id="p-sport">${sportOpts}</select>
+      </div>
+      <div class="pform-row">
+        <select class="pselect" id="p-level">
+          <option value="כל הרמות">כל הרמות</option>
+          <option value="מתחיל">מתחיל</option>
+          <option value="בינוני">בינוני</option>
+          <option value="מתקדם">מתקדם</option>
+        </select>
+        <select class="pselect" id="p-count">
+          <option value="1">1 שחקן</option>
+          <option value="2">2 שחקנים</option>
+          <option value="3+">3+ שחקנים</option>
+        </select>
+      </div>
+      <button class="ppost-btn" onclick="postPlayer()">📢 פרסם</button>
+    </div>
+    ${listHtml}
+  `;
+}
+
+function postPlayer() {
+  const name    = document.getElementById('p-name').value.trim() || 'אנונימי';
+  const sport   = document.getElementById('p-sport').value;
+  const level   = document.getElementById('p-level').value;
+  const players = document.getElementById('p-count').value;
+  if (!selected) return;
+  const list = getPlayers(selected);
+  list.unshift({ name, sport, level, players, ts: Date.now() });
+  localStorage.setItem(playersKey(selected), JSON.stringify(list.slice(0, 20)));
+  renderPlayersBody(selected);
+}
+
 // ─── PHOTOS ─────────────────────────────────────────────
 function photoKey(f) { return `pg_photos_${f.lat}_${f.lon}`; }
 
@@ -1444,6 +1546,7 @@ function openDetail(i) {
   document.getElementById('d-btns').innerHTML = `
     <button class="dbtn dbtn-waze" onclick="navTo('waze')">🔵 Waze</button>
     <button class="dbtn dbtn-gmap" onclick="navTo('gmap')">🗺️ מפות</button>
+    <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
     <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick()">${favSaved?'★':'☆'}</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
   `;
