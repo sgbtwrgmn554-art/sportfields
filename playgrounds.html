@@ -1058,6 +1058,14 @@ function renderEventsPanel(preField) {
     </select>
     <input class="add-inp" id="ev-date" type="datetime-local" style="color-scheme:dark" />
     <input class="add-inp" id="ev-desc" placeholder="פרטים נוספים (אופציונלי)" />
+    <select class="add-sel" id="ev-reminder">
+      <option value="0">🔕 ללא תזכורת</option>
+      <option value="15">⏰ 15 דקות לפני</option>
+      <option value="30" selected>⏰ 30 דקות לפני</option>
+      <option value="60">⏰ שעה לפני</option>
+      <option value="120">⏰ שעתיים לפני</option>
+      <option value="1440">⏰ יום לפני (בבוקר)</option>
+    </select>
     <button class="add-submit" onclick="createEvent()">📅 צור אירוע ושתף</button>
   </div>`;
   // set default datetime to tomorrow 18:00
@@ -1067,19 +1075,24 @@ function renderEventsPanel(preField) {
 }
 
 function createEvent() {
-  const title    = document.getElementById('ev-title')?.value.trim();
-  const fieldName= selected?.name || document.getElementById('ev-field')?.value.trim() || 'מגרש';
-  const sport    = document.getElementById('ev-sport')?.value || 'multi';
-  const dateVal  = document.getElementById('ev-date')?.value;
+  const title      = document.getElementById('ev-title')?.value.trim();
+  const fieldName  = selected?.name || document.getElementById('ev-field')?.value.trim() || 'מגרש';
+  const sport      = document.getElementById('ev-sport')?.value || 'multi';
+  const dateVal    = document.getElementById('ev-date')?.value;
+  const reminderMin= parseInt(document.getElementById('ev-reminder')?.value || '0');
   if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
+  const dateTs = new Date(dateVal).getTime();
   const ev = {
     id: Date.now(), title, fieldName,
-    sport, dateTs: new Date(dateVal).getTime(),
+    sport, dateTs,
     lat: selected?.lat, lon: selected?.lon,
     creator: currentUser?.name || 'אנונימי',
     rsvp: [currentUser?.email || 'guest'],
+    reminderMin,
     ts: Date.now(),
   };
+  // קבע תזכורת אם נבחרה
+  if (reminderMin > 0) scheduleEventReminder(ev);
   const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
   // שתף קישור
   const text = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
@@ -1089,6 +1102,30 @@ function createEvent() {
   document.querySelectorAll('.ev-tab').forEach((b,i)=>b.classList.toggle('on',i===0));
   renderEventsPanel();
   setStatus('✅ האירוע נוצר ושותף!', true);
+}
+
+function scheduleEventReminder(ev) {
+  if (!ev.reminderMin || ev.reminderMin <= 0) return;
+  const delay = ev.dateTs - ev.reminderMin * 60 * 1000 - Date.now();
+  if (delay <= 0) return; // עבר כבר
+  setTimeout(() => {
+    sendLocalNotification(
+      `⏰ ${ev.title} — בעוד ${ev.reminderMin < 60 ? ev.reminderMin+'דק\'' : ev.reminderMin/60+'שע\''}`,
+      `🏟️ ${ev.fieldName} · ${new Date(ev.dateTs).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}`
+    );
+  }, delay);
+  // שמור גם בlocalStorage לטעינה עתידית
+  const reminders = JSON.parse(localStorage.getItem('pg_reminders') || '[]');
+  reminders.push({ evId: ev.id, fireTs: ev.dateTs - ev.reminderMin * 60 * 1000, title: ev.title, fieldName: ev.fieldName, dateTs: ev.dateTs });
+  localStorage.setItem('pg_reminders', JSON.stringify(reminders.filter(r => r.fireTs > Date.now())));
+}
+
+function restoreReminders() {
+  const reminders = JSON.parse(localStorage.getItem('pg_reminders') || '[]');
+  reminders.forEach(r => {
+    const delay = r.fireTs - Date.now();
+    if (delay > 0) setTimeout(() => sendLocalNotification(`⏰ ${r.title}`, `🏟️ ${r.fieldName}`), delay);
+  });
 }
 
 function rsvpEvent(i) {
@@ -3115,6 +3152,7 @@ if ('serviceWorker' in navigator) {
   if (isPro()) applyProPerks();
   applyLang(curLang);
   applyA11yOnLoad();
+  restoreReminders();
 }
 </script>
 </body>
