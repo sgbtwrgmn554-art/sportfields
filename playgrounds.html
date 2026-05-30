@@ -1396,30 +1396,47 @@ function switchEvTab(btn, tab) {
 function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
 function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
 
+function renderEventsFromList(evs, body) {
+  if (!evs.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>אין אירועים קרובים<br><small>צור את הראשון!</small></div>';
+    return;
+  }
+  body.innerHTML = evs.map((e,i) => {
+    const joined = (e.rsvp||[]).includes(currentUser?.email||'guest');
+    const d = new Date(e.dateTs);
+    const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="ev-card">
+      <div class="ev-title">${e.title}</div>
+      <div class="ev-field">🏟️ ${e.fieldName}</div>
+      <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
+      <div class="ev-actions">
+        <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
+        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
+      </div>
+      <div class="ev-count">👥 ${(e.rsvp||[]).length} מצטרפים</div>
+    </div>`;
+  }).join('');
+}
+
 function renderEventsPanel(preField) {
   const body = document.getElementById('events-body');
   if (curEvTab === 'list') {
-    const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000)
-      .sort((a,b) => a.dateTs - b.dateTs);
-    if (!evs.length) {
-      body.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>אין אירועים קרובים<br><small>צור את הראשון!</small></div>';
-      return;
+    if (fsEnabled()) {
+      db.collectionGroup('list')
+        .where('dateTs', '>', Date.now() - 7*24*60*60*1000)
+        .orderBy('dateTs')
+        .get().then(snap => {
+          const evs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderEventsFromList(evs, body);
+        }).catch(() => {
+          // fallback to localStorage
+          const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+          renderEventsFromList(evs, body);
+        });
+    } else {
+      const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+      renderEventsFromList(evs, body);
     }
-    body.innerHTML = evs.map((e,i) => {
-      const joined = (e.rsvp||[]).includes(currentUser?.email||'guest');
-      const d = new Date(e.dateTs);
-      const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-      return `<div class="ev-card">
-        <div class="ev-title">${e.title}</div>
-        <div class="ev-field">🏟️ ${e.fieldName}</div>
-        <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
-        <div class="ev-actions">
-          <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
-          <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
-        </div>
-        <div class="ev-count">👥 ${(e.rsvp||[]).length} מצטרפים</div>
-      </div>`;
-    }).join('');
     return;
   }
 
@@ -1957,6 +1974,17 @@ function enterApp() {
     map.invalidateSize();
   }, 420);
   document.getElementById('user-btn').style.display = 'flex';
+  if (fsEnabled()) {
+    const existingBadge = document.getElementById('fs-badge');
+    if (!existingBadge) {
+      const badge = document.createElement('span');
+      badge.id = 'fs-badge';
+      badge.textContent = '☁️';
+      badge.title = 'מסונכרן לענן';
+      badge.style.cssText = 'font-size:16px;cursor:default;';
+      document.getElementById('user-btn').after(badge);
+    }
+  }
   updateFilterPills('default');
   updateLocBtn();
   locateMe();
@@ -2748,6 +2776,14 @@ function trackVisit(f) {
   const visits = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
   visits.unshift({ name: f.name, sport: f.sport, lat: f.lat, lon: f.lon, ts: Date.now() });
   localStorage.setItem('pg_visit_log', JSON.stringify(visits.slice(0, 100)));
+
+  if (fsEnabled() && currentUser && !currentUser.guest) {
+    const uid = currentUser.id || currentUser.email;
+    db.collection('visits').doc(uid).set({
+      name: currentUser.name || currentUser.email,
+      count: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(console.warn);
+  }
 }
 
 // ─── STATS ──────────────────────────────────────────────
@@ -2877,11 +2913,50 @@ function renderLb() {
     return;
   }
 
-  // משתמשים — ספור פעולות (דירוגים + תמונות + שחקנים שפרסמו)
+  // משתמשים — טען מ-Firestore אם זמין, אחרת localStorage
+  function renderLbUsers(leaders) {
+    if (!leaders.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ico">👥</div>אין נתוני משתמשים עדיין<br><small>דרג מגרשים כדי להופיע כאן!</small></div>';
+      return;
+    }
+    body.innerHTML = leaders.slice(0,20).map((u,i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankClass}">${medal}</div>
+        <div style="font-size:26px;flex-shrink:0">👤</div>
+        <div class="lb-info">
+          <div class="lb-name">${u.name}</div>
+          <div class="lb-sub">${u.actions ? u.actions.join(' · ') : 'משתמש פעיל'}</div>
+        </div>
+        <div class="lb-score">${u.score || u.count || 0} נק'</div>
+      </div>`;
+    }).join('');
+  }
+
+  if (fsEnabled()) {
+    db.collection('visits').orderBy('count', 'desc').limit(20)
+      .get().then(snap => {
+        const leaders = snap.docs.map(d => ({ name: d.data().name, count: d.data().count, score: d.data().count * 10 }));
+        renderLbUsers(leaders);
+      }).catch(() => {
+        // fallback to localStorage
+        const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+        const userActions = {};
+        if (currentUser && !currentUser.guest) {
+          const email = currentUser.email;
+          const name  = currentUser.name || email;
+          if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
+          userActions[email].score += Object.keys(ratings).length * 10;
+          if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
+        }
+        renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
+      });
+    return;
+  }
+
   const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
   const userActions = {};
-
-  // ספור דירוגים לפי אימייל
   if (currentUser && !currentUser.guest) {
     const email = currentUser.email;
     const name  = currentUser.name || email;
@@ -2889,27 +2964,7 @@ function renderLb() {
     userActions[email].score += Object.keys(ratings).length * 10;
     if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
   }
-
-  const entries = Object.values(userActions).sort((a,b) => b.score - a.score);
-
-  // אם אין נתונים — הצג placeholder
-  if (!entries.length) {
-    body.innerHTML = '<div class="empty"><div class="empty-ico">👥</div>אין נתוני משתמשים עדיין<br><small>דרג מגרשים כדי להופיע כאן!</small></div>';
-    return;
-  }
-  body.innerHTML = entries.slice(0,20).map((u,i) => {
-    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-    return `<div class="lb-row">
-      <div class="lb-rank ${rankClass}">${medal}</div>
-      <div style="font-size:26px;flex-shrink:0">👤</div>
-      <div class="lb-info">
-        <div class="lb-name">${u.name}</div>
-        <div class="lb-sub">${u.actions.join(' · ') || 'משתמש פעיל'}</div>
-      </div>
-      <div class="lb-score">${u.score} נק'</div>
-    </div>`;
-  }).join('');
+  renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
 }
 
 // ─── PLAYERS BOARD ──────────────────────────────────────
@@ -2927,8 +2982,7 @@ function closePlayersPanel() {
   document.getElementById('players-panel').classList.remove('on');
 }
 
-function renderPlayersBody(f) {
-  const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000); // 24 שעות
+function buildPlayersHTML(f, players) {
   const sportOpts = (f.sports || [f.sport]).map(s =>
     `<option value="${s}">${ico(s)} ${he(s)}</option>`
   ).join('');
@@ -2969,15 +3023,41 @@ function renderPlayersBody(f) {
   `;
 }
 
-function postPlayer() {
+function renderPlayersBody(f) {
+  if (fsEnabled()) {
+    const fieldId = f.id || `${f.lat}_${f.lon}`;
+    db.collection('players').doc(fieldId).collection('list')
+      .orderBy('ts', 'desc').limit(30)
+      .onSnapshot(snap => {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const players = snap.docs.map(d => d.data()).filter(p => p.ts > cutoff);
+        buildPlayersHTML(f, players);
+      }, () => {
+        // fallback
+        const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+        buildPlayersHTML(f, players);
+      });
+    return;
+  }
+  const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+  buildPlayersHTML(f, players);
+}
+
+async function postPlayer() {
   const name    = document.getElementById('p-name').value.trim() || 'אנונימי';
   const sport   = document.getElementById('p-sport').value;
   const level   = document.getElementById('p-level').value;
   const players = document.getElementById('p-count').value;
   if (!selected) return;
+  const player = { name, sport, level, players, ts: Date.now() };
+  // localStorage fallback always
   const list = getPlayers(selected);
-  list.unshift({ name, sport, level, players, ts: Date.now() });
+  list.unshift(player);
   localStorage.setItem(playersKey(selected), JSON.stringify(list.slice(0, 20)));
+  if (fsEnabled()) {
+    const fieldId = selected.id || `${selected.lat}_${selected.lon}`;
+    await db.collection('players').doc(fieldId).collection('list').add(player).catch(console.warn);
+  }
   renderPlayersBody(selected);
 }
 
