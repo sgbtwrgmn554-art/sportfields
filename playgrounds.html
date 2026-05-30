@@ -1169,6 +1169,21 @@ try {
 
 function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
 
+// ─── WORD FILTER ─────────────────────────────────────────
+const BANNED_WORDS = [
+  // Hebrew
+  'זין','תזדיין','כוסאמק','בן זונה','זונה','מזדיין','מניאק','בן שרמוטה','שרמוטה','כוס אמא','לך תזדיין',
+  // Arabic
+  'كس','زب','شرموطة','منيوك','يلعن','كلب','حمار',
+  // English
+  'fuck','shit','bitch','asshole','cunt','nigger','faggot'
+];
+
+function containsBannedWord(text) {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(w => lower.includes(w.toLowerCase()));
+}
+
 // ─── BIZ DASHBOARD ──────────────────────────────────────
 function openBizPanel() {
   renderBizDashboard();
@@ -1354,6 +1369,12 @@ function renderChat() {
 async function sendMsg() {
   const inp  = document.getElementById('chat-inp');
   const text = inp.value.trim(); if (!text || !chatField) return;
+  if (containsBannedWord(text)) {
+    inp.style.borderColor = 'red';
+    inp.placeholder = '⚠️ הודעה לא הולמת';
+    setTimeout(() => { inp.style.borderColor = ''; inp.placeholder = 'כתוב הודעה...'; }, 2000);
+    return;
+  }
   inp.value = '';
   const msg = {
     text,
@@ -3100,6 +3121,7 @@ function pickPhoto(source) {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
+      if (!confirm('התמונה חייבת להיות קשורה למגרש הספורט. אישור?')) return;
       addFieldPhoto(selected, ev.target.result);
       // רענן את בלוק התמונות
       const wrap = document.querySelector('.photos-wrap');
