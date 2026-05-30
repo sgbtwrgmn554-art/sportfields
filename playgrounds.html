@@ -78,6 +78,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 }
 .fpill.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent)}
 .sheet-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.city-row{display:flex;gap:7px;margin-top:10px}
+.city-inp{
+  flex:1;padding:9px 12px;border-radius:11px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:.2s;
+}
+.city-inp:focus{border-color:var(--accent)}
+.city-inp::placeholder{color:var(--muted)}
+.city-btn{
+  padding:9px 14px;border-radius:11px;border:none;
+  background:var(--accent);color:#000;font-size:15px;font-weight:800;
+  font-family:inherit;cursor:pointer;flex-shrink:0;transition:.15s;
+}
+.city-btn:active{opacity:.8}
 .count-lbl{font-size:13px;color:var(--muted);font-weight:600}
 .radius-sel{background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;outline:none}
 .sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
@@ -248,6 +262,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
   <div class="sheet-head">
     <div class="filter-row" id="filter-row">
       <!-- נוצר דינמית לפי מדינה -->
+    </div>
+    <div class="city-row">
+      <input class="city-inp" id="city-inp" type="text" placeholder="🔍 חפש עיר — תל אביב, חיפה..." dir="rtl"
+        onkeydown="if(event.key==='Enter')searchCity()" />
+      <button class="city-btn" onclick="searchCity()">→</button>
     </div>
     <div class="sheet-meta">
       <span class="count-lbl" id="cnt">טוען...</span>
@@ -433,7 +452,7 @@ const ICONS = {
   gymnastics:'🤸',rhythmic_gymnastics:'🤸',
   padel:'🎾',paddle:'🎾',squash:'🎾',
   multi:'🏅',
-  playground:'🛝',
+  playground:'🎡',
   default:'🏟️'
 };
 const HE = {
@@ -482,7 +501,7 @@ const ALL_FILTERS = [
   { id:'table_tennis',     label:'🏓 פינג-פונג',          countries:'all' },
   { id:'badminton',        label:'🏸 בדמינטון',           countries:'all' },
   { id:'climbing',         label:'🧗 טיפוס',              countries:'all' },
-  { id:'playground',       label:'🛝 גן שעשועים',         countries:'all' },
+  { id:'playground',       label:'🎡 גן שעשועים',         countries:'all' },
   // ישראל + אירופה
   { id:'handball',         label:'🤾 כדוריד',             countries:['IL','DE','FR','ES','PT','DK','NO','SE','HR','PL','HU','RO','RS','AT','CH','GR','TN','EG','MA'] },
   { id:'padel',            label:'🎾 פאדל',               countries:['IL','ES','IT','AR','SE','BE','PT','MX','AE','SA','QA'] },
@@ -874,6 +893,33 @@ function navTo(app) {
   const { lat, lon } = selected;
   if (app==='waze') window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`);
   else              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+}
+
+// ─── CITY SEARCH ────────────────────────────────────────
+async function searchCity() {
+  const q = document.getElementById('city-inp').value.trim();
+  if (!q) return;
+  setStatus('🔍 מחפש ' + q + '...');
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'he,en' } }
+    );
+    const data = await res.json();
+    if (!data[0]) { setStatus('❌ לא נמצאה עיר — נסה שם אחר'); return; }
+    const lat = parseFloat(data[0].lat);
+    const lon = parseFloat(data[0].lon);
+    uLat = lat; uLon = lon;
+    map.setView([lat, lon], 14);
+    if (uMarker) map.removeLayer(uMarker);
+    uMarker = L.circleMarker([lat, lon], {
+      radius:11, fillColor:'#0a84ff', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
+    }).addTo(map);
+    curCountry = await getCountry(lat, lon);
+    updateFilterPills(curCountry);
+    document.getElementById('city-inp').blur();
+    loadFields(lat, lon);
+  } catch(e) { setStatus('❌ שגיאה בחיפוש'); }
 }
 
 // ─── SERVICE WORKER ─────────────────────────────────────
