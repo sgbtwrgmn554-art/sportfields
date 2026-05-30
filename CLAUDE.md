@@ -2,44 +2,56 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Deployment
+---
 
-This is a Vercel project — there is no local dev server or build step. Deploy via:
+## פקודות עבודה
 
-```bash
-npx vercel --prod
-```
+| פעולה | פקודה |
+|-------|--------|
+| Deploy לייצור | `npx vercel --prod` |
+| הרצה מקומית (כולל API) | `npx vercel dev` |
+| יצירת VAPID keys חדשים | `node generate-vapid.js` |
 
-To test API routes locally:
-```bash
-npx vercel dev
-```
+---
 
-## Architecture
+## ארכיטקטורה
 
-**Single-page PWA** with no bundler, no framework — everything lives in `index.html` (HTML + CSS + JS all in one file, ~3000 lines). The app is RTL Hebrew, targeting mobile.
+### Frontend
+- **קובץ יחיד:** `index.html` — HTML + CSS + JS ביחד (~3000 שורות), ללא bundler או framework
+- **שפה:** עברית, RTL, ממוקד מובייל
+- **PWA:** `manifest.json` + `sw.js` לתמיכה ב-offline ו-push notifications
 
-**Backend: Vercel Serverless Functions** (`/api/`)
-- `api/ai.js` — proxy to Anthropic Claude API. Forwards POST body directly to `https://api.anthropic.com/v1/messages` using `ANTHROPIC_API_KEY`. Used for meal photo analysis and product scanning.
-- `api/subscribe.js` — manages Web Push subscriptions in Vercel KV. Actions: `get-public-key`, `subscribe`, `update`, `unsubscribe`. Keys stored as `sub:<profileId>`.
-- `api/cron.js` — scheduled push notification sender. Reads all `sub:*` keys from KV, checks Israel time (`Asia/Jerusalem`), sends via `web-push` VAPID. Protected by `CRON_SECRET` Bearer token. Deduplication key: `sent:<profileId>:<time>:<date>` (TTL 24h).
+### Backend — Vercel Serverless Functions (`/api/`)
 
-**Service Worker** (`sw.js`) — caches `index.html` + `manifest.json` for offline use (cache name `dad-fit-v2`). Handles push events and notification clicks.
+| קובץ | תפקיד |
+|------|--------|
+| `api/ai.js` | פרוקסי ל-Anthropic API — מעביר את ה-body ישירות ל-`/v1/messages` |
+| `api/subscribe.js` | ניהול Web Push subscriptions ב-Vercel KV (actions: `get-public-key`, `subscribe`, `update`, `unsubscribe`) |
+| `api/cron.js` | שליחת push notifications לפי לוח זמנים — בודק שעה ישראלית (`Asia/Jerusalem`), מונע כפילויות עם key `sent:<profileId>:<time>:<date>` (TTL 24h) |
 
-**Storage** — all user data is `localStorage` only (no user database). Each family member is a separate profile with a PIN. KV is only used for push subscriptions.
+### אחסון
+- **נתוני משתמשים:** `localStorage` בלבד — אין DB
+- **Push subscriptions:** Vercel KV, מפתח `sub:<profileId>`
 
-## Environment Variables
+---
 
-Required in Vercel:
-- `ANTHROPIC_API_KEY` — for `api/ai.js`
-- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` — for push notifications (generate with `node generate-vapid.js`)
-- `CRON_SECRET` — authorizes calls to `api/cron.js`
-- `KV_REST_API_URL` / `KV_REST_API_TOKEN` — auto-set by Vercel KV addon
+## משתני סביבה (Vercel)
 
-## Key Patterns in index.html
+| משתנה | שימוש |
+|-------|--------|
+| `ANTHROPIC_API_KEY` | `api/ai.js` |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | push notifications |
+| `CRON_SECRET` | הגנה על `api/cron.js` (Bearer token) |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | מוגדר אוטומטית ע"י Vercel KV addon |
 
-- **Tabs**: `showTab(name)` switches between `#tab-home`, `#tab-workout`, `#tab-food`, `#tab-mini`, `#tab-scan`, `#tab-stats`
-- **Profiles**: multi-user via `localStorage`, PIN-protected, onboarding wizard (11 steps)
-- **AI calls**: `fetch('/api/ai', { method:'POST', body: JSON.stringify({model, messages, ...}) })` — mirrors Anthropic API shape exactly
-- **Push**: subscribe flow calls `/api/subscribe` with `action:'subscribe'`; cron trigger calls `/api/cron` with `Authorization: Bearer <CRON_SECRET>`
-- **Theme**: `body.light-mode` class toggles light/dark via CSS variables on `:root`
+---
+
+## דפוסים מרכזיים ב-index.html
+
+| נושא | פרטים |
+|------|--------|
+| **טאבים** | `showTab(name)` — `home`, `workout`, `food`, `mini`, `scan`, `stats` |
+| **פרופילים** | multi-user ב-localStorage, PIN-protected, onboarding wizard של 11 שלבים |
+| **קריאות AI** | `fetch('/api/ai', { method:'POST', body: JSON.stringify({model, messages, ...}) })` |
+| **Push** | subscribe קורא ל-`/api/subscribe`, cron קורא ל-`/api/cron` עם `Authorization: Bearer <CRON_SECRET>` |
+| **תמה** | `body.light-mode` class — toggles CSS variables מוגדרים ב-`:root` |
