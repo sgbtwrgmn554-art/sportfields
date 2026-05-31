@@ -224,6 +224,12 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 .ob-next{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:14px 20px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;flex:1;transition:.15s}
 .ob-next:active,.ob-back:active{opacity:.75;transform:scale(.98)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pulse-rec{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.task-card{background:var(--card);border-radius:14px;padding:14px;margin:0 16px 10px;border:.5px solid var(--border)}
+.task-card.done-task{opacity:.45}
+.task-attach-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer}
+.task-attach-file{padding:6px 10px;background:var(--card2);border-radius:8px;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:4px}
+.ai-mic-active{border-color:var(--red)!important;background:var(--red-s)!important;color:var(--red)!important}
 </style>
 </head>
 <body>
@@ -900,11 +906,14 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
 <!-- AI -->
 <div class="tab" id="tab-ai">
   <div class="card">
-    <div style="font-size:17px;font-weight:900;margin-bottom:4px">🤖 מאמן AI</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">שאל כל שאלה — עם תמונה, סרטון, או סתם טקסט</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:2px">🤖 מאמן AI</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">שאל כל שאלה — עם קול, תמונה, סרטון או טקסט. <span style="color:var(--accent);font-weight:700">יכול גם לבצע פעולות באפליקציה!</span></div>
 
-    <!-- כפתורי מדיה -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <!-- כפתורי מדיה + מיקרופון -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <button onclick="toggleAIVoice()" id="ai-mic-btn" style="padding:12px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.2s">
+        <span style="font-size:22px">🎤</span>דבר
+      </button>
       <button onclick="document.getElementById('ai-cam').click()" style="padding:12px 6px;border-radius:14px;border:1.5px solid var(--border);background:var(--card2);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
         <span style="font-size:22px">📷</span>צלם
       </button>
@@ -915,6 +924,13 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
         <span style="font-size:22px">🎥</span>סרטון
       </button>
     </div>
+    <!-- מחוון הקלטה -->
+    <div id="ai-voice-indicator" style="display:none;background:var(--red-s);border:1px solid var(--red);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:10px">
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--red);animation:pulse-rec 1s ease-in-out infinite"></div>
+      <div style="font-size:14px;font-weight:700;color:var(--red)">מקליט... דבר עכשיו</div>
+      <button onclick="stopAIVoice()" style="margin-right:auto;background:var(--red);color:#fff;border:none;border-radius:8px;padding:4px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">עצור</button>
+    </div>
+
     <input type="file" id="ai-cam" accept="image/*" capture="environment" style="display:none" onchange="attachAIMedia(this)">
     <input type="file" id="ai-img" accept="image/*" style="display:none" onchange="attachAIMedia(this)">
     <input type="file" id="ai-vid" accept="video/*" style="display:none" onchange="attachAIMedia(this)">
@@ -930,12 +946,19 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
       </div>
     </div>
 
-    <textarea class="textarea" id="ai-inp" rows="3" placeholder="שאל על האימון, הכאב, האוכל, הטכניקה... (אפשר גם בלי תמונה)"></textarea>
+    <textarea class="textarea" id="ai-inp" rows="3" placeholder="שאל על האימון, הכאב, האוכל... או תגיד 'תוסיף תזכורת', 'תוסיף משימה', 'תכבה תזכורת'"></textarea>
     <div style="margin-top:10px"><button class="btn" id="ai-btn" onclick="askAI()">📩 שלח למאמן</button></div>
+
+    <!-- רמז על פעולות -->
+    <div style="margin-top:10px;padding:10px 12px;background:var(--blue-s);border:1px solid var(--blue);border-radius:12px;font-size:12px;color:var(--blue);line-height:1.7">
+      💡 <strong>מה ה-AI יכול לעשות?</strong><br>
+      "תוסיף לי משימה לקנות חלב" · "תזכיר לי לשתות מים בשמונה בבוקר כל יום" · "תסמן שאכלתי ארוחת בוקר" · "תוסיף 2 כוסות מים"
+    </div>
   </div>
 
   <div class="card card-green" id="ai-card" style="display:none">
     <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:7px">💬 תשובת המאמן:</div>
+    <div id="ai-action-done" style="display:none;background:var(--accent-s);border:1px solid var(--accent);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--accent);font-weight:700;margin-bottom:8px"></div>
     <div style="font-size:15px;line-height:1.8" id="ai-ans"></div>
     <button id="ai-copy-btn" onclick="copyAIAnswer()" style="margin-top:12px;background:none;border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer">📋 העתק תשובה</button>
   </div>
@@ -950,6 +973,68 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   </div>
 
   <div class="card"><div class="sec">❓ שאלות נפוצות</div><div id="quick-qs"></div></div>
+</div>
+
+<!-- VOICTASK — משימות עם קול וקבצים -->
+<div class="tab" id="tab-tasks">
+  <div class="card">
+    <div style="font-size:17px;font-weight:900;margin-bottom:4px">📋 VoicTask — משימות חכמות</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">הקלט קול, צרף קבצים — ה-AI יגדיר תזכורות לבד</div>
+
+    <!-- טופס הוספת משימה -->
+    <div style="background:var(--card2);border-radius:14px;padding:14px;border:.5px solid var(--border);margin-bottom:14px">
+      <input class="inp" id="task-title-inp" placeholder="כותרת המשימה..." style="text-align:right;margin-bottom:10px">
+
+      <!-- הקלטת קול למשימה -->
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button onclick="toggleTaskVoice()" id="task-mic-btn" style="flex:1;padding:11px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s">
+          <span style="font-size:18px">🎤</span> הקלט הוראה קולית
+        </button>
+        <button onclick="document.getElementById('task-file-inp').click()" style="padding:11px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer">📎</button>
+      </div>
+
+      <!-- מחוון הקלטה -->
+      <div id="task-voice-indicator" style="display:none;background:var(--red-s);border:1px solid var(--red);border-radius:10px;padding:8px 12px;margin-bottom:10px;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse-rec 1s ease-in-out infinite;flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--red)">מקליט...</div>
+        <button onclick="stopTaskVoice()" style="margin-right:auto;background:var(--red);color:#fff;border:none;border-radius:7px;padding:3px 10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">עצור</button>
+      </div>
+
+      <!-- תמלול קולי -->
+      <div id="task-voice-text" style="display:none;background:var(--accent-s);border:1px solid var(--accent);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:var(--accent)"></div>
+
+      <!-- קבצים מצורפים -->
+      <input type="file" id="task-file-inp" accept="image/*,application/pdf,.doc,.docx,.txt" multiple style="display:none" onchange="attachTaskFiles(this)">
+      <div id="task-attachments" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+
+      <!-- שדות תזכורת (ניתן לעריכה) -->
+      <div id="task-reminder-fields" style="display:none;background:var(--yellow-s);border:1px solid var(--yellow);border-radius:10px;padding:10px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px">🔔 תזכורת (ה-AI זיהה — ניתן לשנות):</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="time" id="task-rem-time" class="inp" style="flex:1;font-size:15px;padding:8px">
+          <select id="task-rem-repeat" class="inp" style="flex:1;font-size:13px;padding:8px">
+            <option value="none">פעם אחת</option>
+            <option value="daily">כל יום</option>
+            <option value="weekly">כל שבוע</option>
+          </select>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">תאריך (לפעם אחת): <input type="date" id="task-rem-date" class="inp" style="font-size:12px;padding:6px;margin-top:4px"></div>
+      </div>
+
+      <!-- הוסף משימה -->
+      <button class="btn" onclick="addTask()">➕ הוסף משימה</button>
+    </div>
+
+    <!-- פילטר -->
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <button class="pill active" onclick="filterTasks('all',this)">הכל</button>
+      <button class="pill" onclick="filterTasks('pending',this)">ממתינות</button>
+      <button class="pill" onclick="filterTasks('done',this)">הושלמו</button>
+    </div>
+  </div>
+
+  <!-- רשימת משימות -->
+  <div id="task-list-wrap"></div>
 </div>
 
 <!-- PROGRESS -->
@@ -1066,6 +1151,7 @@ body:not(.light-mode) .scard{border:.5px solid var(--border)}
   <button class="nb"        id="nb-mini"     onclick="showTab('mini')">    <span class="ni">⚡</span>5דק׳</button>
   <button class="nb"        id="nb-steps"    onclick="showTab('steps')">   <span class="ni">👟</span>צעדים</button>
   <button class="nb"        id="nb-ai"       onclick="showTab('ai')">      <span class="ni">🤖</span>מאמן</button>
+  <button class="nb"        id="nb-tasks"    onclick="showTab('tasks')">   <span class="ni">📋</span>משימות</button>
   <button class="nb"        id="nb-body"     onclick="showTab('body')">    <span class="ni">📈</span>גוף</button>
   <button class="nb"        id="nb-plan"     onclick="showTab('plan')">    <span class="ni">📅</span>תוכנית</button>
   <button class="nb"        id="nb-progress" onclick="showTab('progress')"><span class="ni">🏆</span>התקדמות</button>
@@ -1344,7 +1430,7 @@ function checkReset(){
   }
 }
 
-function renderAll(){renderHeader();renderHome();renderWorkout();renderFood();renderScan();renderMini();renderSteps();renderAI();renderProgress();renderSettings();renderBodyTab();renderPlanTab();}
+function renderAll(){renderHeader();renderHome();renderWorkout();renderFood();renderScan();renderMini();renderSteps();renderAI();renderProgress();renderSettings();renderBodyTab();renderPlanTab();renderTasks();}
 
 function renderHeader(){
   const dn=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -2218,18 +2304,96 @@ function renderAIHistory(){
   });
 }
 
+// ── Voice recognition for AI chat ─────────────────────────────────
+let aiSpeechRec=null;
+function toggleAIVoice(){
+  if(aiSpeechRec){stopAIVoice();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('⚠️ הדפדפן לא תומך בזיהוי קול');return;}
+  aiSpeechRec=new SR();
+  aiSpeechRec.lang='he-IL';aiSpeechRec.continuous=false;aiSpeechRec.interimResults=false;
+  aiSpeechRec.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    const inp=document.getElementById('ai-inp');
+    inp.value=(inp.value?inp.value+' ':'')+txt;
+    stopAIVoice();
+    askAI();
+  };
+  aiSpeechRec.onerror=()=>stopAIVoice();
+  aiSpeechRec.onend=()=>stopAIVoice();
+  aiSpeechRec.start();
+  const btn=document.getElementById('ai-mic-btn');
+  const ind=document.getElementById('ai-voice-indicator');
+  btn.classList.add('ai-mic-active');
+  if(ind){ind.style.display='flex';}
+}
+function stopAIVoice(){
+  if(aiSpeechRec){try{aiSpeechRec.stop();}catch(e){}aiSpeechRec=null;}
+  const btn=document.getElementById('ai-mic-btn');
+  const ind=document.getElementById('ai-voice-indicator');
+  if(btn)btn.classList.remove('ai-mic-active');
+  if(ind)ind.style.display='none';
+}
+
+// ── AI App Actions ─────────────────────────────────────────────────
+function executeAIActions(actions){
+  if(!actions||!Array.isArray(actions))return null;
+  const done=[];
+  actions.forEach(a=>{
+    try{
+      if(a.type==='add_task'){
+        const task={id:Date.now()+Math.random(),title:a.title||'משימה חדשה',note:a.note||'',done:false,createdAt:Date.now(),attachments:[],reminder:a.reminder||null};
+        if(!S.tasks)S.tasks=[];
+        S.tasks.unshift(task);save();renderTasks();
+        done.push('✅ נוספה משימה: '+task.title);
+        if(task.reminder)scheduleTaskReminder(task);
+      } else if(a.type==='add_reminder'){
+        const time=a.time||'08:00';
+        const repeat=a.repeat||'daily';
+        S.remTime=time;
+        if(repeat==='daily')S.remDays=[0,1,2,3,4,5,6];
+        save();startRemChecker();
+        done.push('🔔 תזכורת הוגדרה ל-'+time+(repeat==='daily'?' כל יום':''));
+        showToast('🔔 תזכורת: '+time);
+      } else if(a.type==='log_water'){
+        const cups=a.cups||1;
+        S.waterCups=Math.min((S.waterCups||0)+cups,S.waterGoal||8);
+        save();renderHome();
+        done.push('💧 נוספו '+cups+' כוסות מים');
+        showToast('💧 +'+cups+' כוסות מים!');
+      } else if(a.type==='log_meal'){
+        const meal=a.meal||'ארוחה';
+        if(!S.checkedMeals)S.checkedMeals={};
+        S.checkedMeals[meal]=true;save();renderHome();
+        done.push('🍽️ נרשמה ארוחה: '+meal);
+      } else if(a.type==='navigate'){
+        showTab(a.tab||'home');
+        done.push('📍 עברתי ל-'+a.tab);
+      }
+    }catch(err){console.warn('action error',err);}
+  });
+  return done.length?done.join('\n'):null;
+}
+
 async function askAI(){
   const q=document.getElementById('ai-inp').value.trim();
   if(!q&&!AI_MEDIA)return;
   const btn=document.getElementById('ai-btn'),card=document.getElementById('ai-card'),ans=document.getElementById('ai-ans');
+  const actionDone=document.getElementById('ai-action-done');
   btn.textContent='⏳ חושב...';btn.disabled=true;card.style.display='block';
+  if(actionDone)actionDone.style.display='none';
   ans.innerHTML='<div class="spin-wrap"><div class="spinner"></div> מכין תשובה...</div>';
   try{
     const gender=S.gender==='female'?'אישה':'גבר';
     const goalLabel=GOALS.find(g=>g.id===S.goal)?.label||'';
     const injuries=S.injuries&&S.injuries.length&&!S.injuries.includes('אין כאבים — הכל בסדר')?'מגבלות: '+S.injuries.join(', ')+'.':'';
     const profile=S.age?`(${gender}, ${S.age} שנים, ${S.weight||'?'}ק״ג, גובה ${S.height||'?'}ס״מ, מטרה: ${goalLabel}${injuries?' — '+injuries:''})`: '';
-    const sysPrompt=`אתה מאמן כושר ותזונאי ישראלי מנוסה ואנושי. מסייע ל${gender} ${profile}. ענה בעברית פשוטה, חמה וענייה. אם רואה תמונה — תאר מה אתה רואה ותן עצות מדויקות. 4-6 משפטים.`;
+    const sysPrompt=`אתה מאמן כושר ותזונאי ישראלי מנוסה ואנושי. מסייע ל${gender} ${profile}. ענה בעברית פשוטה, חמה וענייה. אם רואה תמונה — תאר מה אתה רואה ותן עצות מדויקות. 4-6 משפטים.
+
+אם המשתמש מבקש לבצע פעולה באפליקציה (להוסיף משימה, לקבוע תזכורת, לרשום כוסות מים, לסמן ארוחה, לנווט לעמוד), **הוסף בסוף תגובתך** (אחרי הטקסט) בלוק JSON בפורמט הבא בדיוק, ואל תסביר אותו — רק הטקסט ואז ה-JSON:
+[ACTIONS:{"actions":[{"type":"add_task","title":"שם המשימה","note":"הערה","reminder":{"time":"HH:MM","repeat":"daily|weekly|none","date":"YYYY-MM-DD"}},{"type":"add_reminder","time":"HH:MM","repeat":"daily|weekly|none"},{"type":"log_water","cups":1},{"type":"log_meal","meal":"ארוחת בוקר"},{"type":"navigate","tab":"home|workout|food|scan|steps|ai|tasks|body|plan|progress|settings"}]}]
+
+השתמש רק בפעולות הרלוונטיות. אם אין פעולה — אל תכתוב את ה-JSON כלל.`;
     let content;
     if(AI_MEDIA){
       const question=q||(AI_MEDIA.label==='🎥 פריים מסרטון'?'מה אתה רואה בסרטון? תן לי עצות לשיפור הטכניקה.':'מה אתה רואה? תן לי עצות מותאמות.');
@@ -2240,10 +2404,24 @@ async function askAI(){
     } else {
       content=sysPrompt+'\n\nשאלה: '+q;
     }
-    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})});
+    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content}]})});
     const data=await resp.json();
-    const text=data.content?.map(b=>b.text||'').join('')||'';
+    let text=data.content?.map(b=>b.text||'').join('')||'';
+    // חלץ פעולות מה-JSON
+    let actionsResult=null;
+    const actMatch=text.match(/\[ACTIONS:(\{.*?\})\]/s);
+    if(actMatch){
+      try{
+        const parsed=JSON.parse(actMatch[1]);
+        actionsResult=executeAIActions(parsed.actions);
+        text=text.replace(actMatch[0],'').trim();
+      }catch(e){}
+    }
     ans.textContent=text;
+    if(actionsResult&&actionDone){
+      actionDone.style.display='block';
+      actionDone.textContent='✅ בוצע: '+actionsResult;
+    }
     // שמור בהיסטוריה
     AI_HISTORY.push({q:q||'',imgFlag:!!AI_MEDIA,ans:text,ts:new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})});
     if(AI_HISTORY.length>20)AI_HISTORY=AI_HISTORY.slice(-20);
@@ -2253,6 +2431,236 @@ async function askAI(){
     clearAIMedia();
   }catch(e){ans.textContent='לא הצלחתי להתחבר. נסה שוב.';}
   btn.textContent='📩 שלח למאמן';btn.disabled=false;
+}
+
+// ── VoicTask — Tasks System ────────────────────────────────────────
+let taskAttachments=[];
+let taskSpeechRec=null;
+let taskVoiceText='';
+
+function toggleTaskVoice(){
+  if(taskSpeechRec){stopTaskVoice();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('⚠️ הדפדפן לא תומך בזיהוי קול');return;}
+  taskSpeechRec=new SR();
+  taskSpeechRec.lang='he-IL';taskSpeechRec.continuous=false;taskSpeechRec.interimResults=false;
+  taskSpeechRec.onresult=async e=>{
+    const txt=e.results[0][0].transcript;
+    taskVoiceText=txt;
+    stopTaskVoice();
+    const vt=document.getElementById('task-voice-text');
+    if(vt){vt.style.display='block';vt.textContent='🎤 "'+txt+'"';}
+    // אם אין כותרת, מלא אותה
+    const ti=document.getElementById('task-title-inp');
+    if(ti&&!ti.value)ti.value=txt;
+    // שלח ל-AI לניתוח תזכורת
+    await parseVoiceTaskWithAI(txt);
+  };
+  taskSpeechRec.onerror=()=>stopTaskVoice();
+  taskSpeechRec.onend=()=>stopTaskVoice();
+  taskSpeechRec.start();
+  const btn=document.getElementById('task-mic-btn');
+  const ind=document.getElementById('task-voice-indicator');
+  if(btn){btn.classList.add('ai-mic-active');btn.innerHTML='<span style="font-size:18px">⏹️</span> מקליט...';}
+  if(ind)ind.style.display='flex';
+}
+function stopTaskVoice(){
+  if(taskSpeechRec){try{taskSpeechRec.stop();}catch(e){}taskSpeechRec=null;}
+  const btn=document.getElementById('task-mic-btn');
+  const ind=document.getElementById('task-voice-indicator');
+  if(btn){btn.classList.remove('ai-mic-active');btn.innerHTML='<span style="font-size:18px">🎤</span> הקלט הוראה קולית';}
+  if(ind)ind.style.display='none';
+}
+
+async function parseVoiceTaskWithAI(text){
+  try{
+    const sysP=`אתה עוזר שמנתח הוראות קוליות בעברית למשימות. המשתמש אמר: "${text}".
+זהה אם יש בקשה לתזכורת (זמן, תדירות). החזר JSON בלבד:
+{"hasReminder":true/false,"time":"HH:MM","repeat":"daily|weekly|none","date":"YYYY-MM-DD","taskTitle":"כותרת מוצעת"}
+אם אין תזכורת: {"hasReminder":false,"taskTitle":"כותרת מוצעת"}`;
+    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:sysP}]})});
+    const data=await resp.json();
+    const raw=data.content?.map(b=>b.text||'').join('')||'{}';
+    const jsonMatch=raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch)return;
+    const parsed=JSON.parse(jsonMatch[0]);
+    if(parsed.taskTitle){
+      const ti=document.getElementById('task-title-inp');
+      if(ti&&!ti.value)ti.value=parsed.taskTitle;
+    }
+    if(parsed.hasReminder&&parsed.time){
+      const rf=document.getElementById('task-reminder-fields');
+      const rt=document.getElementById('task-rem-time');
+      const rr=document.getElementById('task-rem-repeat');
+      const rd=document.getElementById('task-rem-date');
+      if(rf)rf.style.display='block';
+      if(rt)rt.value=parsed.time;
+      if(rr)rr.value=parsed.repeat||'daily';
+      if(rd&&parsed.date)rd.value=parsed.date;
+      showToast('🔔 זיהיתי תזכורת ב-'+parsed.time);
+    }
+  }catch(e){}
+}
+
+function attachTaskFiles(inp){
+  const files=Array.from(inp.files);
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const att={name:file.name,type:file.type,size:file.size,data:ev.target.result};
+      taskAttachments.push(att);
+      renderTaskAttachmentPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+  inp.value='';
+}
+function renderTaskAttachmentPreviews(){
+  const wrap=document.getElementById('task-attachments');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  taskAttachments.forEach((att,i)=>{
+    if(att.type.startsWith('image/')){
+      const img=document.createElement('img');
+      img.src=att.data;img.className='task-attach-thumb';
+      img.title=att.name;
+      wrap.appendChild(img);
+    } else {
+      const d=document.createElement('div');
+      d.className='task-attach-file';
+      const icon=att.type==='application/pdf'?'📄':'📁';
+      d.innerHTML=icon+' '+att.name.slice(0,15)+(att.name.length>15?'…':'');
+      wrap.appendChild(d);
+    }
+    const rm=document.createElement('button');
+    rm.textContent='✕';rm.style.cssText='position:relative;background:var(--red-s);color:var(--red);border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;margin-right:-8px;margin-top:-8px;vertical-align:top;flex-shrink:0';
+    rm.onclick=()=>{taskAttachments.splice(i,1);renderTaskAttachmentPreviews();};
+    wrap.appendChild(rm);
+  });
+}
+
+function addTask(){
+  const ti=document.getElementById('task-title-inp');
+  const title=ti?.value.trim();
+  if(!title){showToast('⚠️ הכנס כותרת למשימה');return;}
+  const rf=document.getElementById('task-reminder-fields');
+  let reminder=null;
+  if(rf&&rf.style.display!=='none'){
+    const time=document.getElementById('task-rem-time')?.value;
+    const repeat=document.getElementById('task-rem-repeat')?.value||'none';
+    const date=document.getElementById('task-rem-date')?.value||'';
+    if(time)reminder={time,repeat,date};
+  }
+  const task={
+    id:Date.now(),
+    title,
+    note:taskVoiceText||'',
+    done:false,
+    createdAt:Date.now(),
+    attachments:[...taskAttachments],
+    reminder
+  };
+  if(!S.tasks)S.tasks=[];
+  S.tasks.unshift(task);
+  save();
+  // תזמן תזכורת
+  if(reminder)scheduleTaskReminder(task);
+  // אפס
+  ti.value='';
+  taskAttachments=[];taskVoiceText='';
+  const vt=document.getElementById('task-voice-text');if(vt)vt.style.display='none';
+  if(rf)rf.style.display='none';
+  document.getElementById('task-attachments').innerHTML='';
+  renderTasks();
+  showToast('✅ משימה נוספה!');
+}
+
+function scheduleTaskReminder(task){
+  if(!task.reminder||!task.reminder.time)return;
+  if(!('Notification' in window))return;
+  Notification.requestPermission().then(p=>{
+    if(p!=='granted')return;
+    const [h,m]=task.reminder.time.split(':').map(Number);
+    const now=new Date();
+    let next=new Date(now);
+    next.setHours(h,m,0,0);
+    if(next<=now)next.setDate(next.getDate()+1);
+    const ms=next-now;
+    setTimeout(()=>{
+      new Notification('📋 תזכורת משימה',{body:task.title,icon:'/icon-192.png'});
+      if(task.reminder.repeat==='daily')scheduleTaskReminder(task);
+      else if(task.reminder.repeat==='weekly'){const nt={...task,reminder:{...task.reminder,date:''}};setTimeout(()=>scheduleTaskReminder(nt),6.048e8);}
+    },ms);
+  });
+}
+
+let taskFilter='all';
+function filterTasks(f,btn){
+  taskFilter=f;
+  document.querySelectorAll('#tab-tasks .pill').forEach(p=>p.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTasks();
+}
+function renderTasks(){
+  const wrap=document.getElementById('task-list-wrap');
+  if(!wrap)return;
+  if(!S.tasks)S.tasks=[];
+  const list=taskFilter==='all'?S.tasks:taskFilter==='done'?S.tasks.filter(t=>t.done):S.tasks.filter(t=>!t.done);
+  if(!list.length){wrap.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:15px">אין משימות עדיין 🎉</div>';return;}
+  wrap.innerHTML=list.map(t=>`
+    <div class="task-card ${t.done?'done-task':''}" id="task-${t.id}">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="cbox ${t.done?'done':''}" onclick="toggleTask(${t.id})" style="margin-top:2px;flex-shrink:0">${t.done?'<svg width=14 height=14 viewBox="0 0 14 14"><path d="M2 7l4 4 6-6" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>':''}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;${t.done?'text-decoration:line-through':''}">${t.title}</div>
+          ${t.note?`<div style="font-size:12px;color:var(--muted);margin-top:3px">🎤 "${t.note.slice(0,60)}${t.note.length>60?'…':''}"</div>`:''}
+          ${t.reminder?`<div style="font-size:12px;color:var(--yellow);margin-top:3px;font-weight:600">🔔 ${t.reminder.time}${t.reminder.repeat==='daily'?' · כל יום':t.reminder.repeat==='weekly'?' · כל שבוע':''}</div>`:''}
+          ${t.attachments&&t.attachments.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">${t.attachments.map(a=>a.type.startsWith('image/')?`<img src="${a.data}" class="task-attach-thumb" onclick="viewTaskImg('${t.id}','${a.name}')">`:
+          `<div class="task-attach-file">${a.type==='application/pdf'?'📄':'📁'} ${a.name.slice(0,12)}</div>`).join('')}</div>`:''}
+          <div style="font-size:11px;color:var(--muted);margin-top:5px">${new Date(t.createdAt).toLocaleDateString('he-IL',{day:'numeric',month:'short'})}</div>
+        </div>
+        <button onclick="deleteTask(${t.id})" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px;flex-shrink:0">🗑️</button>
+      </div>
+      <!-- שלח לAI -->
+      <button onclick="sendTaskToAI(${t.id})" style="margin-top:10px;width:100%;padding:8px;background:var(--blue-s);border:1px solid var(--blue);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer">🤖 שאל את ה-AI על המשימה</button>
+    </div>
+  `).join('');
+}
+function toggleTask(id){
+  if(!S.tasks)return;
+  const t=S.tasks.find(t=>t.id===id);
+  if(t){t.done=!t.done;save();renderTasks();}
+}
+function deleteTask(id){
+  if(!S.tasks)return;
+  S.tasks=S.tasks.filter(t=>t.id!==id);
+  save();renderTasks();
+}
+function viewTaskImg(taskId,name){
+  const t=S.tasks&&S.tasks.find(t=>String(t.id)===String(taskId));
+  if(!t)return;
+  const att=t.attachments&&t.attachments.find(a=>a.name===name);
+  if(!att)return;
+  const w=window.open();w.document.write('<img src="'+att.data+'" style="max-width:100%;max-height:100vh">');
+}
+function sendTaskToAI(id){
+  if(!S.tasks)return;
+  const t=S.tasks.find(t=>t.id===id);
+  if(!t)return;
+  showTab('ai');
+  const inp=document.getElementById('ai-inp');
+  if(inp)inp.value='יש לי משימה: "'+t.title+'"'+(t.note?' ('+t.note+')':'')+'. תן לי עצות.';
+  // אם יש תמונה, צרף ראשונה
+  const img=t.attachments&&t.attachments.find(a=>a.type.startsWith('image/'));
+  if(img){
+    AI_MEDIA={base64:img.data.split(',')[1],mediaType:img.type,label:'📎 תמונה מהמשימה'};
+    const prev=document.getElementById('ai-media-preview');
+    const pimg=document.getElementById('ai-preview-img');
+    const pbadge=document.getElementById('ai-preview-badge');
+    if(prev)prev.style.display='block';
+    if(pimg)pimg.src=img.data;
+    if(pbadge)pbadge.textContent='📎 תמונה מהמשימה';
+  }
 }
 
 // ── Web Push helpers ─────────────────────────────────────────────
@@ -2727,6 +3135,7 @@ function getDefaultState(){
     weightLog:[],weeklyPlan:['מנוחה','חזה','גב','רגליים','כתפיים','ידיים','מנוחה'],
     apiKey:'',goalWeight:null,sleepHours:7,injuries:[],onboardingDone:false,
     pushSubscribed:false,pushServerUrl:'',
+    tasks:[],
   };
 }
 
