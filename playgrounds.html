@@ -2324,7 +2324,7 @@ let curFilter = 'all', selected = null;
 map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
 
 // ─── TILE LAYER ──────────────────────────────────────────
-let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   maxZoom: 19, subdomains: 'abcd', attribution: '© CartoDB © OpenStreetMap'
 }).addTo(map);
 
