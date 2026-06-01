@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="ארנה">
 <title>🏟️ Arena | ארנה</title>
 <link rel="manifest" href="/sportfields/manifest-playgrounds.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1628'/><text y='.9em' font-size='80' x='10'>🏟️</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1628'/><text y='.9em' font-size='80' x='10'>🏟️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
@@ -718,12 +720,14 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <!-- Google Analytics -->
 <script>
   var GA_ID = 'G-XXXXXXXXXX'; // Replace with your real GA4 Measurement ID
-  (function(){
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
-    document.head.appendChild(s);
-  })();
+  if (GA_ID !== 'G-XXXXXXXXXX') {
+    (function(){
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+      document.head.appendChild(s);
+    })();
+  }
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1513,11 +1517,11 @@ function renderEventsPanel(preField) {
           renderEventsFromList(evs, body);
         }).catch(() => {
           // fallback to localStorage
-          const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+          const evs = getEvents().filter(e => (e.dateTs || e.ts || 0) > Date.now() - 24*60*60*1000).sort((a,b) => (a.dateTs||a.ts) - (b.dateTs||b.ts));
           renderEventsFromList(evs, body);
         });
     } else {
-      const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b) => a.dateTs - b.dateTs);
+      const evs = getEvents().filter(e => (e.dateTs || e.ts || 0) > Date.now() - 24*60*60*1000).sort((a,b) => (a.dateTs||a.ts) - (b.dateTs||b.ts));
       renderEventsFromList(evs, body);
     }
     return;
@@ -2025,6 +2029,12 @@ function switchTab(mode) {
 
 function showAuthErr(msg) { document.getElementById('auth-err').textContent = msg; }
 
+function hashPass(pass) {
+  let h = 5381;
+  for (let i = 0; i < pass.length; i++) h = (Math.imul(h, 31) + pass.charCodeAt(i)) | 0;
+  return h.toString(36) + '_' + pass.length;
+}
+
 function authSubmit() {
   const name  = document.getElementById('auth-name').value.trim();
   const email = document.getElementById('auth-email').value.trim().toLowerCase();
@@ -2033,14 +2043,18 @@ function authSubmit() {
   if (pass.length < 6)      return showAuthErr('⚠️ סיסמה: לפחות 6 תווים');
 
   const users = JSON.parse(localStorage.getItem('pg_users') || '{}');
+  const hashed = hashPass(pass);
   if (authMode === 'register') {
     if (users[email]) return showAuthErr('⚠️ אימייל כבר רשום — נסה להיכנס');
-    users[email] = { name: name || email.split('@')[0], pass };
+    users[email] = { name: name || email.split('@')[0], pass: hashed };
     localStorage.setItem('pg_users', JSON.stringify(users));
     currentUser = { email, name: users[email].name };
   } else {
-    if (!users[email])              return showAuthErr('⚠️ אימייל לא נמצא');
-    if (users[email].pass !== pass) return showAuthErr('⚠️ סיסמה שגויה');
+    if (!users[email]) return showAuthErr('⚠️ אימייל לא נמצא');
+    const storedPass = users[email].pass;
+    const match = storedPass === hashed || storedPass === pass; // backward compat
+    if (!match) return showAuthErr('⚠️ סיסמה שגויה');
+    if (storedPass === pass) { users[email].pass = hashed; localStorage.setItem('pg_users', JSON.stringify(users)); }
     currentUser = { email, name: users[email].name };
   }
   localStorage.setItem('pg_user', JSON.stringify(currentUser));
@@ -2347,8 +2361,7 @@ function toggleDarkMode() {
 }
 
 applyMapTheme(); // אוטומטי בטעינה
-setTimeout(() => map.invalidateSize(), 300);
-setTimeout(() => map.invalidateSize(), 1000);
+setTimeout(() => map.invalidateSize(), 400);
 
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
@@ -2896,7 +2909,7 @@ function trackVisit(f) {
   localStorage.setItem('pg_visit_log', JSON.stringify(visits.slice(0, 100)));
 
   if (fsEnabled() && currentUser && !currentUser.guest) {
-    const uid = currentUser.id || currentUser.email;
+    const uid = (currentUser.id || currentUser.email || '').replace(/[^a-zA-Z0-9_]/g, '_');
     db.collection('visits').doc(uid).set({
       name: currentUser.name || currentUser.email,
       count: firebase.firestore.FieldValue.increment(1)
