@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>פאנל ניהול — SportFields</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { display: flex; height: 100vh; background: #f5f5f5; }
+
+    /* ─── LOGIN ─── */
+    #login-screen { position: fixed; inset: 0; background: #1a1a2e; display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .login-card { background: #16213e; border-radius: 16px; padding: 40px; text-align: center; color: white; min-width: 300px; }
+    .login-card h2 { margin-bottom: 20px; font-size: 24px; }
+    .login-card input { width: 100%; padding: 12px; border-radius: 8px; border: none; margin-bottom: 12px; font-size: 16px; text-align: center; }
+    .login-card button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: .15s; }
+    .login-card button:hover { background: #43A047; }
+
+    /* ─── LAYOUT ─── */
+    .sidebar { width: 200px; background: #1a1a2e; color: white; padding: 20px 0; display: flex; flex-direction: column; flex-shrink: 0; }
+    .logo { font-size: 22px; font-weight: bold; padding: 0 20px 20px; border-bottom: 1px solid #333; }
+    nav { display: flex; flex-direction: column; gap: 4px; padding: 12px 8px; }
+    .nav-btn { background: none; border: none; color: #aaa; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: right; font-size: 14px; transition: .15s; }
+    .nav-btn.active, .nav-btn:hover { background: #4CAF50; color: white; }
+    .content { flex: 1; padding: 24px; overflow-y: auto; }
+
+    /* ─── STAT CARDS ─── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .stat-card .num { font-size: 36px; font-weight: bold; color: #4CAF50; }
+    .stat-card .label { color: #888; font-size: 13px; margin-top: 4px; }
+
+    /* ─── TABLE ─── */
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    th { background: #f0f0f0; padding: 12px; text-align: right; font-size: 13px; color: #555; }
+    td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ─── BUTTONS ─── */
+    .btn-approve { background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: .15s; }
+    .btn-approve:hover { background: #43A047; }
+    .btn-reject { background: #e53935; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 4px; transition: .15s; }
+    .btn-reject:hover { background: #c62828; }
+    .btn-block { background: #FF9800; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: .15s; }
+    .btn-block:hover { background: #F57C00; }
+    .btn-delete { background: #e53935; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: .15s; }
+    .btn-delete:hover { background: #c62828; }
+
+    /* ─── BADGES ─── */
+    .badge-pending  { background: #fff3e0; color: #e65100; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+    .badge-approved { background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+    .badge-blocked  { background: #fce4ec; color: #c62828; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+
+    /* ─── MISC ─── */
+    h2 { margin-bottom: 16px; color: #333; }
+    .loading { color: #888; font-size: 14px; padding: 20px 0; }
+    .empty-row td { text-align: center; color: #aaa; padding: 24px; }
+  </style>
+</head>
+<body>
+
+<!-- ─── PASSWORD SCREEN ─── -->
+<div id="login-screen">
+  <div class="login-card">
+    <h2>🔐 כניסת מנהל</h2>
+    <input id="pwd-inp" type="password" placeholder="סיסמה" />
+    <button onclick="tryLogin()">כניסה</button>
+    <p id="pwd-err" style="color:red;display:none;margin-top:10px">סיסמה שגויה</p>
+  </div>
+</div>
+
+<!-- ─── ADMIN APP ─── -->
+<div id="admin-app" style="display:none;width:100%;height:100vh;overflow:hidden;display:none;flex-direction:row">
+
+  <aside class="sidebar">
+    <div class="logo">⚽ Admin</div>
+    <nav>
+      <button class="nav-btn active" onclick="showTab('stats', this)">📊 סטטיסטיקות</button>
+      <button class="nav-btn" onclick="showTab('businesses', this)">🏪 עסקים</button>
+      <button class="nav-btn" onclick="showTab('fields', this)">🗺️ מגרשים</button>
+      <button class="nav-btn" onclick="showTab('content', this)">💬 תכנים</button>
+      <button class="nav-btn" onclick="showTab('users', this)">👤 משתמשים</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+
+    <!-- סטטיסטיקות -->
+    <div id="tab-stats">
+      <h2>📊 סטטיסטיקות</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="num" id="stat-users">—</div>
+          <div class="label">סה"כ משתמשים</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-visits">—</div>
+          <div class="label">סה"כ ביקורים</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-businesses">—</div>
+          <div class="label">עסקים פעילים</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-fields">—</div>
+          <div class="label">מגרשים שנוספו</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- עסקים -->
+    <div id="tab-businesses" style="display:none">
+      <h2>🏪 עסקים</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שם עסק</th>
+            <th>סטטוס</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="businesses-tbody">
+          <tr><td colspan="3" class="loading">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- מגרשים -->
+    <div id="tab-fields" style="display:none">
+      <h2>🗺️ מגרשים שנוספו</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שם מגרש</th>
+            <th>מיקום</th>
+            <th>סטטוס</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="fields-tbody">
+          <tr><td colspan="4" class="loading">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- תכנים -->
+    <div id="tab-content" style="display:none">
+      <h2>💬 הודעות צ'אט</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שם משתמש</th>
+            <th>הודעה</th>
+            <th>מגרש</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="content-tbody">
+          <tr><td colspan="4" class="loading">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- משתמשים -->
+    <div id="tab-users" style="display:none">
+      <h2>👤 משתמשים</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שם</th>
+            <th>מספר ביקורים</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="3" class="loading">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────
+const ADMIN_PASSWORD = 'admin1234';
+
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+} catch(e) { console.warn('Firebase not configured'); }
+
+function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
+
+// ─── AUTH ─────────────────────────────────────────────────
+document.getElementById('pwd-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryLogin();
+});
+
+function tryLogin() {
+  const val = document.getElementById('pwd-inp').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    const app = document.getElementById('admin-app');
+    app.style.display = 'flex';
+    initAdmin();
+  } else {
+    document.getElementById('pwd-err').style.display = 'block';
+  }
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = 'block';
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+function initAdmin() {
+  loadStats();
+  loadBusinesses();
+  loadFields();
+  loadContent();
+  loadUsers();
+}
+
+// ─── STATS ────────────────────────────────────────────────
+async function loadStats() {
+  if (!fsEnabled()) {
+    ['stat-users','stat-visits','stat-businesses','stat-fields'].forEach(id => {
+      document.getElementById(id).textContent = 'N/A';
+    });
+    return;
+  }
+  try {
+    const [visitsSnap, bizSnap, fieldsSnap] = await Promise.all([
+      db.collection('visits').get(),
+      db.collection('businesses').get(),
+      db.collection('fields_added').get(),
+    ]);
+    document.getElementById('stat-users').textContent = visitsSnap.size;
+    document.getElementById('stat-visits').textContent = visitsSnap.size;
+    document.getElementById('stat-businesses').textContent = bizSnap.docs.filter(d => d.data().status === 'approved').length;
+    document.getElementById('stat-fields').textContent = fieldsSnap.size;
+  } catch(e) {
+    console.error('loadStats:', e);
+  }
+}
+
+// ─── BUSINESSES ───────────────────────────────────────────
+async function loadBusinesses() {
+  const tbody = document.getElementById('businesses-tbody');
+  if (!fsEnabled()) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Firebase לא מחובר</td></tr>';
+    return;
+  }
+  try {
+    const snap = await db.collection('businesses').get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">אין עסקים</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      const status = d.status || 'pending';
+      const badge = status === 'approved'
+        ? '<span class="badge-approved">מאושר</span>'
+        : '<span class="badge-pending">ממתין</span>';
+      return `<tr>
+        <td>${escHtml(d.name || doc.id)}</td>
+        <td>${badge}</td>
+        <td>
+          <button class="btn-approve" onclick="approveBusiness('${doc.id}')">אשר</button>
+          <button class="btn-reject"  onclick="rejectBusiness('${doc.id}')">דחה</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="3">שגיאה: ${e.message}</td></tr>`;
+  }
+}
+
+async function approveBusiness(id) {
+  if (!fsEnabled()) return;
+  await db.collection('businesses').doc(id).update({ status: 'approved' });
+  loadBusinesses();
+  loadStats();
+}
+
+async function rejectBusiness(id) {
+  if (!fsEnabled()) return;
+  if (!confirm('למחוק עסק זה?')) return;
+  await db.collection('businesses').doc(id).delete();
+  loadBusinesses();
+  loadStats();
+}
+
+// ─── FIELDS ───────────────────────────────────────────────
+async function loadFields() {
+  const tbody = document.getElementById('fields-tbody');
+  if (!fsEnabled()) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Firebase לא מחובר</td></tr>';
+    return;
+  }
+  try {
+    const snap = await db.collection('fields_added').get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">אין מגרשים</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      const status = d.status || 'pending';
+      const badge = status === 'approved'
+        ? '<span class="badge-approved">מאושר</span>'
+        : '<span class="badge-pending">ממתין</span>';
+      const location = d.lat && d.lon ? `${(+d.lat).toFixed(4)}, ${(+d.lon).toFixed(4)}` : (d.location || '—');
+      return `<tr>
+        <td>${escHtml(d.name || doc.id)}</td>
+        <td>${escHtml(location)}</td>
+        <td>${badge}</td>
+        <td>
+          <button class="btn-approve" onclick="approveField('${doc.id}')">אשר</button>
+          <button class="btn-reject"  onclick="rejectField('${doc.id}')">דחה</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">שגיאה: ${e.message}</td></tr>`;
+  }
+}
+
+async function approveField(id) {
+  if (!fsEnabled()) return;
+  await db.collection('fields_added').doc(id).update({ status: 'approved' });
+  loadFields();
+}
+
+async function rejectField(id) {
+  if (!fsEnabled()) return;
+  if (!confirm('למחוק מגרש זה?')) return;
+  await db.collection('fields_added').doc(id).delete();
+  loadFields();
+}
+
+// ─── CONTENT (CHAT MESSAGES) ──────────────────────────────
+async function loadContent() {
+  const tbody = document.getElementById('content-tbody');
+  if (!fsEnabled()) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Firebase לא מחובר</td></tr>';
+    return;
+  }
+  try {
+    const snap = await db.collectionGroup('messages').orderBy('ts', 'desc').limit(50).get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">אין הודעות</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      // parent path: chats/{fieldId}/messages/{msgId}
+      const fieldId = doc.ref.parent.parent.id;
+      return `<tr>
+        <td>${escHtml(d.name || d.uid || '—')}</td>
+        <td>${escHtml(d.text || '')}</td>
+        <td>${escHtml(fieldId)}</td>
+        <td>
+          <button class="btn-delete" onclick="deleteMsg('${escAttr(fieldId)}','${doc.id}')">מחק</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">שגיאה: ${e.message}</td></tr>`;
+  }
+}
+
+async function deleteMsg(fieldId, msgId) {
+  if (!fsEnabled()) return;
+  if (!confirm('למחוק הודעה זו?')) return;
+  await db.collection('chats').doc(fieldId).collection('messages').doc(msgId).delete();
+  loadContent();
+}
+
+// ─── USERS ────────────────────────────────────────────────
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  if (!fsEnabled()) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Firebase לא מחובר</td></tr>';
+    return;
+  }
+  try {
+    const snap = await db.collection('visits').orderBy('count', 'desc').limit(50).get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">אין משתמשים</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      return `<tr>
+        <td>${escHtml(d.name || doc.id)}</td>
+        <td>${d.count || 0}</td>
+        <td>
+          <button class="btn-block" onclick="blockUser('${doc.id}')">חסום</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="3">שגיאה: ${e.message}</td></tr>`;
+  }
+}
+
+async function blockUser(userId) {
+  if (!fsEnabled()) return;
+  if (!confirm('לחסום משתמש זה?')) return;
+  await db.collection('blockedUsers').doc(userId).set({ blocked: true, ts: firebase.firestore.FieldValue.serverTimestamp() });
+  alert('המשתמש נחסם');
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return String(str).replace(/'/g,"\\'");
+}
+</script>
+</body>
+</html>
