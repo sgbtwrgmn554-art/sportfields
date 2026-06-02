@@ -2324,9 +2324,16 @@ let curFilter = 'all', selected = null;
 map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
 
 // ─── TILE LAYER ──────────────────────────────────────────
-let tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19, attribution: '© OpenStreetMap'
+let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19, subdomains: 'abcd', attribution: '© CartoDB © OpenStreetMap',
+  crossOrigin: true
 }).addTo(map);
+tileLayer.on('tileerror', () => {
+  map.removeLayer(tileLayer);
+  tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  }).addTo(map);
+});
 
 function applyMapTheme() {} // no-op — kept for compatibility
 function toggleDarkMode() {}
