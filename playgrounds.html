@@ -881,6 +881,11 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <div class="hdr-city" id="city-badge"></div>
+    <!-- hidden elements kept for JS compatibility -->
+    <button id="user-btn" style="display:none" onclick="showUserMenu()">👤</button>
+    <button id="heat-btn" style="display:none" onclick="toggleHeatmap()">🔥</button>
+    <button id="theme-btn" style="display:none" onclick="toggleDarkMode()">🌙</button>
+    <!-- visible buttons -->
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
     <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
     <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
@@ -3735,11 +3740,11 @@ function loadPrefs() {
     }
   } catch {}
 }
-loadPrefs();
-
 // ─── SCOPE (radius / city / country / world) ────────────
 let searchScope = 'radius';
 let curRadius   = 2000;
+
+loadPrefs(); // restore saved radius + map style
 let bboxCache   = {};
 
 let radiusCircle = null;
