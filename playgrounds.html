@@ -716,6 +716,14 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .auth-social-btn:active{opacity:.8;transform:scale(.98)}
 .auth-google{border-color:#4285f4;background:rgba(66,133,244,.1)}
 .auth-apple{border-color:#fff;background:rgba(255,255,255,.08)}
+/* ─── MAP STYLE SWITCHER ─── */
+#map-style-sw{position:fixed;left:10px;top:120px;z-index:100;display:flex;flex-direction:column;gap:5px}
+.msw-btn{width:40px;height:40px;border-radius:10px;background:rgba(20,31,53,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border2);color:var(--text);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.msw-btn:active{transform:scale(.9)}
+.msw-btn.on{border-color:var(--accent);background:rgba(48,209,88,.15)}
+@media(min-width:700px){#map-style-sw{right:396px;left:auto;top:100px}}
+/* ─── CITY BADGE ─── */
+.hdr-city{font-size:12px;font-weight:700;color:var(--blue);background:rgba(10,132,255,.12);border:1px solid var(--blue);border-radius:20px;padding:4px 10px;white-space:nowrap;display:none}
 </style>
 <!-- Google Analytics -->
 <script>
@@ -826,11 +834,13 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <div id="map"></div>
+<div id="map-style-sw"></div>
 
 <div class="hdr">
   <div class="hdr-row">
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
+    <div class="hdr-city" id="city-badge"></div>
     <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
     <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
     <button class="hdr-btn" id="heat-btn" onclick="toggleHeatmap()" title="מפת חום">🔥</button>
@@ -2328,6 +2338,25 @@ let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyag
   maxZoom: 19, subdomains: 'abcd', attribution: '© CartoDB © OpenStreetMap'
 }).addTo(map);
 
+// ─── MAP STYLE SWITCHER ───────────────────────────────────
+const MAP_STYLES = [
+  { id:'voyager', icon:'🗺️', label:'Voyager',  url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png' },
+  { id:'dark',    icon:'🌑', label:'Dark',     url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png' },
+  { id:'light',   icon:'☀️', label:'Light',    url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png' },
+  { id:'osm',     icon:'🌍', label:'Classic',  url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
+];
+let curMapStyle = 'voyager';
+const swEl = document.getElementById('map-style-sw');
+swEl.innerHTML = MAP_STYLES.map(s =>
+  `<button class="msw-btn${s.id===curMapStyle?' on':''}" onclick="setMapStyle('${s.id}')" title="${s.label}">${s.icon}</button>`
+).join('');
+function setMapStyle(id) {
+  const s = MAP_STYLES.find(x => x.id === id); if (!s) return;
+  curMapStyle = id;
+  tileLayer.setUrl(s.url);
+  document.querySelectorAll('.msw-btn').forEach((b,i) => b.classList.toggle('on', MAP_STYLES[i].id === id));
+}
+
 function applyMapTheme() {} // no-op — kept for compatibility
 function toggleDarkMode() {}
 setTimeout(() => map.invalidateSize(), 400);
@@ -2432,7 +2461,21 @@ async function onLocation(lat, lon) {
   setStatus('🌍 מזהה מדינה...');
   curCountry = await getCountry(lat, lon);
   updateFilterPills(curCountry);
+  getCityName(lat, lon);
   loadFields(lat, lon);
+}
+
+async function getCityName(lat, lon) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,
+      { headers: { 'Accept-Language': 'he,en' } }
+    );
+    const data = await res.json();
+    const city = data.address?.city || data.address?.town || data.address?.village || data.address?.suburb || '';
+    const badge = document.getElementById('city-badge');
+    if (city) { badge.textContent = '📍 ' + city; badge.style.display = 'block'; }
+  } catch {}
 }
 
 // ─── OVERPASS ───────────────────────────────────────────
@@ -3511,11 +3554,19 @@ let searchScope = 'radius';
 let curRadius   = 2000;
 let bboxCache   = {};
 
+let radiusCircle = null;
 function setRadius(r) {
   curRadius = r; searchScope = 'radius';
   document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
   document.querySelector(`.scope-btn[data-r="${r}"]`)?.classList.add('on');
-  if (uLat != null) loadFields(uLat, uLon);
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (uLat != null) {
+    radiusCircle = L.circle([uLat, uLon], {
+      radius: r, color: '#30d158', weight: 1.5, dashArray: '6 4',
+      fillColor: '#30d158', fillOpacity: 0.06, opacity: 0.7
+    }).addTo(map);
+    loadFields(uLat, uLon);
+  }
 }
 
 async function setScope(mode) {
