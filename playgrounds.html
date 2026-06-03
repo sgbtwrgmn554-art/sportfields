@@ -724,6 +724,46 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 @media(min-width:700px){#map-style-sw{right:396px;left:auto;top:100px}}
 /* ─── CITY BADGE ─── */
 .hdr-city{font-size:12px;font-weight:700;color:var(--blue);background:rgba(10,132,255,.12);border:1px solid var(--blue);border-radius:20px;padding:4px 10px;white-space:nowrap;display:none}
+/* ─── OVERFLOW MENU ─── */
+#overflow-menu{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
+#overflow-menu.on{display:flex}
+.overflow-card{width:100%;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px)}
+.overflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.overflow-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:14px;background:var(--card2);border:1px solid var(--border);cursor:pointer;transition:.15s;font-family:inherit}
+.overflow-item:active{transform:scale(.94);background:var(--bg)}
+.overflow-item-ico{font-size:24px;line-height:1}
+.overflow-item-lbl{font-size:11px;font-weight:700;color:var(--text2);text-align:center}
+.overflow-close{width:100%;padding:13px;border-radius:13px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+/* ─── ADVANCED FILTERS ─── */
+.adv-filter-row{display:flex;gap:6px;overflow-x:auto;padding:7px 14px 0;scrollbar-width:none}
+.adv-filter-row::-webkit-scrollbar{display:none}
+.afpill{flex-shrink:0;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap}
+.afpill.on{border-color:#ffd60a;background:rgba(255,214,10,.12);color:#ffd60a}
+.afpill:active{transform:scale(.93)}
+/* ─── SORT BUTTON ─── */
+.sort-btn{padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap;flex-shrink:0}
+.sort-btn:active{transform:scale(.93)}
+/* ─── RETURN TO LOCATION ─── */
+#return-btn{position:fixed;left:16px;z-index:100;width:46px;height:46px;border-radius:50%;background:rgba(20,31,53,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid var(--blue);color:var(--blue);font-size:22px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:.15s;animation:fadeInScale .2s ease}
+#return-btn:active{transform:scale(.9)}
+@media(min-width:700px){#return-btn{right:396px;left:auto}}
+/* ─── SKELETON LOADER ─── */
+.skeleton-card{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border)}
+.skeleton-ico{width:36px;height:36px;border-radius:50%;background:var(--border2);flex-shrink:0;animation:shimmer 1.2s ease infinite}
+.skeleton-lines{flex:1}
+.skeleton-line{height:12px;border-radius:6px;background:var(--border2);margin-bottom:7px;animation:shimmer 1.2s ease infinite}
+.skeleton-line.short{width:55%}
+.skeleton-dist{width:36px;height:14px;border-radius:6px;background:var(--border2);flex-shrink:0;animation:shimmer 1.2s ease infinite}
+@keyframes shimmer{0%,100%{opacity:.4}50%{opacity:.9}}
+/* ─── RADIUS WAVE ─── */
+@keyframes radiusWave{0%{stroke-opacity:.8;stroke-width:3}100%{stroke-opacity:0;stroke-width:0}}
+.radius-ring{animation:radiusWave .8s ease-out forwards}
+/* ─── FILTER PILL BOUNCE ─── */
+@keyframes pillBounce{0%{transform:scale(1)}40%{transform:scale(1.18)}70%{transform:scale(.95)}100%{transform:scale(1)}}
+.pill-bounce{animation:pillBounce .3s ease}
+/* ─── LOCATE PULSE ─── */
+@keyframes locatePulse{0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,.6)}50%{box-shadow:0 0 0 12px rgba(48,209,88,0)}}
+#loc-btn.locating{animation:locatePulse 1s ease infinite;border-color:var(--accent);color:var(--accent)}
 </style>
 <!-- Google Analytics -->
 <script>
@@ -841,26 +881,34 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-title">🏟️ Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <div class="hdr-city" id="city-badge"></div>
-    <button class="hdr-btn" id="user-btn" onclick="showUserMenu()" title="פרופיל" style="display:none">👤</button>
-    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
-    <button class="hdr-btn" id="heat-btn" onclick="toggleHeatmap()" title="מפת חום">🔥</button>
-    <button class="hdr-btn" onclick="openRentalPanel()" title="השכרת ציוד">🎾</button>
-    <button class="hdr-btn" onclick="openSettingsPanel()" title="הגדרות">⚙️</button>
-    <button class="hdr-btn" id="lang-btn" onclick="cycleLang()" title="שפה">🌐</button>
-    <button class="hdr-btn" onclick="openCouponsPanel()" title="קופונים">🏷️</button>
-    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
-    <button class="hdr-btn" onclick="openPremiumPanel()" title="Arena PRO" style="font-size:15px;font-weight:800;color:#bf5af2;border-color:#bf5af2">PRO</button>
-    <button class="hdr-btn" onclick="openStatsPanel()" title="סטטיסטיקות">📊</button>
-    <button class="hdr-btn" onclick="openLbPanel()" title="טבלת דירוג">🏆</button>
     <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
-    <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="מצב לילה/יום" style="display:none">🌙</button>
+    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
+    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
+    <button class="hdr-btn" onclick="openOverflowMenu()" title="עוד">···</button>
     <button id="share-loc-btn" onclick="toggleLocationShare()" title="שיתוף מיקום חי" style="background:var(--card);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;">📍</button>
-    <button class="hdr-btn" onclick="locateMe()" title="מיקומי">📍</button>
   </div>
 </div>
 
 <div id="status" style="top:76px">🔍 מאתר מיקום...</div>
 <button id="loc-btn" onclick="locateMe()" title="המיקום שלי">📍</button>
+<button id="return-btn" onclick="returnToLocation()" title="חזור למיקום שלי">🎯</button>
+
+<!-- ─── OVERFLOW MENU ─── -->
+<div id="overflow-menu" onclick="if(event.target===this)closeOverflowMenu()">
+  <div class="overflow-card">
+    <div class="overflow-grid">
+      <button class="overflow-item" onclick="closeOverflowMenu();toggleHeatmap()"><span class="overflow-item-ico">🔥</span><span class="overflow-item-lbl">מפת חום</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openRentalPanel()"><span class="overflow-item-ico">🎾</span><span class="overflow-item-lbl">השכרה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl">קופונים</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl">סטטיסטיקות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl">דירוג</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();cycleLang()" id="lang-btn"><span class="overflow-item-ico">🌐</span><span class="overflow-item-lbl">שפה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl">הגדרות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico">👑</span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
+    </div>
+    <button class="overflow-close" onclick="closeOverflowMenu()">סגור</button>
+  </div>
+</div>
 
 <div class="sheet" id="sheet">
   <div class="handle-wrap" id="handle-wrap"><div class="handle"></div></div>
@@ -880,7 +928,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     </div>
     <div class="sheet-meta">
       <span class="count-lbl" id="cnt">טוען...</span>
-      <button class="radius-sel" onclick="locateMe()" style="background:var(--accent-s);border-color:var(--accent);color:var(--accent);font-size:15px">📍</button>
+      <button class="sort-btn" id="sort-btn" onclick="cycleSortMode()">↕ קרוב</button>
     </div>
     <div class="scope-row" id="scope-row">
       <button class="scope-btn"    data-r="500"   onclick="setRadius(500)">500מ'</button>
@@ -892,6 +940,13 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <button class="scope-btn" data-s="city"    onclick="setScope('city')">🏙️ כל העיר</button>
       <button class="scope-btn" data-s="country" onclick="setScope('country')">🌍 כל המדינה</button>
       <button class="scope-btn" data-s="world"   onclick="setScope('world')">🌐 כל העולם</button>
+    </div>
+    <div class="adv-filter-row" id="adv-filter-row">
+      <button class="afpill" data-af="open"  onclick="toggleAdvFilter(this,'open')">🕐 פתוח עכשיו</button>
+      <button class="afpill" data-af="lit"   onclick="toggleAdvFilter(this,'lit')">💡 תאורה</button>
+      <button class="afpill" data-af="free"  onclick="toggleAdvFilter(this,'free')">🆓 חינם</button>
+      <button class="afpill" data-af="indoor" onclick="toggleAdvFilter(this,'indoor')">🏠 מקורה</button>
+      <button class="afpill" data-af="active" onclick="toggleAdvFilter(this,'active')">🟢 פעיל עכשיו</button>
     </div>
   </div>
   <!-- Google AdSense Banner — החלף YOUR_SLOT_ID -->
@@ -2355,6 +2410,7 @@ function setMapStyle(id) {
   curMapStyle = id;
   tileLayer.setUrl(s.url);
   document.querySelectorAll('.msw-btn').forEach((b,i) => b.classList.toggle('on', MAP_STYLES[i].id === id));
+  savePrefs();
 }
 
 function applyMapTheme() {} // no-op — kept for compatibility
@@ -2442,10 +2498,15 @@ function updateFilterPills(countryCode) {
 // ─── LOCATE ─────────────────────────────────────────────
 function locateMe() {
   setStatus('📍 מאתר מיקום...');
-  if (!navigator.geolocation) { setStatus('⚠️ GPS לא נתמך בדפדפן זה'); return; }
+  const locBtn = document.getElementById('loc-btn');
+  locBtn.classList.add('locating');
+  if (!navigator.geolocation) {
+    locBtn.classList.remove('locating');
+    setStatus('⚠️ GPS לא נתמך בדפדפן זה'); return;
+  }
   navigator.geolocation.getCurrentPosition(
-    p => onLocation(p.coords.latitude, p.coords.longitude),
-    () => setStatus('⚠️ לא ניתן לאתר מיקום — בדוק הרשאות GPS')
+    p => { locBtn.classList.remove('locating'); onLocation(p.coords.latitude, p.coords.longitude); },
+    () => { locBtn.classList.remove('locating'); setStatus('⚠️ לא ניתן לאתר מיקום — בדוק הרשאות GPS'); }
   );
 }
 
@@ -2480,7 +2541,7 @@ async function getCityName(lat, lon) {
 
 // ─── OVERPASS ───────────────────────────────────────────
 async function loadFields(lat, lon) {
-  document.getElementById('list').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  renderSkeleton();
   document.getElementById('cnt').textContent = 'טוען...';
 
   const leisureTypes = 'pitch|sports_centre|playground|fitness_station|swimming_pool|track|skate_park|golf_course|ice_rink|climbing|stadium|horse_riding|bowling_alley|miniature_golf|sports_hall';
@@ -2573,15 +2634,24 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
 
 // ─── FILTER ─────────────────────────────────────────────
 function getFiltered() {
-  if (curFilter === 'all') return allFields;
-  const group = FILTER_GROUPS[curFilter] || [curFilter];
-  return allFields.filter(f => f.sports.some(s => group.includes(s)));
+  let fields = curFilter === 'all' ? allFields : allFields.filter(f => {
+    const group = FILTER_GROUPS[curFilter] || [curFilter];
+    return f.sports.some(s => group.includes(s));
+  });
+  if (advFilters.has('lit'))    fields = fields.filter(f => f.tags?.lit === 'yes');
+  if (advFilters.has('free'))   fields = fields.filter(f => f.tags?.fee === 'no' || f.tags?.access !== 'private');
+  if (advFilters.has('indoor')) fields = fields.filter(f => f.tags?.indoor === 'yes' || f.tags?.covered === 'yes' || f.name?.toLowerCase().includes('indoor') || f.name?.includes('מקורה'));
+  if (advFilters.has('active')) fields = fields.filter(f => getAvailability(f).status === 'free');
+  if (advFilters.has('open'))   fields = fields.filter(f => { const o = isOpenNow(f); return o === null || o === true; });
+  return getSorted(fields);
 }
 
 function setFilter(btn, filter) {
   curFilter = filter;
   document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
   btn.classList.add('on');
+  btn.classList.add('pill-bounce');
+  btn.addEventListener('animationend', () => btn.classList.remove('pill-bounce'), { once: true });
   renderMarkers(); renderList();
   setStatus(`${getFiltered().length} מגרשים`, true);
 }
@@ -2612,7 +2682,16 @@ function renderMarkers() {
       className: '', iconSize: [42,42], iconAnchor: [21,21]
     });
     const m = L.marker([f.lat, f.lon], { icon });
-    m.on('click', () => openDetail(i));
+    m.on('click', () => {
+      // bounce animation
+      const el = m.getElement();
+      if (el) {
+        el.style.transition = 'transform .15s ease';
+        el.style.transform = 'scale(1.4)';
+        setTimeout(() => { el.style.transform = 'scale(1)'; }, 150);
+      }
+      openDetail(i);
+    });
     markerCluster.addLayer(m);
   });
 }
@@ -2651,6 +2730,19 @@ function openSponsored(i) {
 }
 
 // ─── LIST ────────────────────────────────────────────────
+function renderSkeleton() {
+  const el = document.getElementById('list');
+  el.innerHTML = Array(5).fill(0).map((_,i) => `
+    <div class="skeleton-card" style="animation-delay:${i*80}ms">
+      <div class="skeleton-ico"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line" style="width:${60+Math.random()*30}%"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+      <div class="skeleton-dist"></div>
+    </div>`).join('');
+}
+
 function renderList() {
   shownFields = getFiltered();
   shownSponsored = getNearbySponsored();
@@ -3549,6 +3641,102 @@ function navTo(app) {
   else              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
+// ─── OVERFLOW MENU ───────────────────────────────────────
+function openOverflowMenu()  { document.getElementById('overflow-menu').classList.add('on'); }
+function closeOverflowMenu() { document.getElementById('overflow-menu').classList.remove('on'); }
+
+// ─── RETURN TO LOCATION ──────────────────────────────────
+function returnToLocation() {
+  if (uLat == null) { locateMe(); return; }
+  map.flyTo([uLat, uLon], 15, { duration: 0.5 });
+  document.getElementById('return-btn').style.display = 'none';
+}
+map.on('moveend', () => {
+  if (uLat == null) return;
+  const c = map.getCenter();
+  const dist = Math.sqrt(Math.pow(c.lat - uLat, 2) + Math.pow(c.lng - uLon, 2));
+  const btn = document.getElementById('return-btn');
+  const sheetH = document.getElementById('sheet').getBoundingClientRect().height;
+  btn.style.bottom = (sheetH + 68) + 'px';
+  btn.style.display = dist > 0.008 ? 'flex' : 'none';
+});
+
+// ─── ADVANCED FILTERS ────────────────────────────────────
+let advFilters = new Set();
+function toggleAdvFilter(btn, filter) {
+  btn.classList.add('pill-bounce');
+  btn.addEventListener('animationend', () => btn.classList.remove('pill-bounce'), { once: true });
+  if (advFilters.has(filter)) { advFilters.delete(filter); btn.classList.remove('on'); }
+  else { advFilters.add(filter); btn.classList.add('on'); }
+  renderMarkers(); renderList();
+}
+
+function isOpenNow(f) {
+  const oh = f.tags?.opening_hours;
+  if (!oh) return null;
+  const now = new Date();
+  const day = ['Su','Mo','Tu','We','Th','Fr','Sa'][now.getDay()];
+  const hour = now.getHours() + now.getMinutes() / 60;
+  if (oh.includes('24/7')) return true;
+  const match = oh.match(new RegExp(day + '.*?(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})'));
+  if (!match) return null;
+  const from = parseInt(match[1]) + parseInt(match[2]) / 60;
+  const to   = parseInt(match[3]) + parseInt(match[4]) / 60;
+  return hour >= from && hour <= to;
+}
+
+// ─── SORT ────────────────────────────────────────────────
+const SORT_MODES = [
+  { id:'dist',   label:'↕ קרוב' },
+  { id:'rating', label:'⭐ דירוג' },
+  { id:'active', label:'🟢 פעיל' },
+];
+let curSort = 'dist';
+function cycleSortMode() {
+  const idx = SORT_MODES.findIndex(s => s.id === curSort);
+  curSort = SORT_MODES[(idx + 1) % SORT_MODES.length].id;
+  const btn = document.getElementById('sort-btn');
+  btn.textContent = SORT_MODES.find(s => s.id === curSort).label;
+  btn.classList.add('pill-bounce');
+  btn.addEventListener('animationend', () => btn.classList.remove('pill-bounce'), { once: true });
+  renderList();
+}
+
+function getSorted(fields) {
+  if (curSort === 'rating') {
+    return [...fields].sort((a, b) => {
+      const ra = parseFloat(localStorage.getItem('pg_avgrating_' + a.id) || 0);
+      const rb = parseFloat(localStorage.getItem('pg_avgrating_' + b.id) || 0);
+      return rb - ra || a.dist - b.dist;
+    });
+  }
+  if (curSort === 'active') {
+    return [...fields].sort((a, b) => {
+      const aa = getAvailability(a).status === 'free' ? 0 : 1;
+      const ab = getAvailability(b).status === 'free' ? 0 : 1;
+      return aa - ab || a.dist - b.dist;
+    });
+  }
+  return fields; // dist — already sorted
+}
+
+// ─── SAVE / RESTORE PREFERENCES ──────────────────────────
+function savePrefs() {
+  localStorage.setItem('arena_prefs', JSON.stringify({ radius: curRadius, mapStyle: curMapStyle }));
+}
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem('arena_prefs') || '{}');
+    if (p.mapStyle && MAP_STYLES.find(s => s.id === p.mapStyle)) setMapStyle(p.mapStyle);
+    if (p.radius) {
+      curRadius = p.radius;
+      document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
+      document.querySelector(`.scope-btn[data-r="${p.radius}"]`)?.classList.add('on');
+    }
+  } catch {}
+}
+loadPrefs();
+
 // ─── SCOPE (radius / city / country / world) ────────────
 let searchScope = 'radius';
 let curRadius   = 2000;
@@ -3558,15 +3746,32 @@ let radiusCircle = null;
 function setRadius(r) {
   curRadius = r; searchScope = 'radius';
   document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
-  document.querySelector(`.scope-btn[data-r="${r}"]`)?.classList.add('on');
+  const activeBtn = document.querySelector(`.scope-btn[data-r="${r}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('on');
+    activeBtn.classList.add('pill-bounce');
+    activeBtn.addEventListener('animationend', () => activeBtn.classList.remove('pill-bounce'), { once: true });
+  }
   if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
   if (uLat != null) {
     radiusCircle = L.circle([uLat, uLon], {
       radius: r, color: '#30d158', weight: 1.5, dashArray: '6 4',
-      fillColor: '#30d158', fillOpacity: 0.06, opacity: 0.7
+      fillColor: '#30d158', fillOpacity: 0.06, opacity: 0
     }).addTo(map);
+    // animate circle in
+    let op = 0;
+    const fadeIn = setInterval(() => {
+      op = Math.min(op + 0.1, 0.7);
+      radiusCircle.setStyle({ opacity: op, fillOpacity: op * 0.09 });
+      if (op >= 0.7) clearInterval(fadeIn);
+    }, 20);
+    // auto-zoom to show full circle
+    setTimeout(() => {
+      if (radiusCircle) map.fitBounds(radiusCircle.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    }, 50);
     loadFields(uLat, uLon);
   }
+  savePrefs();
 }
 
 async function setScope(mode) {
