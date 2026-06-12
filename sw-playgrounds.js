@@ -1,9 +1,9 @@
-const CACHE_STATIC = 'playgrounds-static-v4';
+const CACHE_STATIC = 'playgrounds-static-v5';
 const CACHE_TILES  = 'playgrounds-tiles-v3';
 const CACHE_DATA   = 'playgrounds-data-v2';
 
 const ASSETS = [
-  '/playgrounds.html',
+  '/sportfields/playgrounds.html',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js',
@@ -70,6 +70,17 @@ self.addEventListener('fetch', e => {
 
   // Nominatim — network only (אין טעם לשמור)
   if (url.includes('nominatim.openstreetmap.org')) return;
+
+  // playgrounds.html — network-first כדי תמיד לקבל גרסה חדשה
+  if (url.includes('playgrounds.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res.ok) caches.open(CACHE_STATIC).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
 
   // שאר הקבצים — cache-first
   e.respondWith(
