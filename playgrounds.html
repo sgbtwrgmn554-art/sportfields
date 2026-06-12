@@ -946,7 +946,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   <button class="tab-btn" id="tab-list-btn" onclick="switchMainTab('list')">
     <span class="tab-ico">🏟️</span><span>מגרשים</span>
   </button>
-  <button class="tab-btn" id="tab-fav-btn" onclick="switchMainTab('fav')">
+  <button class="tab-btn" id="tab-fav-btn" style="display:none" onclick="switchMainTab('fav')">
     <span class="tab-ico">⭐</span><span>מועדפים</span>
   </button>
   <button class="tab-btn" id="tab-profile-btn" onclick="switchMainTab('profile')">
@@ -1926,16 +1926,17 @@ function trackRentalClick(i) {
 
 // ─── SETTINGS / ACCESSIBILITY ───────────────────────────
 function openSettingsPanel() {
-  syncSettingsUI();
-  // Fill profile info
-  if (currentUser) {
-    const name = currentUser.guest ? 'אורח' : (currentUser.name || currentUser.email || '');
-    const email = currentUser.guest ? '' : (currentUser.email || '');
-    const initials = name ? name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).join('').slice(0,2) : '?';
-    document.getElementById('profile-avatar').textContent = initials;
-    document.getElementById('profile-name').textContent = name;
-    document.getElementById('profile-email').textContent = email;
-  }
+  try { syncSettingsUI(); } catch(e) {}
+  try {
+    if (currentUser) {
+      const name = currentUser.guest ? 'אורח' : (currentUser.name || currentUser.email || '');
+      const email = currentUser.guest ? '' : (currentUser.email || '');
+      const initials = name ? name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).join('').slice(0,2) : '?';
+      document.getElementById('profile-avatar').textContent = initials;
+      document.getElementById('profile-name').textContent = name;
+      document.getElementById('profile-email').textContent = email;
+    }
+  } catch(e) {}
   document.getElementById('settings-panel').classList.add('on');
 }
 function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
@@ -2171,7 +2172,6 @@ async function _appleSignIn() {
 
 // ─── AUTH (local-storage, no backend needed) ────────────
 let authMode = 'register', currentUser = null;
-let darkMode = null;
 
 function switchTab(mode) {
   authMode = mode;
@@ -2507,6 +2507,7 @@ let allFields = [], shownFields = [], markerCluster = null;
 let curFilter = 'all', selected = null;
 let curCityGeoJSON = null, curCountryGeoJSON = null;
 let boundaryLayer = null, boundaryType = null;
+let darkMode = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
 map = L.map('map', {
