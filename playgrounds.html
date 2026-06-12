@@ -1264,6 +1264,13 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// ─── HTML ESCAPE ─────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ─── STRIPE CONFIG ───
 const STRIPE_CONFIG = {
   publishableKey: 'pk_test_YOUR_PUBLISHABLE_KEY',
@@ -1475,8 +1482,8 @@ function renderChat() {
           const ts = m.ts?.toMillis ? m.ts.toMillis() : (m.ts || 0);
           const time = new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
           return `<div class="msg-row ${me?'me':'them'}">
-            <div class="msg-bubble">${m.text}</div>
-            <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+            <div class="msg-bubble">${esc(m.text)}</div>
+            <div class="msg-meta">${me?'':esc(m.name)+' · '}${time}</div>
           </div>`;
         }).join('');
         el.scrollTop = el.scrollHeight;
@@ -1494,8 +1501,8 @@ function renderChat() {
     const me = m.uid === myId;
     const time = new Date(m.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-row ${me?'me':'them'}">
-      <div class="msg-bubble">${m.text}</div>
-      <div class="msg-meta">${me?'':m.name+' · '}${time}</div>
+      <div class="msg-bubble">${esc(m.text)}</div>
+      <div class="msg-meta">${me?'':esc(m.name)+' · '}${time}</div>
     </div>`;
   }).join('');
   el.scrollTop = el.scrollHeight;
@@ -1563,8 +1570,8 @@ function renderEventsFromList(evs, body) {
     const d = new Date(e.dateTs);
     const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     return `<div class="ev-card">
-      <div class="ev-title">${e.title}</div>
-      <div class="ev-field">🏟️ ${e.fieldName}</div>
+      <div class="ev-title">${esc(e.title)}</div>
+      <div class="ev-field">🏟️ ${esc(e.fieldName)}</div>
       <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
       <div class="ev-actions">
         <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
@@ -1631,6 +1638,7 @@ function createEvent() {
   const dateVal    = document.getElementById('ev-date')?.value;
   const reminderMin= parseInt(document.getElementById('ev-reminder')?.value || '0');
   if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
+  if (containsBannedWord(title)) { setStatus('⚠️ כותרת לא הולמת', true); return; }
   track('create_event');
   const dateTs = new Date(dateVal).getTime();
   const ev = {
@@ -1838,7 +1846,6 @@ function renderRental() {
     </div>`).join('');
 }
 
-let _rentalShopsFiltered = [];
 function trackRentalClick(i) {
   // צרף ref=ARENA לקישור — ה-affiliate tracking
   const shops = RENTAL_SHOPS.filter(s =>
@@ -2707,7 +2714,7 @@ let shownSponsored = [];
 function getNearbySponsored() {
   if (!uLat) return [];
   return SPONSORED.filter(s => {
-    const countryOk = s.countries === 'all' || s.countries.includes(curCountry);
+    const countryOk = s.countries === 'all' || s.countries.includes(curCountry) || curCountry === 'default';
     const distOk = km(uLat, uLon, s.lat, s.lon) <= MAX_SPONSORED_DIST;
     const filterOk = curFilter === 'all' || (FILTER_GROUPS[curFilter]||[curFilter]).includes(s.sport);
     return countryOk && distOk && filterOk;
@@ -2788,7 +2795,7 @@ function renderList() {
     return `<div class="frow" onclick="openDetail(${i})">
       <div class="fi" style="font-size:${f.sports.length>1?'20px':'32px'};line-height:1.4">${sportIcons}</div>
       <div style="flex:1;min-width:0">
-        <div class="fn">${avDot} ${f.name}</div>
+        <div class="fn">${avDot} ${esc(f.name)}</div>
         <div class="fs">${sportLabel}${extras?' · '+extras:''}</div>
       </div>
       <div class="fd">${fmt(f.dist)}</div>
@@ -2923,7 +2930,7 @@ function cancelPinMode() {
 
 function submitNewField() {
   const name  = document.getElementById('af-name').value.trim();
-  const sport = document.getElementById('af-sel')?.value || document.getElementById('af-sport').value;
+  const sport = document.getElementById('af-sport').value;
   const lit   = document.getElementById('af-lit').value;
   const fee   = document.getElementById('af-fee').value;
 
@@ -3235,8 +3242,8 @@ function buildPlayersHTML(f, players) {
     ? players.map(p => `
       <div class="player-card">
         <span class="player-sport">${ico(p.sport)}</span>
-        <div class="player-name">${p.name}</div>
-        <div class="player-meta">${he(p.sport)} · ${p.level} · ${p.players} שחקנים</div>
+        <div class="player-name">${esc(p.name)}</div>
+        <div class="player-meta">${he(p.sport)} · ${esc(p.level)} · ${esc(p.players)} שחקנים</div>
         <div class="player-time">⏰ ${new Date(p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('')
     : '<div class="empty"><div class="empty-ico">👥</div>אין שחקנים כרגע<br><small>היה הראשון!</small></div>';
@@ -3293,6 +3300,7 @@ async function postPlayer() {
   const level   = document.getElementById('p-level').value;
   const players = document.getElementById('p-count').value;
   if (!selected) return;
+  if (containsBannedWord(name)) { setStatus('⚠️ שם לא הולם', true); return; }
   const player = { name, sport, level, players, ts: Date.now() };
   // localStorage fallback always
   const list = getPlayers(selected);
@@ -3543,7 +3551,7 @@ function renderFavPanel() {
     <div class="fav-item" onclick="closeFavPanel();goToLatLon(${f.lat},${f.lon})">
       <div style="font-size:28px">${ico(f.sport)}</div>
       <div style="flex:1;min-width:0">
-        <div class="fn">${f.name}</div>
+        <div class="fn">${esc(f.name)}</div>
         <div class="fs">${he(f.sport)}${f.dist ? ' · ' + fmt(f.dist) : ''}</div>
       </div>
       <button class="fav-del" onclick="event.stopPropagation();removeFav('${f.sport}',${f.lat},${f.lon})" title="הסר">🗑️</button>
