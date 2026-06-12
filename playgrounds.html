@@ -2728,26 +2728,42 @@ async function loadFields(lat, lon) {
   let q, timeout = 45;
 
   if (searchScope === 'city' || searchScope === 'country' || searchScope === 'world') {
-    const level = searchScope === 'world' ? 'world' : searchScope;
     const labels = { city:'🏙️ כל העיר', country:'🌍 כל המדינה', world:'🌐 כל העולם' };
     setStatus(`${labels[searchScope]} — טוען...`);
 
-    let bbox;
-    if (searchScope === 'world') {
-      bbox = [-90, -180, 90, 180]; // כל העולם — מוגבל לתוצאות הראשונות
+    if (searchScope === 'country' && curCountry && curCountry !== 'default') {
+      // Use Overpass area filter (ISO3166-1) — stays within actual borders, no bbox bleed
+      timeout = 90;
+      q = `[out:json][timeout:90];
+area["ISO3166-1"="${curCountry}"][admin_level=2]->.country;
+(
+node["leisure"~"^(${leisureTypes})$"](area.country);
+way["leisure"~"^(${leisureTypes})$"](area.country);
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"](area.country);
+node["sport"~"."](area.country);
+way["sport"~"."](area.country);
+);out 1000 center tags;`;
+    } else if (searchScope === 'world') {
       timeout = 30;
-    } else {
-      bbox = await fetchBbox(searchScope);
-      if (!bbox) { setStatus('❌ שגיאה בזיהוי גבולות'); return; }
-      timeout = searchScope === 'country' ? 90 : 45;
-    }
-    const [S, W, N, E] = bbox;
-    const bboxStr = `${S},${W},${N},${E}`;
-    q = `[out:json][timeout:${timeout}][bbox:${bboxStr}];(
+      q = `[out:json][timeout:30][bbox:-90,-180,90,180];(
 way["leisure"~"^(${leisureTypes})$"];
-relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"];
 way["sport"~"."];
 );out 300 center tags;`;
+    } else {
+      // city or country fallback — bbox mode (include nodes)
+      const bbox = await fetchBbox(searchScope);
+      if (!bbox) { setStatus('❌ שגיאה בזיהוי גבולות'); return; }
+      timeout = 45;
+      const [S, W, N, E] = bbox;
+      const bboxStr = `${S},${W},${N},${E}`;
+      q = `[out:json][timeout:45][bbox:${bboxStr}];(
+node["leisure"~"^(${leisureTypes})$"];
+way["leisure"~"^(${leisureTypes})$"];
+relation["leisure"~"^(pitch|sports_centre|swimming_pool|track|golf_course|stadium|horse_riding)$"];
+node["sport"~"."];
+way["sport"~"."];
+);out 500 center tags;`;
+    }
   } else {
     // radius mode
     setStatus(`🔍 מחפש ב-${fmt(curRadius)}...`);
