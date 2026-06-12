@@ -919,8 +919,8 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div class="hdr">
   <div class="hdr-row">
     <div class="hdr-title">🏟️ Arena</div>
-    <div class="hdr-country" id="country-badge" style="display:none"></div>
-    <div class="hdr-city" id="city-badge"></div>
+    <div class="hdr-country" id="country-badge" style="display:none;cursor:pointer" onclick="highlightArea('country')"></div>
+    <div class="hdr-city" id="city-badge" style="cursor:pointer" onclick="highlightArea('city')"></div>
     <!-- hidden elements kept for JS compatibility -->
     <button id="user-btn" style="display:none" onclick="switchMainTab('profile')">👤</button>
     <button id="heat-btn" style="display:none" onclick="toggleHeatmap()">🔥</button>
@@ -2504,9 +2504,15 @@ const fmt = d => d < 1000 ? Math.round(d)+'מ\'' : (d/1000).toFixed(1)+'ק"מ';
 let map, uMarker, uLat, uLon, curCountry = 'default';
 let allFields = [], shownFields = [], markerCluster = null;
 let curFilter = 'all', selected = null;
+let curCityGeoJSON = null, curCountryGeoJSON = null;
+let boundaryLayer = null, boundaryType = null;
 
 // ─── MAP INIT ───────────────────────────────────────────
-map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([31.7683, 35.2137], 13);
+map = L.map('map', {
+  zoomControl: false, attributionControl: false, preferCanvas: true,
+  inertia: true, inertiaDeceleration: 2800, inertiaMaxSpeed: 1400,
+  easeLinearity: 0.2, zoomAnimation: true, markerZoomAnimation: true
+}).setView([31.7683, 35.2137], 13);
 
 // ─── TILE LAYER ──────────────────────────────────────────
 let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png', {
@@ -2625,10 +2631,11 @@ function setStatus(msg, autohide = false) {
 async function getCountry(lat, lon) {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=3`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=3&polygon_geojson=1`,
       { headers: { 'Accept-Language': 'en' } }
     );
     const data = await res.json();
+    if (data.geojson) curCountryGeoJSON = data.geojson;
     return (data.address?.country_code || 'default').toUpperCase();
   } catch { return 'default'; }
 }
@@ -2684,14 +2691,32 @@ async function onLocation(lat, lon) {
 async function getCityName(lat, lon) {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&polygon_geojson=1`,
       { headers: { 'Accept-Language': 'he,en' } }
     );
     const data = await res.json();
     const city = data.address?.city || data.address?.town || data.address?.village || data.address?.suburb || '';
+    if (data.geojson) curCityGeoJSON = data.geojson;
     const badge = document.getElementById('city-badge');
     if (city) { badge.textContent = '📍 ' + city; badge.style.display = 'block'; }
   } catch {}
+}
+
+// ─── BOUNDARY HIGHLIGHT ─────────────────────────────────
+function highlightArea(type) {
+  const geo = type === 'city' ? curCityGeoJSON : curCountryGeoJSON;
+  if (!geo) return;
+  if (boundaryLayer && boundaryType === type) {
+    map.removeLayer(boundaryLayer);
+    boundaryLayer = null; boundaryType = null;
+    return;
+  }
+  if (boundaryLayer) { map.removeLayer(boundaryLayer); boundaryLayer = null; }
+  boundaryLayer = L.geoJSON(geo, {
+    style: { color: '#32d2c8', weight: 2.5, opacity: .85, fillColor: '#32d2c8', fillOpacity: .07 }
+  }).addTo(map);
+  boundaryType = type;
+  try { map.fitBounds(boundaryLayer.getBounds(), { padding: [40, 40], maxZoom: type === 'city' ? 13 : 8 }); } catch {}
 }
 
 // ─── OVERPASS ───────────────────────────────────────────
