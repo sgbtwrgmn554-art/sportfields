@@ -25,7 +25,7 @@
   --text:#fff;--text2:rgba(255,255,255,.75);--muted:rgba(255,255,255,.4);
 }
 html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text)}
-#map{position:fixed;inset:0;z-index:1}
+#map{position:fixed;inset:0;z-index:1;background:#1a2a3a}
 
 .hdr{
   position:fixed;top:0;left:0;right:0;z-index:100;
@@ -65,7 +65,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 
 .sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:200;
-  height:42vh;
+  height:260px;
   background:var(--card);border-radius:22px 22px 0 0;
   border-top:1px solid var(--border);display:flex;flex-direction:column;will-change:transform;
 }
@@ -2450,8 +2450,8 @@ function updateLocBtn() {
 }
 
 const SHEET_MAX  = Math.round(window.innerHeight * 0.60);
-const SHEET_MIN  = 160;
-const SHEET_DEF  = Math.round(window.innerHeight * 0.42);
+const SHEET_MIN  = 130;
+const SHEET_DEF  = 260;
 let sheetCollapsed = false;
 
 function toggleSheetCollapse() {
@@ -2475,10 +2475,15 @@ handleEl.addEventListener('touchmove', e => {
 }, { passive:true });
 handleEl.addEventListener('touchend', () => {
   const h = sheetEl.getBoundingClientRect().height;
-  sheetCollapsed = h < (SHEET_MIN + SHEET_DEF) / 2;
+  const snapToMin = h < (SHEET_MIN + SHEET_DEF) / 2;
+  sheetCollapsed = snapToMin;
+  const snapH = snapToMin ? SHEET_MIN : SHEET_DEF;
+  sheetEl.style.transition = 'height .25s ease';
+  sheetEl.style.height = snapH + 'px';
+  setTimeout(() => { sheetEl.style.transition = ''; updateLocBtn(); }, 260);
   const btn = document.getElementById('map-toggle-btn');
   if (btn) btn.textContent = sheetCollapsed ? '📋 רשימה' : '🗺️ מפה';
-  dStart = null; updateLocBtn();
+  dStart = null;
 });
 handleEl.addEventListener('mousedown', e => {
   dStart = e.clientY; dH0 = sheetEl.getBoundingClientRect().height;
