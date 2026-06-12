@@ -18,19 +18,21 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0a1628;--card:#141f35;--card2:#1e2d4a;
-  --border:#2a3a5c;--border2:#3a4a6c;
-  --accent:#30d158;--accent-s:#30d15820;
+  --bg:#000;--card:#1c1c1e;--card2:#2c2c2e;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --accent:#32d2c8;--accent-s:rgba(50,210,200,.15);
   --blue:#0a84ff;--red:#ff453a;
-  --text:#fff;--text2:rgba(255,255,255,.75);--muted:rgba(255,255,255,.4);
+  --text:#fff;--text2:rgba(255,255,255,.7);--muted:rgba(255,255,255,.35);
+  --tab-h:calc(56px + env(safe-area-inset-bottom,0px));
+  --hdr-h:calc(env(safe-area-inset-top,0px) + 68px);
 }
 html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text)}
-#map{position:fixed;inset:0;z-index:1;background:#1a2a3a}
+#map{position:fixed;inset:0;z-index:1;background:#000}
 
 .hdr{
   position:fixed;top:0;left:0;right:0;z-index:100;
   padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
-  background:linear-gradient(to bottom,rgba(10,22,40,.95) 50%,transparent);
+  background:linear-gradient(to bottom,rgba(0,0,0,.97) 60%,transparent);
   pointer-events:none;
 }
 .hdr-row{display:flex;align-items:center;gap:10px;pointer-events:all;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -39,16 +41,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 .hdr-country{font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-s);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;white-space:nowrap}
 .hdr-btn{
   width:40px;height:40px;border-radius:50%;
-  background:rgba(20,31,53,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid var(--border2);color:var(--text);font-size:19px;
+  background:rgba(28,28,30,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:19px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;
 }
 .hdr-btn:active{transform:scale(.9)}
 
 #status{
   position:fixed;left:50%;transform:translateX(-50%);z-index:100;
-  background:rgba(20,31,53,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid var(--border2);border-radius:20px;
+  background:rgba(28,28,30,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.15);border-radius:20px;
   padding:8px 18px;font-size:13px;font-weight:600;color:var(--text2);
   white-space:nowrap;transition:opacity .4s;pointer-events:none;
 }
@@ -56,7 +58,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 #loc-btn{
   position:fixed;left:16px;z-index:100;
   width:46px;height:46px;border-radius:50%;
-  background:rgba(20,31,53,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:rgba(28,28,30,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border:1px solid var(--border2);color:var(--accent);font-size:24px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 20px rgba(0,0,0,.5);transition:.15s;
@@ -64,17 +66,50 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 #loc-btn:active{transform:scale(.9)}
 
 .sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:200;
-  height:44px;
-  overflow:hidden;
-  background:var(--card);border-radius:22px 22px 0 0;
+  position:fixed;left:0;right:0;z-index:200;
+  bottom:0;height:0;overflow:hidden;
+  background:var(--card);border-radius:0;
   border-top:1px solid var(--border);display:flex;flex-direction:column;will-change:transform;
-  transition:none;
+  transition:height .3s cubic-bezier(.4,0,.2,1);
 }
-.handle-wrap{padding:12px 16px 8px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
-.handle{width:40px;height:4px;border-radius:2px;background:var(--border2);display:inline-block}
-.map-toggle-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:var(--blue);border:none;border-radius:10px;padding:5px 13px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;letter-spacing:-.2px}
-.sheet-head{padding:4px 16px 12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.sheet.list-mode{
+  top:var(--hdr-h);bottom:var(--tab-h);height:auto;overflow:visible;
+}
+.handle-wrap{display:none}
+.handle{display:none}
+.map-toggle-btn{display:none}
+.sheet-head{padding:8px 16px 12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.list-section-hdr{padding:18px 16px 8px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.list-row{display:flex;align-items:center;gap:13px;padding:13px 16px;background:var(--card);border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
+.list-row:active{background:var(--card2)}
+.list-row-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.list-row-ico.teal{background:rgba(50,210,200,.18)}
+.list-row-ico.blue{background:rgba(10,132,255,.18)}
+.list-row-ico.red{background:rgba(255,69,58,.18)}
+.list-row-ico.orange{background:rgba(255,159,10,.18)}
+.list-row-lbl{flex:1;font-size:15px;font-weight:500}
+.list-row-val{font-size:14px;color:var(--muted)}
+.list-row-chevron{color:rgba(255,255,255,.25);font-size:16px;flex-shrink:0}
+
+/* ─── TAB BAR ─── */
+#tab-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:250;
+  height:var(--tab-h);
+  background:rgba(28,28,30,.97);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:.5px solid rgba(255,255,255,.1);
+  display:flex;align-items:flex-start;
+}
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding-top:9px;padding-bottom:env(safe-area-inset-bottom,8px);
+  gap:2px;cursor:pointer;background:none;border:none;
+  color:rgba(255,255,255,.35);font-family:inherit;font-size:10px;font-weight:700;
+  letter-spacing:.3px;transition:color .15s;-webkit-tap-highlight-color:transparent;
+}
+.tab-btn.active{color:var(--accent)}
+.tab-btn:active{opacity:.7}
+.tab-ico{font-size:23px;line-height:1.1}
 .filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .filter-row::-webkit-scrollbar{display:none}
 .fpill{
@@ -503,11 +538,11 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 /* ─── DESKTOP LAYOUT ─── */
 @media (min-width: 700px) {
-  .sheet{
-    top:0;left:auto;right:0;bottom:0;width:380px;height:100%!important;
+  .sheet.list-mode{
+    top:0!important;left:auto;right:0;bottom:0!important;width:380px;height:auto!important;
     border-radius:0;border-top:none;border-right:none;border-left:1px solid var(--border);
   }
-  .handle-wrap{display:none}
+  #tab-bar{display:none}
   #loc-btn{left:auto;right:396px;bottom:24px!important}
   #status{left:auto;right:calc(380px + 50%);transform:translateX(50%)}
   .hdr{right:380px}
@@ -901,6 +936,22 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <button id="loc-btn" onclick="locateMe()" title="המיקום שלי">📍</button>
 <button id="return-btn" onclick="returnToLocation()" title="חזור למיקום שלי">🎯</button>
 
+<!-- ─── TAB BAR ─── -->
+<nav id="tab-bar">
+  <button class="tab-btn active" id="tab-map-btn" onclick="switchMainTab('map')">
+    <span class="tab-ico">🗺️</span><span>מפה</span>
+  </button>
+  <button class="tab-btn" id="tab-list-btn" onclick="switchMainTab('list')">
+    <span class="tab-ico">🏟️</span><span>מגרשים</span>
+  </button>
+  <button class="tab-btn" id="tab-fav-btn" onclick="switchMainTab('fav')">
+    <span class="tab-ico">⭐</span><span>מועדפים</span>
+  </button>
+  <button class="tab-btn" id="tab-profile-btn" onclick="switchMainTab('profile')">
+    <span class="tab-ico">👤</span><span>אני</span>
+  </button>
+</nav>
+
 <!-- ─── OVERFLOW MENU ─── -->
 <div id="overflow-menu" onclick="if(event.target===this)closeOverflowMenu()">
   <div class="overflow-card">
@@ -919,10 +970,6 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <div class="sheet" id="sheet">
-  <div class="handle-wrap" id="handle-wrap">
-    <button class="map-toggle-btn" id="map-toggle-btn" onclick="toggleSheetCollapse()">📋 רשימה</button>
-    <div class="handle"></div>
-  </div>
   <div class="sheet-head">
     <div class="filter-row" id="filter-row">
       <!-- נוצר דינמית לפי מדינה -->
@@ -2171,7 +2218,7 @@ function enterApp() {
     }
   }
   updateFilterPills('default');
-  updateLocBtn();
+  switchMainTab('map');
   locateMe();
   initPushNotifications();
 }
@@ -2441,66 +2488,50 @@ new ResizeObserver(() => { map.invalidateSize(); }).observe(document.getElementB
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
 L.control.zoom({ position:'topleft' }).addTo(map);
 
-// ─── SHEET DRAG ─────────────────────────────────────────
-const sheetEl  = document.getElementById('sheet');
-const handleEl = document.getElementById('handle-wrap');
-let dStart = null, dH0 = null;
+// ─── TAB NAVIGATION ─────────────────────────────────────
+const sheetEl = document.getElementById('sheet');
+let curMainTab = 'map';
 
 function updateLocBtn() {
-  const h = sheetEl.getBoundingClientRect().height;
-  document.getElementById('loc-btn').style.bottom = (h + 14) + 'px';
+  const tabH = 56;
+  const h = curMainTab === 'map' ? 0 : window.innerHeight * 0.5;
+  document.getElementById('loc-btn').style.bottom = (tabH + 14) + 'px';
 }
 
-const SHEET_MAX  = Math.round(window.innerHeight * 0.88);
-const SHEET_MIN  = 44;
-const SHEET_DEF  = 380;
-let sheetCollapsed = true;
+function switchMainTab(tab) {
+  curMainTab = tab;
 
-function toggleSheetCollapse() {
-  sheetCollapsed = !sheetCollapsed;
-  const targetH = sheetCollapsed ? SHEET_MIN : SHEET_DEF;
-  sheetEl.style.transition = 'height .3s cubic-bezier(.4,0,.2,1)';
-  sheetEl.style.height = targetH + 'px';
-  updateLocBtn();
-  const btn = document.getElementById('map-toggle-btn');
-  if (btn) btn.textContent = sheetCollapsed ? '📋 רשימה' : '🗺️ מפה';
-  setTimeout(() => { sheetEl.style.transition = ''; }, 320);
+  // update tab bar
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('tab-' + tab + '-btn');
+  if (activeBtn) activeBtn.classList.add('active');
+
+  if (tab === 'map') {
+    sheetEl.classList.remove('list-mode');
+    updateLocBtn();
+
+  } else if (tab === 'list') {
+    sheetEl.classList.add('list-mode');
+    updateLocBtn();
+
+  } else if (tab === 'fav') {
+    curMainTab = 'map'; // revert tab visual to map after open
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-map-btn').classList.add('active');
+    openFavPanel();
+
+  } else if (tab === 'profile') {
+    curMainTab = 'map';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-map-btn').classList.add('active');
+    openSettingsPanel();
+  }
 }
 
-handleEl.addEventListener('touchstart', e => {
-  dStart = e.touches[0].clientY; dH0 = sheetEl.getBoundingClientRect().height;
-  sheetEl.style.transition = '';
-}, { passive:true });
-handleEl.addEventListener('touchmove', e => {
-  const newH = Math.max(SHEET_MIN, Math.min(SHEET_MAX, dH0 + dStart - e.touches[0].clientY));
-  sheetEl.style.height = newH + 'px'; updateLocBtn();
-}, { passive:true });
-handleEl.addEventListener('touchend', () => {
-  const h = sheetEl.getBoundingClientRect().height;
-  const snapToMin = h < (SHEET_MIN + SHEET_DEF) / 2;
-  sheetCollapsed = snapToMin;
-  const snapH = snapToMin ? SHEET_MIN : Math.max(SHEET_DEF, h);
-  sheetEl.style.transition = 'height .25s ease';
-  sheetEl.style.height = snapH + 'px';
-  setTimeout(() => { sheetEl.style.transition = ''; updateLocBtn(); }, 260);
-  const btn = document.getElementById('map-toggle-btn');
-  if (btn) btn.textContent = sheetCollapsed ? '📋 רשימה' : '🗺️ מפה';
-  dStart = null;
-});
-handleEl.addEventListener('mousedown', e => {
-  dStart = e.clientY; dH0 = sheetEl.getBoundingClientRect().height;
-  sheetEl.style.transition = '';
-  const move = ev => {
-    const newH = Math.max(SHEET_MIN, Math.min(SHEET_MAX, dH0 + dStart - ev.clientY));
-    sheetEl.style.height = newH + 'px'; updateLocBtn();
-  };
-  const up = () => {
-    document.removeEventListener('mousemove', move);
-    document.removeEventListener('mouseup', up);
-  };
-  document.addEventListener('mousemove', move);
-  document.addEventListener('mouseup', up);
-});
+// Remove old drag-related variables/functions (they're no longer needed)
+const SHEET_MAX = 0, SHEET_MIN = 0, SHEET_DEF = 0;
+let sheetCollapsed = false;
+function toggleSheetCollapse() { switchMainTab(curMainTab === 'list' ? 'map' : 'list'); }
 
 // ─── STATUS ─────────────────────────────────────────────
 let statusTimer = null;
@@ -3702,8 +3733,8 @@ map.on('moveend', () => {
   const c = map.getCenter();
   const dist = Math.sqrt(Math.pow(c.lat - uLat, 2) + Math.pow(c.lng - uLon, 2));
   const btn = document.getElementById('return-btn');
-  const sheetH = document.getElementById('sheet').getBoundingClientRect().height;
-  btn.style.bottom = (sheetH + 68) + 'px';
+  const tabOffset = curMainTab === 'list' ? window.innerHeight * 0.5 : 56;
+  btn.style.bottom = (tabOffset + 68) + 'px';
   btn.style.display = dist > 0.008 ? 'flex' : 'none';
 });
 
@@ -4298,7 +4329,7 @@ window.addEventListener('beforeunload', () => {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('user-btn').style.display = 'flex';
     updateFilterPills('default');
-    updateLocBtn();
+    switchMainTab('map');
     setTimeout(() => { map.invalidateSize(); tileLayer && tileLayer.redraw(); }, 100);
     locateMe();
   }
