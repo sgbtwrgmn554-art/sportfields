@@ -538,9 +538,11 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 /* ─── DESKTOP LAYOUT ─── */
 @media (min-width: 700px) {
-  .sheet.list-mode{
-    top:0!important;left:auto;right:0;bottom:0!important;width:380px;height:auto!important;
-    border-radius:0;border-top:none;border-right:none;border-left:1px solid var(--border);
+  .sheet{
+    display:flex!important;top:0!important;left:auto!important;right:0!important;
+    bottom:0!important;width:380px!important;height:auto!important;
+    border-radius:0!important;border-top:none!important;border-right:none;
+    border-left:1px solid var(--border)!important;overflow:hidden!important;
   }
   #tab-bar{display:none}
   #loc-btn{left:auto;right:396px;bottom:24px!important}
@@ -2491,31 +2493,55 @@ L.control.zoom({ position:'topleft' }).addTo(map);
 // ─── TAB NAVIGATION ─────────────────────────────────────
 const sheetEl = document.getElementById('sheet');
 let curMainTab = 'map';
+const TAB_H = 56;
 
 function updateLocBtn() {
-  const tabH = 56;
-  const h = curMainTab === 'map' ? 0 : window.innerHeight * 0.5;
-  document.getElementById('loc-btn').style.bottom = (tabH + 14) + 'px';
+  if (curMainTab === 'list') {
+    const sh = parseInt(sheetEl.style.height) || 0;
+    document.getElementById('loc-btn').style.bottom = (sh + TAB_H + 14) + 'px';
+  } else {
+    document.getElementById('loc-btn').style.bottom = (TAB_H + 14) + 'px';
+  }
 }
 
 function switchMainTab(tab) {
   curMainTab = tab;
 
-  // update tab bar
+  // update tab bar highlight
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = document.getElementById('tab-' + tab + '-btn');
   if (activeBtn) activeBtn.classList.add('active');
 
   if (tab === 'map') {
-    sheetEl.classList.remove('list-mode');
+    // Hide sheet — map fills screen above tab bar
+    sheetEl.style.display = 'none';
+    sheetEl.style.height = '0';
     updateLocBtn();
+    setTimeout(() => { map.invalidateSize(); }, 60);
 
   } else if (tab === 'list') {
-    sheetEl.classList.add('list-mode');
+    // Partial overlay: map visible at top, list covers bottom 65%
+    const sheetH = Math.round(window.innerHeight * 0.65);
+    sheetEl.style.cssText = [
+      'display:flex',
+      'position:fixed',
+      'left:0','right:0',
+      'bottom:' + TAB_H + 'px',
+      'top:auto',
+      'height:' + sheetH + 'px',
+      'border-radius:18px 18px 0 0',
+      'overflow:hidden',
+      'z-index:200',
+      'background:var(--card)',
+      'border-top:1px solid var(--border)',
+      'flex-direction:column',
+      'will-change:transform',
+    ].join(';');
     updateLocBtn();
+    setTimeout(() => { map.invalidateSize(); }, 60);
 
   } else if (tab === 'fav') {
-    curMainTab = 'map'; // revert tab visual to map after open
+    curMainTab = 'map';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-map-btn').classList.add('active');
     openFavPanel();
@@ -2528,7 +2554,7 @@ function switchMainTab(tab) {
   }
 }
 
-// Remove old drag-related variables/functions (they're no longer needed)
+// stubs for lingering references
 const SHEET_MAX = 0, SHEET_MIN = 0, SHEET_DEF = 0;
 let sheetCollapsed = false;
 function toggleSheetCollapse() { switchMainTab(curMainTab === 'list' ? 'map' : 'list'); }
@@ -3733,8 +3759,8 @@ map.on('moveend', () => {
   const c = map.getCenter();
   const dist = Math.sqrt(Math.pow(c.lat - uLat, 2) + Math.pow(c.lng - uLon, 2));
   const btn = document.getElementById('return-btn');
-  const tabOffset = curMainTab === 'list' ? window.innerHeight * 0.5 : 56;
-  btn.style.bottom = (tabOffset + 68) + 'px';
+  const sheetOffset = curMainTab === 'list' ? (parseInt(sheetEl.style.height) || 0) : 0;
+  btn.style.bottom = (sheetOffset + TAB_H + 68) + 'px';
   btn.style.display = dist > 0.008 ? 'flex' : 'none';
 });
 
