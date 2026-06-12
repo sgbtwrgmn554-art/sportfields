@@ -65,13 +65,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans
 
 .sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:200;
-  height:260px;
+  height:44px;
+  overflow:hidden;
   background:var(--card);border-radius:22px 22px 0 0;
   border-top:1px solid var(--border);display:flex;flex-direction:column;will-change:transform;
+  transition:none;
 }
-.handle-wrap{padding:8px 16px 4px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
+.handle-wrap{padding:12px 16px 8px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
 .handle{width:40px;height:4px;border-radius:2px;background:var(--border2);display:inline-block}
-.map-toggle-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--blue);cursor:pointer;white-space:nowrap}
+.map-toggle-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:var(--blue);border:none;border-radius:10px;padding:5px 13px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;letter-spacing:-.2px}
 .sheet-head{padding:4px 16px 12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .filter-row::-webkit-scrollbar{display:none}
@@ -918,7 +920,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 <div class="sheet" id="sheet">
   <div class="handle-wrap" id="handle-wrap">
-    <button class="map-toggle-btn" id="map-toggle-btn" onclick="toggleSheetCollapse()">🗺️ מפה</button>
+    <button class="map-toggle-btn" id="map-toggle-btn" onclick="toggleSheetCollapse()">📋 רשימה</button>
     <div class="handle"></div>
   </div>
   <div class="sheet-head">
@@ -2449,10 +2451,10 @@ function updateLocBtn() {
   document.getElementById('loc-btn').style.bottom = (h + 14) + 'px';
 }
 
-const SHEET_MAX  = Math.round(window.innerHeight * 0.60);
-const SHEET_MIN  = 130;
-const SHEET_DEF  = 260;
-let sheetCollapsed = false;
+const SHEET_MAX  = Math.round(window.innerHeight * 0.88);
+const SHEET_MIN  = 44;
+const SHEET_DEF  = 380;
+let sheetCollapsed = true;
 
 function toggleSheetCollapse() {
   sheetCollapsed = !sheetCollapsed;
@@ -2477,7 +2479,7 @@ handleEl.addEventListener('touchend', () => {
   const h = sheetEl.getBoundingClientRect().height;
   const snapToMin = h < (SHEET_MIN + SHEET_DEF) / 2;
   sheetCollapsed = snapToMin;
-  const snapH = snapToMin ? SHEET_MIN : SHEET_DEF;
+  const snapH = snapToMin ? SHEET_MIN : Math.max(SHEET_DEF, h);
   sheetEl.style.transition = 'height .25s ease';
   sheetEl.style.height = snapH + 'px';
   setTimeout(() => { sheetEl.style.transition = ''; updateLocBtn(); }, 260);
