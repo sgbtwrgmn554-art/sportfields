@@ -1,4 +1,4 @@
-const CACHE_STATIC = 'playgrounds-static-v8';
+const CACHE_STATIC = 'playgrounds-static-v9';
 const CACHE_TILES  = 'playgrounds-tiles-v3';
 const CACHE_DATA   = 'playgrounds-data-v2';
 

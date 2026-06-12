@@ -922,7 +922,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="hdr-country" id="country-badge" style="display:none"></div>
     <div class="hdr-city" id="city-badge"></div>
     <!-- hidden elements kept for JS compatibility -->
-    <button id="user-btn" style="display:none" onclick="showUserMenu()">👤</button>
+    <button id="user-btn" style="display:none" onclick="switchMainTab('profile')">👤</button>
     <button id="heat-btn" style="display:none" onclick="toggleHeatmap()">🔥</button>
     <button id="theme-btn" style="display:none" onclick="toggleDarkMode()">🌙</button>
     <!-- visible buttons -->
@@ -1082,11 +1082,20 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
   <div class="settings-card">
     <div class="lb-head">
-      <div class="lb-title">⚙️ הגדרות</div>
+      <div class="lb-title">👤 הפרופיל שלי</div>
       <button class="fav-close" onclick="closeSettingsPanel()">✕</button>
     </div>
+    <!-- User info row -->
+    <div id="profile-user-row" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:.5px solid var(--border);flex-shrink:0">
+      <div id="profile-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000;flex-shrink:0">?</div>
+      <div style="flex:1;min-width:0">
+        <div id="profile-name" style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">טוען...</div>
+        <div id="profile-email" style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      </div>
+      <button onclick="doLogout()" style="padding:7px 14px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">יציאה</button>
+    </div>
     <div class="settings-body">
-      <div class="settings-section">♿ נגישות</div>
+      <div class="settings-section">⚙️ הגדרות</div>
 
       <div class="settings-row">
         <div>
@@ -1918,9 +1927,23 @@ function trackRentalClick(i) {
 // ─── SETTINGS / ACCESSIBILITY ───────────────────────────
 function openSettingsPanel() {
   syncSettingsUI();
+  // Fill profile info
+  if (currentUser) {
+    const name = currentUser.guest ? 'אורח' : (currentUser.name || currentUser.email || '');
+    const email = currentUser.guest ? '' : (currentUser.email || '');
+    const initials = name ? name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).join('').slice(0,2) : '?';
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-email').textContent = email;
+  }
   document.getElementById('settings-panel').classList.add('on');
 }
 function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
+function doLogout() {
+  if (!confirm('להתנתק?')) return;
+  localStorage.removeItem('pg_user');
+  location.reload();
+}
 
 function syncSettingsUI() {
   const prefs = getA11yPrefs();
@@ -2396,10 +2419,11 @@ const ALL_FILTERS = [
 
 // ─── FILTER GROUPS (sport synonyms) ─────────────────────
 const FILTER_GROUPS = {
-  soccer:           ['soccer','football','futsal','mini_soccer'],
+  soccer:           ['soccer','football','futsal','mini_soccer','multi'],
+  basketball:       ['basketball','multi'],
   tennis:           ['tennis'],
-  volleyball:       ['volleyball','beach_volleyball','netball'],
-  fitness:          ['fitness','gym'],
+  volleyball:       ['volleyball','beach_volleyball','netball','multi'],
+  fitness:          ['fitness','gym','crossfit','weightlifting'],
   swimming:         ['swimming','water_polo'],
   athletics:        ['athletics','running','track'],
   skateboard:       ['skateboard','bmx','bicycle_motocross'],
@@ -2416,7 +2440,7 @@ const FILTER_GROUPS = {
   archery:          ['archery'],
   parkour:          ['parkour','obstacle_course'],
   crossfit:         ['crossfit','weightlifting'],
-  handball:         ['handball'],
+  handball:         ['handball','multi'],
   padel:            ['padel','paddle','squash'],
   american_football:['american_football'],
   baseball:         ['baseball','softball'],
@@ -2440,6 +2464,35 @@ const COUNTRY_NAMES = {
 
 const ico = s => ICONS[(s||'').toLowerCase()] || ICONS.default;
 const he  = s => HE[(s||'').toLowerCase()]   || s || 'מגרש רב-ספורטיבי';
+
+// ─── SPORT INFERENCE FROM NAME ───────────────────────────
+function inferSportFromName(name) {
+  if (!name) return null;
+  const n = name.toLowerCase();
+  if (/כדורגל|football|soccer|futsal|כדור-?רגל/.test(n)) return 'soccer';
+  if (/כדורסל|basketball/.test(n)) return 'basketball';
+  if (/טניס(?! שולחן)|tennis(?!.*table)/.test(n)) return 'tennis';
+  if (/כדורעף|volleyball/.test(n)) return 'volleyball';
+  if (/כדוריד|handball/.test(n)) return 'handball';
+  if (/שחייה|בריכה|swimming|pool/.test(n)) return 'swimming';
+  if (/כושר|ספורטק|גים|fitness|gym/.test(n)) return 'fitness';
+  if (/פדל|padel/.test(n)) return 'padel';
+  if (/טניס שולחן|table.?tennis|פינג.?פונג/.test(n)) return 'table_tennis';
+  if (/בדמינטון|badminton/.test(n)) return 'badminton';
+  if (/ריצה|אתלטיקה|athletics|track/.test(n)) return 'athletics';
+  if (/גולף|golf/.test(n)) return 'golf';
+  if (/ראגבי|rugby/.test(n)) return 'rugby';
+  if (/בייסבול|baseball/.test(n)) return 'baseball';
+  if (/הוקי|hockey/.test(n)) return 'hockey';
+  if (/קריקט|cricket/.test(n)) return 'cricket';
+  if (/אמריקאי|american.?football/.test(n)) return 'american_football';
+  if (/טיפוס|climbing|boulder/.test(n)) return 'climbing';
+  if (/סקייט|skate/.test(n)) return 'skateboard';
+  if (/אגרוף|boxing/.test(n)) return 'boxing';
+  if (/בולינג|bowling/.test(n)) return 'bowling';
+  if (/גן שעשועים|playground/.test(n)) return 'playground';
+  return null;
+}
 const km  = (lat1,lon1,lat2,lon2) => {
   const R=6371000, dL=(lat2-lat1)*Math.PI/180, dG=(lon2-lon1)*Math.PI/180;
   const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dG/2)**2;
@@ -2691,13 +2744,14 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
     const data = await res.json();
 
     const leisureMap = {
+      pitch:'soccer',             // pitches without sport tag → soccer (most common in IL)
       playground:'playground', fitness_station:'fitness',
       swimming_pool:'swimming', track:'athletics',
       skate_park:'skateboard', golf_course:'golf',
       ice_rink:'hockey', climbing:'climbing',
       horse_riding:'equestrian', bowling_alley:'bowling',
       miniature_golf:'miniature_golf', sports_hall:'fitness',
-      stadium:'multi',
+      stadium:'default', sports_centre:'default',
     };
 
     allFields = (data.elements||[]).map(el => {
@@ -2705,7 +2759,15 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       const clon = el.lon || el.center?.lon;
       if (!clat || !clon) return null;
       const t = el.tags || {};
+      // Build sports list from OSM sport tag
       const sports = (t.sport||'').split(';').map(s=>s.trim().toLowerCase()).filter(Boolean);
+      // If no sport tag, try inferring from Hebrew/English name first
+      if (!sports.length) {
+        const rawName = t['name:he'] || t.name || '';
+        const inferred = inferSportFromName(rawName);
+        if (inferred) sports.push(inferred);
+      }
+      // Last resort: use leisure type mapping
       const primarySport = sports[0] || leisureMap[t.leisure] || 'default';
       if (!sports.length) sports.push(primarySport);
       const name = t.name || t['name:he'] || he(primarySport);
