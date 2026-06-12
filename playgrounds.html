@@ -418,6 +418,20 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .settings-row:last-child{border-bottom:none}
 .settings-lbl{font-size:15px;font-weight:600}
 .settings-sub{font-size:12px;color:var(--muted);margin-top:2px}
+/* avatar upload */
+.avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
+.avatar-cam{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--accent);border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);color:#000}
+/* profile stats */
+.profile-stats{display:flex;border-bottom:.5px solid var(--border);flex-shrink:0}
+.stat-item{flex:1;text-align:center;padding:13px 4px}
+.stat-num{font-size:22px;font-weight:900;color:var(--accent);line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.2px}
+/* favourite sport chips */
+.sport-grid{display:flex;flex-wrap:wrap;gap:7px;padding:6px 0}
+.sport-chip{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-family:inherit;font-size:13px;cursor:pointer;transition:.12s;-webkit-tap-highlight-color:transparent}
+.sport-chip.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent);font-weight:700}
+/* reminder time input */
+#reminder-time{background:var(--card2);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;padding:5px 8px;-webkit-appearance:none;cursor:pointer}
 /* toggle switch */
 .toggle{width:51px;height:31px;background:var(--border2);border-radius:20px;position:relative;cursor:pointer;transition:.3s;flex-shrink:0}
 .toggle.on{background:var(--accent)}
@@ -1079,6 +1093,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 </div>
 
 <!-- ─── SETTINGS PANEL ─── -->
+<input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
 <div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
   <div class="settings-card">
     <div class="lb-head">
@@ -1087,14 +1102,28 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     </div>
     <!-- User info row -->
     <div id="profile-user-row" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:.5px solid var(--border);flex-shrink:0">
-      <div id="profile-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000;flex-shrink:0">?</div>
+      <div class="avatar-wrap" onclick="changeAvatar()">
+        <div id="profile-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000;background-size:cover;background-position:center">?</div>
+        <div class="avatar-cam">📷</div>
+      </div>
       <div style="flex:1;min-width:0">
         <div id="profile-name" style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">טוען...</div>
         <div id="profile-email" style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       </div>
       <button onclick="doLogout()" style="padding:7px 14px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">יציאה</button>
     </div>
+    <!-- Stats row -->
+    <div class="profile-stats">
+      <div class="stat-item"><div class="stat-num" id="stat-visited">0</div><div class="stat-lbl">מגרשים גיליתי</div></div>
+      <div class="stat-item" style="border-right:.5px solid var(--border);border-left:.5px solid var(--border)"><div class="stat-num" id="stat-favs">0</div><div class="stat-lbl">מועדפים</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-sport">—</div><div class="stat-lbl">ספורט מועדף</div></div>
+    </div>
     <div class="settings-body">
+      <!-- Favourite sports -->
+      <div class="settings-section">⭐ ספורטים מועדפים</div>
+      <div class="settings-sub" style="margin-bottom:4px">בחר ספורטים שמסננים אוטומטית</div>
+      <div class="sport-grid" id="fav-sports-grid"></div>
+
       <div class="settings-section">⚙️ הגדרות</div>
 
       <div class="settings-row">
@@ -1122,15 +1151,18 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <div class="settings-section">🗺️ מפה</div>
 
       <div class="settings-row">
-        <div><div class="settings-lbl">מצב לילה אוטומטי</div><div class="settings-sub">מפה כהה בשעות הלילה</div></div>
+        <div><div class="settings-lbl">מצב לילה אוטומטי</div><div class="settings-sub">מפה כהה בשעות 20:00–7:00</div></div>
         <div class="toggle" id="toggle-auto-dark" onclick="toggleAutoDark()"></div>
       </div>
 
       <div class="settings-section">🔔 התראות</div>
 
-      <div class="settings-row">
-        <div><div class="settings-lbl">תזכורת יומית</div><div class="settings-sub">בשעה 17:00</div></div>
-        <div class="toggle" id="toggle-reminder" onclick="toggleReminder()"></div>
+      <div class="settings-row" style="flex-wrap:wrap;gap:8px">
+        <div><div class="settings-lbl">תזכורת יומית</div><div class="settings-sub">קבל תזכורת כל יום</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="time" id="reminder-time" value="17:00" onchange="saveReminderTime(this.value)" style="display:none">
+          <div class="toggle" id="toggle-reminder" onclick="toggleReminder()"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1932,14 +1964,89 @@ function openSettingsPanel() {
       const name = currentUser.guest ? 'אורח' : (currentUser.name || currentUser.email || '');
       const email = currentUser.guest ? '' : (currentUser.email || '');
       const initials = name ? name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).join('').slice(0,2) : '?';
-      document.getElementById('profile-avatar').textContent = initials;
+      const av = document.getElementById('profile-avatar');
+      const saved = localStorage.getItem('pg_avatar');
+      if (saved) { av.style.backgroundImage = `url(${saved})`; av.textContent = ''; }
+      else { av.style.backgroundImage = ''; av.textContent = initials; }
       document.getElementById('profile-name').textContent = name;
       document.getElementById('profile-email').textContent = email;
     }
   } catch(e) {}
+  try { renderProfileStats(); } catch(e) {}
+  try { renderFavSportsGrid(); } catch(e) {}
   document.getElementById('settings-panel').classList.add('on');
 }
 function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
+
+// ─── AVATAR UPLOAD ───────────────────────────────────────
+function changeAvatar() { document.getElementById('avatar-input').click(); }
+function handleAvatarUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 120;
+      const ctx = c.getContext('2d');
+      const size = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 120, 120);
+      const data = c.toDataURL('image/jpeg', 0.85);
+      localStorage.setItem('pg_avatar', data);
+      const av = document.getElementById('profile-avatar');
+      av.style.backgroundImage = `url(${data})`; av.textContent = '';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ─── PROFILE STATS ───────────────────────────────────────
+function renderProfileStats() {
+  const log = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  const unique = new Set(log.map(v => `${v.lat},${v.lon}`)).size;
+  const favs = Object.keys(getFavs()).length;
+  const sportCount = {};
+  log.forEach(v => { if (v.sport) sportCount[v.sport] = (sportCount[v.sport]||0)+1; });
+  const top = Object.entries(sportCount).sort((a,b)=>b[1]-a[1])[0];
+  const topEmoji = top ? (ALL_FILTERS.find(f=>f.id===top[0])?.label.split(' ')[0] || '🏟️') : '—';
+  document.getElementById('stat-visited').textContent = unique || 0;
+  document.getElementById('stat-favs').textContent = favs;
+  document.getElementById('stat-sport').textContent = topEmoji;
+}
+
+// ─── FAVOURITE SPORTS ────────────────────────────────────
+const FAV_SPORT_OPTIONS = [
+  {id:'soccer',l:'⚽ כדורגל'},{id:'basketball',l:'🏀 כדורסל'},{id:'tennis',l:'🎾 טניס'},
+  {id:'volleyball',l:'🏐 כדורעף'},{id:'fitness',l:'💪 כושר'},{id:'swimming',l:'🏊 שחייה'},
+  {id:'athletics',l:'🏃 ריצה'},{id:'padel',l:'🎾 פאדל'},{id:'table_tennis',l:'🏓 פינג-פונג'},
+  {id:'handball',l:'🤾 כדוריד'},{id:'climbing',l:'🧗 טיפוס'},{id:'skateboard',l:'🛹 סקייט'},
+  {id:'badminton',l:'🏸 בדמינטון'},{id:'playground',l:'🎠 גן שעשועים'},
+];
+function getFavSports() { return JSON.parse(localStorage.getItem('pg_fav_sports') || '[]'); }
+function saveFavSports(arr) { localStorage.setItem('pg_fav_sports', JSON.stringify(arr)); }
+function toggleFavSport(id) {
+  let arr = getFavSports();
+  arr = arr.includes(id) ? arr.filter(x=>x!==id) : [...arr, id];
+  saveFavSports(arr);
+  renderFavSportsGrid();
+}
+function renderFavSportsGrid() {
+  const sel = getFavSports();
+  document.getElementById('fav-sports-grid').innerHTML = FAV_SPORT_OPTIONS.map(s =>
+    `<button class="sport-chip${sel.includes(s.id)?' on':''}" onclick="toggleFavSport('${s.id}')">${s.l}</button>`
+  ).join('');
+}
+
+// ─── REMINDER TIME ───────────────────────────────────────
+function saveReminderTime(val) {
+  localStorage.setItem('pg_reminder_time', val);
+  if (localStorage.getItem('pg_reminder')) {
+    localStorage.removeItem('pg_reminder');
+    scheduleDailyReminder();
+  }
+}
+
 function doLogout() {
   if (!confirm('להתנתק?')) return;
   localStorage.removeItem('pg_user');
@@ -1953,7 +2060,11 @@ function syncSettingsUI() {
   document.getElementById('toggle-contrast').classList.toggle('on', !!prefs.contrast);
   document.getElementById('toggle-big-btns').classList.toggle('on', !!prefs.bigBtns);
   document.getElementById('toggle-auto-dark').classList.toggle('on', darkMode === null);
-  document.getElementById('toggle-reminder').classList.toggle('on', !!localStorage.getItem('pg_reminder'));
+  const reminderOn = !!localStorage.getItem('pg_reminder');
+  document.getElementById('toggle-reminder').classList.toggle('on', reminderOn);
+  const timeEl = document.getElementById('reminder-time');
+  timeEl.style.display = reminderOn ? 'block' : 'none';
+  timeEl.value = localStorage.getItem('pg_reminder_time') || '17:00';
 }
 
 function getA11yPrefs() { return JSON.parse(localStorage.getItem('pg_a11y') || '{}'); }
@@ -1976,8 +2087,8 @@ function toggleA11y(key) {
 }
 
 function toggleAutoDark() {
-  darkMode = darkMode === null ? !isNight() : null;
-  applyMapTheme(darkMode !== null ? darkMode : undefined);
+  darkMode = darkMode === null ? false : null;
+  applyMapTheme();
   syncSettingsUI();
 }
 
@@ -2541,7 +2652,15 @@ function setMapStyle(id) {
   savePrefs();
 }
 
-function applyMapTheme() {} // no-op — kept for compatibility
+function isNight() { const h = new Date().getHours(); return h >= 20 || h < 7; }
+
+function applyMapTheme() {
+  const dark = darkMode === null ? isNight() : darkMode;
+  const style = dark ? 'dark' : (curMapStyle === 'dark' ? 'voyager' : curMapStyle);
+  const s = MAP_STYLES.find(x => x.id === style);
+  if (s) tileLayer.setUrl(s.url);
+}
+
 function toggleDarkMode() {}
 setTimeout(() => map.invalidateSize(), 400);
 
@@ -4144,11 +4263,11 @@ function sendLocalNotification(title, body, icon = '🏟️') {
 }
 
 function scheduleDailyReminder() {
-  // שמור שעת שליחה (אחה"צ 5)
+  const [hh, mm] = (localStorage.getItem('pg_reminder_time') || '17:00').split(':').map(Number);
   const now = new Date();
   const target = new Date();
-  target.setHours(17, 0, 0, 0);
-  if (now > target) target.setDate(target.getDate() + 1);
+  target.setHours(hh, mm || 0, 0, 0);
+  if (now >= target) target.setDate(target.getDate() + 1);
   const delay = target - now;
   setTimeout(() => {
     sendLocalNotification('🏟️ Arena', 'יצאת לשחק היום? יש מגרשים פנויים קרוב אליך!');
