@@ -958,16 +958,16 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <!-- ─── TAB BAR ─── -->
 <nav id="tab-bar">
   <button class="tab-btn active" id="tab-map-btn" onclick="switchMainTab('map')">
-    <span class="tab-ico">🗺️</span><span>מפה</span>
+    <span class="tab-ico">🗺️</span><span data-i18n="tabMap">מפה</span>
   </button>
   <button class="tab-btn" id="tab-list-btn" onclick="switchMainTab('list')">
-    <span class="tab-ico">🏟️</span><span>מגרשים</span>
+    <span class="tab-ico">🏟️</span><span data-i18n="tabList">מגרשים</span>
   </button>
   <button class="tab-btn" id="tab-fav-btn" style="display:none" onclick="switchMainTab('fav')">
-    <span class="tab-ico">⭐</span><span>מועדפים</span>
+    <span class="tab-ico">⭐</span><span data-i18n="tabFav">מועדפים</span>
   </button>
   <button class="tab-btn" id="tab-profile-btn" onclick="switchMainTab('profile')">
-    <span class="tab-ico">👤</span><span>אני</span>
+    <span class="tab-ico">👤</span><span data-i18n="tabProfile">אני</span>
   </button>
 </nav>
 
@@ -975,13 +975,13 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="overflow-menu" onclick="if(event.target===this)closeOverflowMenu()">
   <div class="overflow-card">
     <div class="overflow-grid">
-      <button class="overflow-item" onclick="closeOverflowMenu();toggleHeatmap()"><span class="overflow-item-ico">🔥</span><span class="overflow-item-lbl">מפת חום</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openRentalPanel()"><span class="overflow-item-ico">🎾</span><span class="overflow-item-lbl">השכרה</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl">קופונים</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl">סטטיסטיקות</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl">דירוג</span></button>
-      <button class="overflow-item" onclick="openLangPicker()" id="lang-btn"><span class="overflow-item-ico">🇮🇱</span><span class="overflow-item-lbl">שפה</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl">הגדרות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();toggleHeatmap()"><span class="overflow-item-ico">🔥</span><span class="overflow-item-lbl" data-i18n="omHeatmap">מפת חום</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openRentalPanel()"><span class="overflow-item-ico">🎾</span><span class="overflow-item-lbl" data-i18n="omRental">השכרה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl" data-i18n="omCoupons">קופונים</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl" data-i18n="omStats">סטטיסטיקות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl" data-i18n="omLeaderboard">דירוג</span></button>
+      <button class="overflow-item" onclick="openLangPicker()" id="lang-btn"><span class="overflow-item-ico">🇮🇱</span><span class="overflow-item-lbl" data-i18n="omLang">שפה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl" data-i18n="omSettings">הגדרות</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico">👑</span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
     </div>
     <button class="overflow-close" onclick="closeOverflowMenu()">סגור</button>
@@ -1100,7 +1100,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="settings-panel" onclick="if(event.target===this)closeSettingsPanel()">
   <div class="settings-card">
     <div class="lb-head">
-      <div class="lb-title">👤 הפרופיל שלי</div>
+      <div class="lb-title" data-i18n="profileTitle">👤 הפרופיל שלי</div>
       <div style="display:flex;gap:8px;align-items:center">
         <button onclick="openGuidePanel()" style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--accent);background:var(--accent-s);color:var(--accent);font-size:16px;font-weight:900;cursor:pointer;font-family:inherit">?</button>
         <button class="fav-close" onclick="closeSettingsPanel()">✕</button>
@@ -1116,56 +1116,56 @@ body.a11y-big-btns .fn        { font-size:18px!important }
         <div id="profile-name" style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">טוען...</div>
         <div id="profile-email" style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       </div>
-      <button onclick="doLogout()" style="padding:7px 14px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">יציאה</button>
+      <button onclick="doLogout()" data-i18n="profileLogout" style="padding:7px 14px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">יציאה</button>
     </div>
     <!-- Stats row -->
     <div class="profile-stats">
-      <div class="stat-item"><div class="stat-num" id="stat-visited">0</div><div class="stat-lbl">מגרשים גיליתי</div></div>
-      <div class="stat-item" style="border-right:.5px solid var(--border);border-left:.5px solid var(--border)"><div class="stat-num" id="stat-favs">0</div><div class="stat-lbl">מועדפים</div></div>
-      <div class="stat-item"><div class="stat-num" id="stat-sport">—</div><div class="stat-lbl">ספורט מועדף</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-visited">0</div><div class="stat-lbl" data-i18n="statVisitedLbl">מגרשים גיליתי</div></div>
+      <div class="stat-item" style="border-right:.5px solid var(--border);border-left:.5px solid var(--border)"><div class="stat-num" id="stat-favs">0</div><div class="stat-lbl" data-i18n="statFavsLbl">מועדפים</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-sport">—</div><div class="stat-lbl" data-i18n="statSportLbl">ספורט מועדף</div></div>
     </div>
     <div class="settings-body">
       <!-- Favourite sports -->
-      <div class="settings-section">⭐ ספורטים מועדפים</div>
-      <div class="settings-sub" style="margin-bottom:8px">בחר ספורטים שמסננים אוטומטית</div>
+      <div class="settings-section" data-i18n="secFavSports">⭐ ספורטים מועדפים</div>
+      <div class="settings-sub" data-i18n="subFavSports" style="margin-bottom:8px">בחר ספורטים שמסננים אוטומטית</div>
       <div class="sport-grid" id="fav-sports-grid"></div>
-      <button id="save-sports-btn" onclick="saveFavSportsConfirm()" style="margin-top:10px;width:100%;padding:13px;border-radius:14px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;display:none">שמור ✓</button>
+      <button id="save-sports-btn" data-i18n="saveSports" onclick="saveFavSportsConfirm()" style="margin-top:10px;width:100%;padding:13px;border-radius:14px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;display:none">שמור ✓</button>
 
-      <div class="settings-section">⚙️ הגדרות</div>
+      <div class="settings-section" data-i18n="secSettings">⚙️ הגדרות</div>
 
       <div class="settings-row">
         <div>
-          <div class="settings-lbl">גודל גופן</div>
-          <div class="settings-sub">בחר גודל טקסט מועדף</div>
+          <div class="settings-lbl" data-i18n="lblFontSize">גודל גופן</div>
+          <div class="settings-sub" data-i18n="subFontSize">בחר גודל טקסט מועדף</div>
           <div class="font-size-row">
-            <button class="font-size-btn" data-size="normal"  onclick="setFontSize('normal')">רגיל</button>
-            <button class="font-size-btn" data-size="large"   onclick="setFontSize('large')">גדול</button>
-            <button class="font-size-btn" data-size="xlarge"  onclick="setFontSize('xlarge')">ענק</button>
+            <button class="font-size-btn" data-size="normal"  data-i18n="fontNormal"  onclick="setFontSize('normal')">רגיל</button>
+            <button class="font-size-btn" data-size="large"   data-i18n="fontLarge"   onclick="setFontSize('large')">גדול</button>
+            <button class="font-size-btn" data-size="xlarge"  data-i18n="fontXLarge"  onclick="setFontSize('xlarge')">ענק</button>
           </div>
         </div>
       </div>
 
       <div class="settings-row">
-        <div><div class="settings-lbl">ניגודיות גבוהה</div><div class="settings-sub">צבעים בהירים יותר</div></div>
+        <div><div class="settings-lbl" data-i18n="lblContrast">ניגודיות גבוהה</div><div class="settings-sub" data-i18n="subContrast">צבעים בהירים יותר</div></div>
         <div class="toggle" id="toggle-contrast" onclick="toggleA11y('contrast')"></div>
       </div>
 
       <div class="settings-row">
-        <div><div class="settings-lbl">כפתורים גדולים</div><div class="settings-sub">אזורי לחיצה גדולים יותר</div></div>
+        <div><div class="settings-lbl" data-i18n="lblBigBtns">כפתורים גדולים</div><div class="settings-sub" data-i18n="subBigBtns">אזורי לחיצה גדולים יותר</div></div>
         <div class="toggle" id="toggle-big-btns" onclick="toggleA11y('big-btns')"></div>
       </div>
 
-      <div class="settings-section">🗺️ מפה</div>
+      <div class="settings-section" data-i18n="secMap">🗺️ מפה</div>
 
       <div class="settings-row">
-        <div><div class="settings-lbl">מצב לילה אוטומטי</div><div class="settings-sub">מפה כהה בשעות 20:00–7:00</div></div>
+        <div><div class="settings-lbl" data-i18n="lblAutoDark">מצב לילה אוטומטי</div><div class="settings-sub" data-i18n="subAutoDark">מפה כהה בשעות 20:00–7:00</div></div>
         <div class="toggle" id="toggle-auto-dark" onclick="toggleAutoDark()"></div>
       </div>
 
-      <div class="settings-section">🔔 התראות</div>
+      <div class="settings-section" data-i18n="secNotif">🔔 התראות</div>
 
       <div class="settings-row" style="flex-wrap:wrap;gap:8px">
-        <div><div class="settings-lbl">תזכורת יומית</div><div class="settings-sub">קבל תזכורת כל יום</div></div>
+        <div><div class="settings-lbl" data-i18n="lblReminder">תזכורת יומית</div><div class="settings-sub" data-i18n="subReminder">קבל תזכורת כל יום</div></div>
         <div style="display:flex;align-items:center;gap:10px">
           <input type="time" id="reminder-time" value="17:00" onchange="saveReminderTime(this.value)" style="display:none">
           <div class="toggle" id="toggle-reminder" onclick="toggleReminder()"></div>
@@ -2215,6 +2215,17 @@ const LANGS = {
     addField:'➕ הוסף מגרש חדש',
     coupons:'🏷️ קופונים והנחות',
     players:'👥 חיפוש שחקנים',
+    tabMap:'מפה', tabList:'מגרשים', tabFav:'מועדפים', tabProfile:'אני',
+    omHeatmap:'מפת חום', omRental:'השכרה', omCoupons:'קופונים', omStats:'סטטיסטיקות', omLeaderboard:'דירוג', omLang:'שפה', omSettings:'הגדרות',
+    profileTitle:'👤 הפרופיל שלי', profileLogout:'יציאה',
+    statVisitedLbl:'מגרשים גיליתי', statFavsLbl:'מועדפים', statSportLbl:'ספורט מועדף',
+    secFavSports:'⭐ ספורטים מועדפים', subFavSports:'בחר ספורטים שמסננים אוטומטית', saveSports:'שמור ✓',
+    secSettings:'⚙️ הגדרות', lblFontSize:'גודל גופן', subFontSize:'בחר גודל טקסט מועדף',
+    fontNormal:'רגיל', fontLarge:'גדול', fontXLarge:'ענק',
+    lblContrast:'ניגודיות גבוהה', subContrast:'צבעים בהירים יותר',
+    lblBigBtns:'כפתורים גדולים', subBigBtns:'אזורי לחיצה גדולים יותר',
+    secMap:'🗺️ מפה', lblAutoDark:'מצב לילה אוטומטי', subAutoDark:'מפה כהה בשעות 20:00–7:00',
+    secNotif:'🔔 התראות', lblReminder:'תזכורת יומית', subReminder:'קבל תזכורת כל יום',
   },
   en: {
     dir:'ltr', lang:'en',
@@ -2232,6 +2243,17 @@ const LANGS = {
     addField:'➕ Add New Field',
     coupons:'🏷️ Coupons & Deals',
     players:'👥 Find Players',
+    tabMap:'Map', tabList:'Courts', tabFav:'Favorites', tabProfile:'Me',
+    omHeatmap:'Heatmap', omRental:'Rental', omCoupons:'Coupons', omStats:'Statistics', omLeaderboard:'Rankings', omLang:'Language', omSettings:'Settings',
+    profileTitle:'👤 My Profile', profileLogout:'Logout',
+    statVisitedLbl:'Courts visited', statFavsLbl:'Favorites', statSportLbl:'Top sport',
+    secFavSports:'⭐ Favorite Sports', subFavSports:'Auto-filter courts by selected sports', saveSports:'Save ✓',
+    secSettings:'⚙️ Settings', lblFontSize:'Font Size', subFontSize:'Choose preferred text size',
+    fontNormal:'Normal', fontLarge:'Large', fontXLarge:'Extra Large',
+    lblContrast:'High Contrast', subContrast:'Brighter colors',
+    lblBigBtns:'Large Buttons', subBigBtns:'Larger tap targets',
+    secMap:'🗺️ Map', lblAutoDark:'Auto Night Mode', subAutoDark:'Dark map 8 PM–7 AM',
+    secNotif:'🔔 Notifications', lblReminder:'Daily Reminder', subReminder:'Get a daily reminder',
   },
   ar: {
     dir:'rtl', lang:'ar',
@@ -2249,6 +2271,17 @@ const LANGS = {
     addField:'➕ إضافة ملعب جديد',
     coupons:'🏷️ كوبونات وخصومات',
     players:'👥 البحث عن لاعبين',
+    tabMap:'الخريطة', tabList:'الملاعب', tabFav:'المفضلة', tabProfile:'أنا',
+    omHeatmap:'خريطة الحرارة', omRental:'تأجير', omCoupons:'كوبونات', omStats:'إحصائيات', omLeaderboard:'التصنيف', omLang:'اللغة', omSettings:'الإعدادات',
+    profileTitle:'👤 ملفي الشخصي', profileLogout:'خروج',
+    statVisitedLbl:'ملاعب اكتشفتها', statFavsLbl:'المفضلة', statSportLbl:'الرياضة المفضلة',
+    secFavSports:'⭐ الرياضات المفضلة', subFavSports:'اختر رياضات للتصفية التلقائية', saveSports:'حفظ ✓',
+    secSettings:'⚙️ الإعدادات', lblFontSize:'حجم الخط', subFontSize:'اختر حجم النص المفضل',
+    fontNormal:'عادي', fontLarge:'كبير', fontXLarge:'كبير جداً',
+    lblContrast:'تباين عالٍ', subContrast:'ألوان أكثر إشراقاً',
+    lblBigBtns:'أزرار كبيرة', subBigBtns:'مناطق ضغط أكبر',
+    secMap:'🗺️ الخريطة', lblAutoDark:'الوضع الليلي التلقائي', subAutoDark:'خريطة داكنة من 8 م إلى 7 ص',
+    secNotif:'🔔 الإشعارات', lblReminder:'تذكير يومي', subReminder:'احصل على تذكير يومي',
   },
   ru: {
     dir:'ltr', lang:'ru',
@@ -2266,6 +2299,17 @@ const LANGS = {
     addField:'➕ Добавить площадку',
     coupons:'🏷️ Купоны и скидки',
     players:'👥 Поиск игроков',
+    tabMap:'Карта', tabList:'Площадки', tabFav:'Избранное', tabProfile:'Я',
+    omHeatmap:'Тепловая карта', omRental:'Аренда', omCoupons:'Купоны', omStats:'Статистика', omLeaderboard:'Рейтинг', omLang:'Язык', omSettings:'Настройки',
+    profileTitle:'👤 Мой профиль', profileLogout:'Выход',
+    statVisitedLbl:'Площадок найдено', statFavsLbl:'Избранное', statSportLbl:'Любимый спорт',
+    secFavSports:'⭐ Любимые виды спорта', subFavSports:'Автофильтр по видам спорта', saveSports:'Сохранить ✓',
+    secSettings:'⚙️ Настройки', lblFontSize:'Размер шрифта', subFontSize:'Выберите размер текста',
+    fontNormal:'Обычный', fontLarge:'Большой', fontXLarge:'Очень большой',
+    lblContrast:'Высокий контраст', subContrast:'Более яркие цвета',
+    lblBigBtns:'Большие кнопки', subBigBtns:'Увеличенные зоны нажатия',
+    secMap:'🗺️ Карта', lblAutoDark:'Авто ночной режим', subAutoDark:'Тёмная карта 20:00–7:00',
+    secNotif:'🔔 Уведомления', lblReminder:'Ежедневное напоминание', subReminder:'Получайте ежедневное напоминание',
   },
   fr: {
     dir:'ltr', lang:'fr',
@@ -2283,6 +2327,17 @@ const LANGS = {
     addField:'➕ Ajouter un terrain',
     coupons:'🏷️ Coupons et réductions',
     players:'👥 Trouver des joueurs',
+    tabMap:'Carte', tabList:'Terrains', tabFav:'Favoris', tabProfile:'Moi',
+    omHeatmap:'Carte de chaleur', omRental:'Location', omCoupons:'Coupons', omStats:'Statistiques', omLeaderboard:'Classement', omLang:'Langue', omSettings:'Paramètres',
+    profileTitle:'👤 Mon Profil', profileLogout:'Déconnexion',
+    statVisitedLbl:'Terrains découverts', statFavsLbl:'Favoris', statSportLbl:'Sport préféré',
+    secFavSports:'⭐ Sports favoris', subFavSports:'Filtrer automatiquement les terrains', saveSports:'Enregistrer ✓',
+    secSettings:'⚙️ Paramètres', lblFontSize:'Taille de police', subFontSize:'Choisir la taille de texte',
+    fontNormal:'Normal', fontLarge:'Grand', fontXLarge:'Très grand',
+    lblContrast:'Contraste élevé', subContrast:'Couleurs plus vives',
+    lblBigBtns:'Grands boutons', subBigBtns:'Zones de clic plus grandes',
+    secMap:'🗺️ Carte', lblAutoDark:'Mode nuit automatique', subAutoDark:'Carte sombre de 20h à 7h',
+    secNotif:'🔔 Notifications', lblReminder:'Rappel quotidien', subReminder:'Recevoir un rappel chaque jour',
   },
   es: {
     dir:'ltr', lang:'es',
@@ -2300,6 +2355,17 @@ const LANGS = {
     addField:'➕ Agregar cancha',
     coupons:'🏷️ Cupones y descuentos',
     players:'👥 Buscar jugadores',
+    tabMap:'Mapa', tabList:'Canchas', tabFav:'Favoritos', tabProfile:'Yo',
+    omHeatmap:'Mapa de calor', omRental:'Alquiler', omCoupons:'Cupones', omStats:'Estadísticas', omLeaderboard:'Clasificación', omLang:'Idioma', omSettings:'Ajustes',
+    profileTitle:'👤 Mi Perfil', profileLogout:'Cerrar sesión',
+    statVisitedLbl:'Canchas descubiertas', statFavsLbl:'Favoritos', statSportLbl:'Deporte favorito',
+    secFavSports:'⭐ Deportes favoritos', subFavSports:'Filtrar canchas automáticamente', saveSports:'Guardar ✓',
+    secSettings:'⚙️ Ajustes', lblFontSize:'Tamaño de fuente', subFontSize:'Elige el tamaño de texto',
+    fontNormal:'Normal', fontLarge:'Grande', fontXLarge:'Muy grande',
+    lblContrast:'Alto contraste', subContrast:'Colores más brillantes',
+    lblBigBtns:'Botones grandes', subBigBtns:'Áreas de toque más grandes',
+    secMap:'🗺️ Mapa', lblAutoDark:'Modo nocturno automático', subAutoDark:'Mapa oscuro de 20:00 a 7:00',
+    secNotif:'🔔 Notificaciones', lblReminder:'Recordatorio diario', subReminder:'Recibir un recordatorio diario',
   },
 };
 
@@ -2324,19 +2390,25 @@ function applyLang(lang) {
   document.documentElement.lang = L.lang;
   document.documentElement.dir  = L.dir;
 
+  // data-i18n bulk translation
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (L[key]) el.textContent = L[key];
+  });
+
   // Auth screen
   const authTitle = document.querySelector('.auth-title');
   const authSub   = document.querySelector('.auth-sub');
   if (authTitle) authTitle.textContent = L.authTitle;
   if (authSub)   authSub.innerHTML     = L.authSub;
-  document.getElementById('auth-submit').textContent = authMode === 'register' ? L.register : L.login;
-  document.getElementById('tab-reg').textContent = L.register;
-  document.getElementById('tab-log').textContent = L.login;
-  document.querySelector('.auth-guest').textContent  = L.guest;
-  document.getElementById('auth-name').placeholder  = L.namePh;
-  document.getElementById('auth-email').placeholder = L.emailPh;
-  document.getElementById('auth-pass').placeholder  = L.passPh;
-  document.getElementById('city-inp').placeholder   = L.searchPh;
+  try { document.getElementById('auth-submit').textContent = authMode === 'register' ? L.register : L.login; } catch {}
+  try { document.getElementById('tab-reg').textContent = L.register; } catch {}
+  try { document.getElementById('tab-log').textContent = L.login; } catch {}
+  try { document.querySelector('.auth-guest').textContent  = L.guest; } catch {}
+  try { document.getElementById('auth-name').placeholder  = L.namePh; } catch {}
+  try { document.getElementById('auth-email').placeholder = L.emailPh; } catch {}
+  try { document.getElementById('auth-pass').placeholder  = L.passPh; } catch {}
+  try { document.getElementById('city-inp').placeholder   = L.searchPh; } catch {}
 
   // lang button — show flag of current language
   const btn = document.getElementById('lang-btn');
@@ -2353,7 +2425,11 @@ function openLangPicker() {
   panel.style.display = 'flex';
 }
 function closeLangPicker() { document.getElementById('lang-picker').style.display = 'none'; }
-function selectLang(lang) { applyLang(lang); closeLangPicker(); }
+function selectLang(lang) {
+  applyLang(lang);
+  closeLangPicker();
+  setTimeout(() => location.reload(), 80);
+}
 function cycleLang() { openLangPicker(); }
 
 // ─── SOCIAL AUTH CONFIG ──────────────────────────────────
