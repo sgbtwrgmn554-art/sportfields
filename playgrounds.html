@@ -2410,7 +2410,7 @@ function enterApp() {
     map.invalidateSize();
     setTimeout(() => { map.invalidateSize(); tileLayer && tileLayer.redraw(); }, 500);
   }, 420);
-  document.getElementById('user-btn').style.display = 'flex';
+  document.getElementById('user-btn').style.display = 'none';
   document.getElementById('share-loc-btn').style.display = 'flex';
   if (fsEnabled()) {
     const existingBadge = document.getElementById('fs-badge');
@@ -4655,7 +4655,7 @@ window.addEventListener('beforeunload', () => {
     // משתמש מחובר — דלג על מסך הכניסה
     currentUser = JSON.parse(saved);
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('user-btn').style.display = 'flex';
+    document.getElementById('user-btn').style.display = 'none';
     updateFilterPills('default');
     switchMainTab('map');
     setTimeout(() => { map.invalidateSize(); tileLayer && tileLayer.redraw(); }, 100);
