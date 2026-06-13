@@ -980,6 +980,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl">קופונים</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl">סטטיסטיקות</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl">דירוג</span></button>
+      <button class="overflow-item" onclick="openLangPicker()" id="lang-btn"><span class="overflow-item-ico">🇮🇱</span><span class="overflow-item-lbl">שפה</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl">הגדרות</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico">👑</span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
     </div>
@@ -1172,6 +1173,22 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       </div>
 
     </div>
+  </div>
+</div>
+
+<!-- ─── LANGUAGE PICKER ─── -->
+<div id="lang-picker" onclick="if(event.target===this)closeLangPicker()" style="position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end">
+  <div style="width:100%;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);padding:20px 16px calc(env(safe-area-inset-bottom,0px)+20px);animation:slideUp .3s cubic-bezier(.22,1,.36,1)">
+    <div style="font-size:17px;font-weight:900;text-align:center;margin-bottom:16px">🌐 בחר שפה</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="selectLang('he')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇮🇱</span><span>עברית</span></button>
+      <button onclick="selectLang('ar')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇸🇦</span><span>العربية</span></button>
+      <button onclick="selectLang('en')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇺🇸</span><span>English</span></button>
+      <button onclick="selectLang('ru')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇷🇺</span><span>Русский</span></button>
+      <button onclick="selectLang('fr')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇫🇷</span><span>Français</span></button>
+      <button onclick="selectLang('es')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card2);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);width:100%;transition:.12s"><span style="font-size:28px">🇪🇸</span><span>Español</span></button>
+    </div>
+    <button onclick="closeLangPicker()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;border:none;background:var(--card2);color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">ביטול</button>
   </div>
 </div>
 
@@ -2233,13 +2250,74 @@ const LANGS = {
     coupons:'🏷️ كوبونات وخصومات',
     players:'👥 البحث عن لاعبين',
   },
+  ru: {
+    dir:'ltr', lang:'ru',
+    authTitle:'Arena · ארנה',
+    authSub:'Найдите спортивные площадки рядом<br>в любой точке мира',
+    register:'Регистрация', login:'Войти', guest:'👤 Продолжить без аккаунта',
+    namePh:'Полное имя', emailPh:'Email', passPh:'Пароль (мин. 6 символов)',
+    searchPh:'🔍 Поиск города или адреса...',
+    locating:'🔍 Определение...', loading:'Загрузка...',
+    noFields:'Площадки не найдены',
+    close:'Закрыть', cancel:'Отмена',
+    fav:'⭐ Избранное', noFavs:'Избранного пока нет',
+    lb:'🏆 Местная таблица лидеров',
+    stats:'📊 Моя статистика',
+    addField:'➕ Добавить площадку',
+    coupons:'🏷️ Купоны и скидки',
+    players:'👥 Поиск игроков',
+  },
+  fr: {
+    dir:'ltr', lang:'fr',
+    authTitle:'Arena · ארנה',
+    authSub:'Trouvez des terrains de sport près de vous<br>partout dans le monde',
+    register:"S'inscrire", login:'Connexion', guest:'👤 Continuer sans compte',
+    namePh:'Nom complet', emailPh:'Email', passPh:'Mot de passe (min. 6 car.)',
+    searchPh:'🔍 Rechercher une ville ou adresse...',
+    locating:'🔍 Localisation...', loading:'Chargement...',
+    noFields:'Aucun terrain trouvé',
+    close:'Fermer', cancel:'Annuler',
+    fav:'⭐ Mes favoris', noFavs:'Pas encore de favoris',
+    lb:'🏆 Classement local',
+    stats:'📊 Mes statistiques',
+    addField:'➕ Ajouter un terrain',
+    coupons:'🏷️ Coupons et réductions',
+    players:'👥 Trouver des joueurs',
+  },
+  es: {
+    dir:'ltr', lang:'es',
+    authTitle:'Arena · ארנה',
+    authSub:'Encuentra canchas deportivas cerca de ti<br>en cualquier lugar del mundo',
+    register:'Registrarse', login:'Iniciar sesión', guest:'👤 Continuar sin cuenta',
+    namePh:'Nombre completo', emailPh:'Email', passPh:'Contraseña (mín. 6 car.)',
+    searchPh:'🔍 Buscar ciudad o dirección...',
+    locating:'🔍 Localizando...', loading:'Cargando...',
+    noFields:'No se encontraron canchas',
+    close:'Cerrar', cancel:'Cancelar',
+    fav:'⭐ Mis favoritos', noFavs:'Sin favoritos aún',
+    lb:'🏆 Clasificación local',
+    stats:'📊 Mis estadísticas',
+    addField:'➕ Agregar cancha',
+    coupons:'🏷️ Cupones y descuentos',
+    players:'👥 Buscar jugadores',
+  },
 };
 
-let curLang = 'he'; localStorage.setItem('pg_lang', 'he');
+const LANG_META = [
+  { id:'he', flag:'🇮🇱', name:'עברית' },
+  { id:'en', flag:'🇺🇸', name:'English' },
+  { id:'ar', flag:'🇸🇦', name:'العربية' },
+  { id:'ru', flag:'🇷🇺', name:'Русский' },
+  { id:'fr', flag:'🇫🇷', name:'Français' },
+  { id:'es', flag:'🇪🇸', name:'Español' },
+];
+
+let curLang = localStorage.getItem('pg_lang') || 'he';
 
 function t(key) { return LANGS[curLang]?.[key] || LANGS.he[key] || key; }
 
 function applyLang(lang) {
+  if (!LANGS[lang]) lang = 'he';
   curLang = lang;
   localStorage.setItem('pg_lang', lang);
   const L = LANGS[lang];
@@ -2260,16 +2338,23 @@ function applyLang(lang) {
   document.getElementById('auth-pass').placeholder  = L.passPh;
   document.getElementById('city-inp').placeholder   = L.searchPh;
 
-  // lang button
+  // lang button — show flag of current language
   const btn = document.getElementById('lang-btn');
-  if (btn) btn.textContent = lang === 'he' ? '🌐' : lang.toUpperCase();
+  if (btn) {
+    const ico = btn.querySelector('.overflow-item-ico');
+    const meta = LANG_META.find(m => m.id === lang);
+    if (ico) ico.textContent = meta?.flag || '🌐';
+  }
 }
 
-function cycleLang() {
-  const order = ['he','en','ar'];
-  const next = order[(order.indexOf(curLang) + 1) % order.length];
-  applyLang(next);
+function openLangPicker() {
+  closeOverflowMenu();
+  const panel = document.getElementById('lang-picker');
+  panel.style.display = 'flex';
 }
+function closeLangPicker() { document.getElementById('lang-picker').style.display = 'none'; }
+function selectLang(lang) { applyLang(lang); closeLangPicker(); }
+function cycleLang() { openLangPicker(); }
 
 // ─── SOCIAL AUTH CONFIG ──────────────────────────────────
 // כדי להפעיל: החלף את ה-IDs האמיתיים שלך מ-console.developers.google.com ו-developer.apple.com
