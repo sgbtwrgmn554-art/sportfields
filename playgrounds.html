@@ -1830,13 +1830,26 @@ function createEvent() {
     db.collection('events').doc(fieldId).collection('list').add(ev).catch(console.warn);
   }
   // שתף קישור
-  const text = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
-  if (navigator.share) navigator.share({ title, text }).catch(()=>{});
-  else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  curEvTab = 'list';
-  document.querySelectorAll('.ev-tab').forEach((b,i)=>b.classList.toggle('on',i===0));
-  renderEventsPanel();
-  setStatus('✅ האירוע נוצר ושותף!', true);
+  const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
+  const switchToList = () => {
+    curEvTab = 'list';
+    document.querySelectorAll('.ev-tab').forEach((b,i) => b.classList.toggle('on', i===0));
+    renderEventsPanel();
+    setStatus('✅ האירוע נוצר ושותף!', true);
+  };
+  if (navigator.share) {
+    navigator.share({ title, text: shareText })
+      .then(switchToList)
+      .catch(err => {
+        if (err?.name === 'AbortError') { switchToList(); return; }
+        // Share failed — fallback to WhatsApp
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        switchToList();
+      });
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    switchToList();
+  }
 }
 
 function scheduleEventReminder(ev) {
