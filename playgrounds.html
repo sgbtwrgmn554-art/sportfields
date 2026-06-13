@@ -30,14 +30,17 @@
   --glow-b:0 0 20px rgba(10,132,255,.3);
 }
 html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text)}
-#map{position:fixed;inset:0;z-index:1;background:#000}
+#map{position:fixed;inset:0;z-index:1;background:#000;contain:strict;will-change:transform}
+.leaflet-tile-pane,.leaflet-overlay-pane,.leaflet-marker-pane{will-change:transform;transform:translateZ(0)}
+.leaflet-tile{transform:translateZ(0)}
+.leaflet-map-pane canvas{transform:translateZ(0)}
 
 .hdr{
   position:fixed;top:0;left:0;right:0;z-index:100;
   padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
   background:linear-gradient(to bottom,rgba(5,10,20,.98) 50%,rgba(5,10,20,.65) 78%,transparent);
   pointer-events:none;
-  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  transform:translateZ(0);
 }
 .hdr-row{display:flex;align-items:center;gap:10px;pointer-events:all;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .hdr-row::-webkit-scrollbar{display:none}
@@ -3026,8 +3029,10 @@ let darkMode = null;
 // ─── MAP INIT ───────────────────────────────────────────
 map = L.map('map', {
   zoomControl: false, attributionControl: false, preferCanvas: true,
-  inertia: true, inertiaDeceleration: 2800, inertiaMaxSpeed: 1400,
-  easeLinearity: 0.2, zoomAnimation: true, markerZoomAnimation: true
+  inertia: true, inertiaDeceleration: 1000, inertiaMaxSpeed: Infinity,
+  easeLinearity: 0.15, zoomAnimation: true, markerZoomAnimation: true,
+  wheelDebounceTime: 40, wheelPxPerZoomLevel: 60,
+  bounceAtZoomLimits: false
 }).setView([31.7683, 35.2137], 13);
 
 // ─── TILE LAYER ──────────────────────────────────────────
