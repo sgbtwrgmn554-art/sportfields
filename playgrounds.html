@@ -2091,7 +2091,7 @@ function toggleFavSport(id) {
     ? _pendingFavSports.filter(x=>x!==id)
     : [..._pendingFavSports, id];
   renderFavSportsGrid();
-  document.getElementById('save-sports-btn').style.display = 'block';
+  document.getElementById('save-sports-btn').style.display = _pendingFavSports.length > 0 ? 'block' : 'none';
 }
 function saveFavSportsConfirm() {
   if (_pendingFavSports !== null) { saveFavSports(_pendingFavSports); _pendingFavSports = null; }
