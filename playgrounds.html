@@ -2987,13 +2987,13 @@ const he  = s => HE[(s||'').toLowerCase()]   || s || 'מגרש רב-ספורטי
 function inferSportFromName(name) {
   if (!name) return null;
   const n = name.toLowerCase();
-  if (/כדורגל|football|soccer|futsal|כדור-?רגל/.test(n)) return 'soccer';
-  if (/כדורסל|basketball/.test(n)) return 'basketball';
-  if (/טניס(?! שולחן)|tennis(?!.*table)/.test(n)) return 'tennis';
-  if (/כדורעף|volleyball/.test(n)) return 'volleyball';
-  if (/כדוריד|handball/.test(n)) return 'handball';
+  if (/כדורגל|football|soccer|futsal|כדור-?רגל|מגרש כדורגל/.test(n)) return 'soccer';
+  if (/כדורסל|basketball|basket|מגרש כדורסל|כדור-?סל/.test(n)) return 'basketball';
+  if (/טניס(?! שולחן)|tennis(?!.*table)|מגרש טניס/.test(n)) return 'tennis';
+  if (/כדורעף|volleyball|כדור-?עף/.test(n)) return 'volleyball';
+  if (/כדוריד|handball|כדור-?יד/.test(n)) return 'handball';
   if (/שחייה|בריכה|swimming|pool/.test(n)) return 'swimming';
-  if (/כושר|ספורטק|גים|fitness|gym/.test(n)) return 'fitness';
+  if (/כושר|ספורטק|גים|fitness|gym|חדר כושר/.test(n)) return 'fitness';
   if (/פדל|padel/.test(n)) return 'padel';
   if (/טניס שולחן|table.?tennis|פינג.?פונג/.test(n)) return 'table_tennis';
   if (/בדמינטון|badminton/.test(n)) return 'badminton';
@@ -3314,7 +3314,7 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
     const data = await res.json();
 
     const leisureMap = {
-      pitch:'soccer',             // pitches without sport tag → soccer (most common in IL)
+      pitch:'default',            // unknown pitch — don't assume soccer
       playground:'playground', fitness_station:'fitness',
       swimming_pool:'swimming', track:'athletics',
       skate_park:'skateboard', golf_course:'golf',
@@ -3324,23 +3324,44 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       stadium:'default', sports_centre:'default',
     };
 
+    // infer sport from OSM surface tag when sport tag is absent
+    function inferSportFromSurface(t) {
+      const surf = (t.surface||'').toLowerCase();
+      const lines = (t.marking||t.line||'').toLowerCase();
+      if (lines.includes('basketball') || t['sport:basketball']) return 'basketball';
+      if (lines.includes('tennis')) return 'tennis';
+      if (lines.includes('soccer') || lines.includes('football')) return 'soccer';
+      // Asphalt half-court sized pitch → likely basketball
+      if ((surf === 'asphalt' || surf === 'concrete') && t.leisure === 'pitch') {
+        // try dimensions — basketball courts are ≤30m
+        const len = parseFloat(t.length||'999');
+        if (len <= 32) return 'basketball';
+      }
+      return null;
+    }
+
     allFields = (data.elements||[]).map(el => {
       const clat = el.lat || el.center?.lat;
       const clon = el.lon || el.center?.lon;
       if (!clat || !clon) return null;
       const t = el.tags || {};
-      // Build sports list from OSM sport tag
+      // Build sports list from OSM sport tag (most reliable)
       const sports = (t.sport||'').split(';').map(s=>s.trim().toLowerCase()).filter(Boolean);
-      // If no sport tag, try inferring from Hebrew/English name first
+      // Try all name fields for sport inference
       if (!sports.length) {
-        const rawName = t['name:he'] || t.name || '';
+        const rawName = t['name:he'] || t['name:en'] || t.name || t.description || '';
         const inferred = inferSportFromName(rawName);
         if (inferred) sports.push(inferred);
       }
-      // Last resort: use leisure type mapping
+      // Try surface/marking tags
+      if (!sports.length) {
+        const inferred = inferSportFromSurface(t);
+        if (inferred) sports.push(inferred);
+      }
+      // Last resort: leisure type mapping (no sport assumed for plain pitch)
       const primarySport = sports[0] || leisureMap[t.leisure] || 'default';
       if (!sports.length) sports.push(primarySport);
-      const name = t.name || t['name:he'] || he(primarySport);
+      const name = t.name || t['name:he'] || t['name:en'] || he(primarySport);
       return { lat:clat, lon:clon, name, sport:primarySport, sports, tags:t, dist:km(lat,lon,clat,clon) };
     }).filter(Boolean);
 
