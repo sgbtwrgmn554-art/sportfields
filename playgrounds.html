@@ -779,8 +779,11 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 /* ─── CITY BADGE ─── */
 .hdr-city{font-size:12px;font-weight:700;color:var(--blue);background:rgba(10,132,255,.12);border:1px solid var(--blue);border-radius:20px;padding:4px 10px;white-space:nowrap;display:none}
 /* ─── OVERFLOW MENU ─── */
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeInBg{from{opacity:0}to{opacity:1}}
 #overflow-menu{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
-#overflow-menu.on{display:flex}
+#overflow-menu.on{display:flex;animation:fadeInBg .2s ease}
+#overflow-menu.on .overflow-card{animation:slideUp .32s cubic-bezier(.22,1,.36,1)}
 .overflow-card{width:100%;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border2);padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px)}
 .overflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 .overflow-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:14px;background:var(--card2);border:1px solid var(--border);cursor:pointer;transition:.15s;font-family:inherit}
@@ -977,7 +980,6 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl">קופונים</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl">סטטיסטיקות</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl">דירוג</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();cycleLang()" id="lang-btn"><span class="overflow-item-ico">🌐</span><span class="overflow-item-lbl">שפה</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl">הגדרות</span></button>
       <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico">👑</span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
     </div>
@@ -2233,7 +2235,7 @@ const LANGS = {
   },
 };
 
-let curLang = localStorage.getItem('pg_lang') || 'he';
+let curLang = 'he'; localStorage.setItem('pg_lang', 'he');
 
 function t(key) { return LANGS[curLang]?.[key] || LANGS.he[key] || key; }
 
