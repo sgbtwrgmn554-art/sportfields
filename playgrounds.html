@@ -2821,7 +2821,8 @@ const MAX_SPONSORED_DIST = 5000; // הצג רשומות ממומנות עד 5ק"
 // ─── ICONS & NAMES ──────────────────────────────────────
 const ICONS = {
   soccer:'⚽',football:'⚽',futsal:'⚽',mini_soccer:'⚽',
-  basketball:'🏀',
+  association_football:'⚽','5-a-side':'⚽','five-a-side':'⚽',minifootball:'⚽',
+  basketball:'🏀',streetball:'🏀','3x3':'🏀',
   tennis:'🎾',
   volleyball:'🏐',beach_volleyball:'🏐',netball:'🏐',
   athletics:'🏃',running:'🏃',track:'🏃',
@@ -3351,9 +3352,10 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       const t = el.tags || {};
       // Build sports list from OSM sport tag (most reliable)
       const sports = (t.sport||'').split(';').map(s=>s.trim().toLowerCase()).filter(Boolean);
-      // Try all name fields for sport inference
+      // Try all name/description fields for sport inference
       if (!sports.length) {
-        const rawName = t['name:he'] || t['name:en'] || t.name || t.description || '';
+        const rawName = [t['name:he'], t['name:en'], t.name, t.description, t.note, t.alt_name, t['alt_name:he']]
+          .filter(Boolean).join(' ');
         const inferred = inferSportFromName(rawName);
         if (inferred) sports.push(inferred);
       }
