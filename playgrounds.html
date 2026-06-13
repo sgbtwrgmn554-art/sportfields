@@ -1124,8 +1124,9 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="settings-body">
       <!-- Favourite sports -->
       <div class="settings-section">⭐ ספורטים מועדפים</div>
-      <div class="settings-sub" style="margin-bottom:4px">בחר ספורטים שמסננים אוטומטית</div>
+      <div class="settings-sub" style="margin-bottom:8px">בחר ספורטים שמסננים אוטומטית</div>
       <div class="sport-grid" id="fav-sports-grid"></div>
+      <button id="save-sports-btn" onclick="saveFavSportsConfirm()" style="margin-top:10px;width:100%;padding:13px;border-radius:14px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;display:none">שמור ✓</button>
 
       <div class="settings-section">⚙️ הגדרות</div>
 
@@ -2029,7 +2030,7 @@ function openSettingsPanel() {
     }
   } catch(e) {}
   try { renderProfileStats(); } catch(e) {}
-  try { renderFavSportsGrid(); } catch(e) {}
+  try { _pendingFavSports = null; document.getElementById('save-sports-btn').style.display='none'; renderFavSportsGrid(); } catch(e) {}
   document.getElementById('settings-panel').classList.add('on');
 }
 function closeSettingsPanel() { document.getElementById('settings-panel').classList.remove('on'); }
@@ -2083,14 +2084,24 @@ const FAV_SPORT_OPTIONS = [
 ];
 function getFavSports() { return JSON.parse(localStorage.getItem('pg_fav_sports') || '[]'); }
 function saveFavSports(arr) { localStorage.setItem('pg_fav_sports', JSON.stringify(arr)); }
+let _pendingFavSports = null;
 function toggleFavSport(id) {
-  let arr = getFavSports();
-  arr = arr.includes(id) ? arr.filter(x=>x!==id) : [...arr, id];
-  saveFavSports(arr);
+  if (_pendingFavSports === null) _pendingFavSports = [...getFavSports()];
+  _pendingFavSports = _pendingFavSports.includes(id)
+    ? _pendingFavSports.filter(x=>x!==id)
+    : [..._pendingFavSports, id];
   renderFavSportsGrid();
+  document.getElementById('save-sports-btn').style.display = 'block';
+}
+function saveFavSportsConfirm() {
+  if (_pendingFavSports !== null) { saveFavSports(_pendingFavSports); _pendingFavSports = null; }
+  const btn = document.getElementById('save-sports-btn');
+  btn.textContent = '✓ נשמר!';
+  btn.style.background = '#30d158';
+  setTimeout(() => { btn.style.display = 'none'; btn.textContent = 'שמור ✓'; btn.style.background = 'var(--accent)'; }, 1500);
 }
 function renderFavSportsGrid() {
-  const sel = getFavSports();
+  const sel = _pendingFavSports ?? getFavSports();
   document.getElementById('fav-sports-grid').innerHTML = FAV_SPORT_OPTIONS.map(s =>
     `<button class="sport-chip${sel.includes(s.id)?' on':''}" onclick="toggleFavSport('${s.id}')">${s.l}</button>`
   ).join('');
