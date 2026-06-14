@@ -227,15 +227,31 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .scope-sep{width:1px;flex-shrink:0;background:var(--border2);margin:2px 3px}
 .sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
 
-.frow{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:background var(--t-fast),transform var(--t-fast);position:relative;overflow:hidden}
-.frow:active{background:rgba(48,224,212,.06);transform:scale(.99)}
-.frow::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--accent);transform:scaleY(0);transition:transform var(--t-spring);border-radius:0 2px 2px 0;box-shadow:var(--glow-t)}
-.frow:active::before{transform:scaleY(1)}
+.frow{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 16px;
+  border-bottom:.5px solid var(--border);
+  cursor:pointer;
+  transition:background var(--t-fast),transform var(--t-fast);
+  position:relative;overflow:hidden;
+  min-height:64px;
+}
+.frow:active{background:rgba(255,255,255,.04);transform:scale(.992)}
+.frow::after{content:'';position:absolute;inset:0;background:rgba(48,224,212,.05);opacity:0;transition:opacity var(--t-fast)}
+.frow:active::after{opacity:1}
+.frow-ico-wrap{
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,var(--card2),rgba(26,34,48,.8));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
 .frow:last-child{border-bottom:none}
-.fi{font-size:32px;flex-shrink:0}
-.fn{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fs{font-size:12px;color:var(--muted);margin-top:2px}
-.fd{font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0}
+.fi{font-size:26px;flex-shrink:0;line-height:1}
+.fn{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+.fs{font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px}
+.fd{font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0}
+.frow-chevron{color:rgba(255,255,255,.2);font-size:14px;flex-shrink:0;margin-right:-2px}
 
 #overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end}
 #overlay.on{display:flex;animation:fadeInBg .2s ease}
@@ -725,10 +741,66 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 /* ─── LIST ITEM SLIDE-IN ─── */
 .frow-animated{
-  animation:slideUpFade 0.35s cubic-bezier(.22,1,.36,1) forwards;
+  animation:slideUpFade 0.38s cubic-bezier(.22,1,.36,1) forwards;
   opacity:0;
 }
-@keyframes slideUpFade{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideUpFade{from{transform:translateY(22px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ─── WIDGETS ─── */
+.widget-row{display:flex;gap:10px;padding:14px 14px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.widget-row::-webkit-scrollbar{display:none}
+
+/* Weather widget */
+.w-weather{
+  flex-shrink:0;min-width:160px;
+  background:linear-gradient(135deg,#0a2040,#0d3060);
+  border:1px solid rgba(10,132,255,.25);border-radius:20px;
+  padding:14px 16px;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.w-weather::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(10,132,255,.25),transparent 70%);pointer-events:none}
+.w-weather-ico{font-size:32px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(10,132,255,.5))}
+.w-weather-temp{font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1}
+.w-weather-desc{font-size:11px;color:rgba(255,255,255,.6);font-weight:600;margin-top:2px}
+.w-weather-tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.w-weather-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+.w-weather-tag.good{background:rgba(48,209,88,.2);color:#30d158}
+.w-weather-tag.bad{background:rgba(255,69,58,.2);color:#ff453a}
+
+/* Quick actions widget */
+.w-quick{
+  flex-shrink:0;display:flex;flex-direction:column;gap:6px;
+}
+.w-quick-btn{
+  padding:10px 14px;border-radius:14px;border:none;cursor:pointer;font-family:inherit;
+  font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px;
+  transition:transform var(--t-fast),opacity var(--t-fast);white-space:nowrap;
+  min-height:44px;
+}
+.w-quick-btn:active{transform:scale(.94);opacity:.8}
+.w-quick-nearest{background:linear-gradient(135deg,rgba(48,224,212,.2),rgba(48,224,212,.08));border:1px solid rgba(48,224,212,.3);color:var(--accent)}
+.w-quick-active{background:linear-gradient(135deg,rgba(48,209,88,.2),rgba(48,209,88,.08));border:1px solid rgba(48,209,88,.3);color:#30d158}
+
+/* Streak widget */
+.w-streak{
+  flex-shrink:0;min-width:120px;
+  background:linear-gradient(135deg,#2d1a00,#3d2500);
+  border:1px solid rgba(255,159,10,.25);border-radius:20px;
+  padding:14px 16px;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.w-streak::before{content:'';position:absolute;bottom:-15px;left:-15px;width:70px;height:70px;background:radial-gradient(circle,rgba(255,159,10,.2),transparent 70%);pointer-events:none}
+.w-streak-ico{font-size:28px;filter:drop-shadow(0 0 6px rgba(255,159,10,.6));margin-bottom:4px}
+.w-streak-num{font-size:30px;font-weight:900;color:var(--orange);letter-spacing:-1px;line-height:1}
+.w-streak-lbl{font-size:10px;color:rgba(255,159,10,.7);font-weight:700;margin-top:2px}
+
+/* Section header in list */
+.list-widget-hdr{
+  padding:18px 16px 6px;font-size:11px;font-weight:800;
+  color:var(--muted);letter-spacing:.7px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.list-widget-hdr-link{font-size:12px;font-weight:700;color:var(--accent);text-transform:none;letter-spacing:0;cursor:pointer}
 
 /* ─── RIPPLE ─── */
 .ripple-wave{
@@ -3560,40 +3632,137 @@ function renderList() {
     </div>`).join('');
 
   const rows = shownFields.slice(0, 50).map((f, i) => {
-    const extras = [
-      f.tags?.surface ? `🌱 ${f.tags.surface}` : '',
-      f.tags?.lit === 'yes' ? '💡' : '',
-      f.tags?.access === 'private' ? '🔒' : ''
-    ].filter(Boolean).join(' ');
+    const extras = [];
+    if (f.tags?.lit === 'yes') extras.push('💡 תאורה');
+    if (f.tags?.fee === 'no' || (!f.tags?.fee && f.tags?.access !== 'private')) extras.push('🆓');
+    if (f.tags?.access === 'private') extras.push('🔒');
+    if (f.tags?.surface) extras.push(f.tags.surface);
     const sportIcons = f.sports.length > 1
-      ? f.sports.slice(0,4).map(s=>ico(s)).join('')
+      ? f.sports.slice(0,3).map(s=>ico(s)).join('')
       : ico(f.sport);
     const sportLabel = f.sports.length > 1
-      ? f.sports.slice(0,3).map(s=>he(s)).join(' · ')
+      ? f.sports.slice(0,2).map(s=>he(s)).join(' · ')
       : he(f.sport);
     const av = getAvailability(f);
-    const avDot = av.status==='free'?'<span style="color:#30d158;font-size:9px">●</span>':av.status==='busy'?'<span style="color:#ff453a;font-size:9px">●</span>':'';
+    const avDot = av.status==='free'
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#30d158;margin-left:3px;box-shadow:0 0 4px #30d158"></span>'
+      : av.status==='busy'
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff453a;margin-left:3px"></span>'
+      : '';
+    const distBadge = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0"><span class="fd">${fmt(f.dist)}</span></div>`;
     return `<div class="frow" onclick="openDetail(${i})">
-      <div class="fi" style="font-size:${f.sports.length>1?'20px':'32px'};line-height:1.4">${sportIcons}</div>
-      <div style="flex:1;min-width:0">
-        <div class="fn">${avDot} ${esc(f.name)}</div>
-        <div class="fs">${sportLabel}${extras?' · '+extras:''}</div>
+      <div class="frow-ico-wrap">
+        <span class="fi" style="font-size:${f.sports.length>1?'20px':'26px'}">${sportIcons}</span>
       </div>
-      <div class="fd">${fmt(f.dist)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fn">${esc(f.name)}</div>
+        <div class="fs">${avDot}<span>${sportLabel}</span>${extras.length?'<span style="color:rgba(240,244,255,.25)">·</span><span>'+extras.join(' ')+'</span>':''}</div>
+      </div>
+      ${distBadge}
+      <span class="frow-chevron">›</span>
     </div>`;
   }).join('');
 
+  // Widgets section (only when list is visible and location known)
+  const widgetSection = uLat != null ? `
+    <div id="list-widgets" style="padding-bottom:4px">
+      <div class="widget-row" id="widget-row">
+        ${buildWeatherWidget()}
+        ${buildStreakWidget()}
+        ${buildQuickWidget()}
+      </div>
+    </div>
+    <div class="list-widget-hdr">
+      <span>מגרשים קרובים</span>
+      <span class="list-widget-hdr-link" onclick="cycleSortMode()">מיין ↕</span>
+    </div>` : '';
+
   const more = shownFields.length > 50
     ? `<div style="text-align:center;padding:16px;font-size:13px;color:var(--muted)">ועוד ${shownFields.length-50} — הקטן את הרדיוס</div>`
-    : '<div style="padding-bottom:env(safe-area-inset-bottom,16px)"></div>';
+    : '<div style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)"></div>';
 
-  el.innerHTML = sponsoredRows + rows + more;
+  el.innerHTML = widgetSection + sponsoredRows + rows + more;
   // staggered slide-in animation for list items
   el.querySelectorAll('.frow').forEach((row, i) => {
-    row.style.animationDelay = (i * 30) + 'ms';
+    row.style.animationDelay = (i * 28) + 'ms';
     row.classList.add('frow-animated');
   });
   updateLocBtn();
+  // load weather async
+  if (uLat != null) loadWeather(uLat, uLon);
+}
+
+// ─── WIDGETS ────────────────────────────────────────────
+let _weatherCache = null;
+
+function buildWeatherWidget() {
+  const w = _weatherCache;
+  if (!w) return `<div class="w-weather"><div class="w-weather-ico">🌡️</div><div class="w-weather-temp" id="w-temp">--°</div><div class="w-weather-desc" id="w-desc">טוען מזג אוויר...</div><div class="w-weather-tags" id="w-tags"></div></div>`;
+  const icon = w.rain > 0.5 ? '🌧️' : w.cloud > 70 ? '☁️' : w.temp > 32 ? '🥵' : '☀️';
+  const tempColor = w.temp > 35 ? 'var(--red)' : w.temp < 10 ? '#64d2ff' : '#fff';
+  const goodPlay = w.rain < 0.3 && w.wind < 40 && w.temp > 8 && w.temp < 38;
+  const tags = [
+    w.wind > 0 ? `💨 ${Math.round(w.wind)} קמ"ש` : '',
+    w.rain > 0 ? `🌧️ ${w.rain.toFixed(1)}מ"מ` : '',
+    goodPlay ? 'מתאים לשחק ✓' : 'תנאים קשים',
+  ].filter(Boolean);
+  return `<div class="w-weather" onclick="void 0">
+    <div class="w-weather-ico">${icon}</div>
+    <div class="w-weather-temp" style="color:${tempColor}">${Math.round(w.temp)}°</div>
+    <div class="w-weather-desc">${w.desc}</div>
+    <div class="w-weather-tags">${tags.map(t=>`<span class="w-weather-tag${t.includes('✓')?' good':t.includes('קשים')?' bad':''}">${t}</span>`).join('')}</div>
+  </div>`;
+}
+
+async function loadWeather(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,windspeed_10m,cloudcover,weathercode&wind_speed_unit=kmh&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    const c = data.current;
+    const codes = {0:'שמיים בהירים',1:'בהיר בעיקר',2:'מעונן חלקית',3:'מעונן',45:'ערפל',48:'ערפל עם כפור',51:'גשם קל',53:'גשם בינוני',55:'גשם כבד',61:'גשם קל',63:'גשם בינוני',65:'גשם כבד',71:'שלג קל',80:'מטר גשם',95:'סערה',99:'סערה עם ברד'};
+    _weatherCache = {
+      temp: c.temperature_2m,
+      rain: c.precipitation,
+      wind: c.windspeed_10m,
+      cloud: c.cloudcover,
+      desc: codes[c.weathercode] || 'מזג אוויר לא ידוע'
+    };
+    const wr = document.getElementById('list-widgets');
+    if (wr) {
+      const wEl = wr.querySelector('.w-weather');
+      if (wEl) wEl.outerHTML = buildWeatherWidget();
+    }
+  } catch(e) {}
+}
+
+function buildStreakWidget() {
+  const log = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
+  const streak = log.length;
+  const topSport = (() => {
+    const counts = {};
+    log.forEach(v => { if(v.sport && v.sport !== 'default') counts[v.sport] = (counts[v.sport]||0)+1; });
+    const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    return top ? ico(top[0]) : '🏟️';
+  })();
+  return `<div class="w-streak">
+    <div class="w-streak-ico">${topSport}</div>
+    <div class="w-streak-num">${streak}</div>
+    <div class="w-streak-lbl">ביקורים</div>
+  </div>`;
+}
+
+function buildQuickWidget() {
+  const freeCount = allFields.filter(f => getAvailability(f).status === 'free').length;
+  return `<div class="w-quick">
+    <button class="w-quick-btn w-quick-nearest" onclick="openDetail(0)">
+      <span>⚡</span><span>קרוב ביותר</span>
+    </button>
+    <button class="w-quick-btn w-quick-active" onclick="toggleAdvFilter(document.querySelector('[data-af=active]'),'active')">
+      <span>🟢</span><span>${freeCount} פנויים עכשיו</span>
+    </button>
+  </div>`;
 }
 
 // ─── DETAIL ─────────────────────────────────────────────
