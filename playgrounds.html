@@ -2282,11 +2282,12 @@ const FAV_SPORT_OPTIONS = [
 function getFavSports() { return JSON.parse(localStorage.getItem('pg_fav_sports') || '[]'); }
 function saveFavSports(arr) { localStorage.setItem('pg_fav_sports', JSON.stringify(arr)); }
 let _pendingFavSports = null;
-function toggleFavSport(id) {
+function toggleFavSport(id, btn) {
   if (_pendingFavSports === null) _pendingFavSports = [...getFavSports()];
   _pendingFavSports = _pendingFavSports.includes(id)
     ? _pendingFavSports.filter(x=>x!==id)
     : [..._pendingFavSports, id];
+  if (btn) { btn.classList.add('pill-bounce'); btn.addEventListener('animationend', () => btn.classList.remove('pill-bounce'), { once:true }); }
   renderFavSportsGrid();
   document.getElementById('save-sports-btn').style.display = 'block';
 }
@@ -2300,7 +2301,7 @@ function saveFavSportsConfirm() {
 function renderFavSportsGrid() {
   const sel = _pendingFavSports ?? getFavSports();
   document.getElementById('fav-sports-grid').innerHTML = FAV_SPORT_OPTIONS.map(s =>
-    `<button class="sport-chip${sel.includes(s.id)?' on':''}" onclick="toggleFavSport('${s.id}')">${s.l}</button>`
+    `<button class="sport-chip${sel.includes(s.id)?' on':''}" onclick="toggleFavSport('${s.id}',this)">${s.l}</button>`
   ).join('');
 }
 
