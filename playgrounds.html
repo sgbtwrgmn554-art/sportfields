@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1628'/><text y='.9em' font-size='80' x='10'>🏟️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <style>
@@ -1013,7 +1014,6 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .overflow-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:13px 8px;border-radius:16px;background:rgba(26,34,48,.9);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:.18s;font-family:inherit;position:relative;overflow:hidden}
 .overflow-item:active{transform:scale(.92);background:rgba(48,224,212,.07);border-color:rgba(48,224,212,.2)}
 .overflow-item-ico{font-size:26px;line-height:1}
-.overflow-item-ico{font-size:24px;line-height:1}
 .overflow-item-lbl{font-size:11px;font-weight:700;color:var(--text2);text-align:center}
 .overflow-close{width:100%;padding:13px;border-radius:13px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
 /* ─── ADVANCED FILTERS ─── */
@@ -3180,7 +3180,11 @@ function applyMapTheme() {
   if (s) tileLayer.setUrl(s.url);
 }
 
-function toggleDarkMode() {}
+function toggleDarkMode() {
+  const next = curMapStyle === 'dark' ? 'voyager' : 'dark';
+  setMapStyle(next);
+  localStorage.setItem('pg_map_style', next);
+}
 setTimeout(() => map.invalidateSize(), 400);
 
 // iOS address-bar resize fix
@@ -3824,13 +3828,25 @@ function closeQr() { document.getElementById('qr-overlay').classList.remove('on'
 
 function drawQr(text) {
   const canvas = document.getElementById('qr-canvas');
+  canvas.innerHTML = '';
+  canvas.width = canvas.height = 200;
+  if (window.QRCode) {
+    canvas.innerHTML = '';
+    new QRCode(canvas, {
+      text,
+      width: 200,
+      height: 200,
+      colorDark: '#000',
+      colorLight: '#fff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    return;
+  }
+  // fallback if library not loaded
   const ctx = canvas.getContext('2d');
   const size = 200;
-  canvas.width = canvas.height = size;
   ctx.fillStyle = '#fff';
   ctx.fillRect(0,0,size,size);
-
-  // QR פשוט — מטריצה מבוססת hash (לא QR אמיתי — לקוד אמיתי יש לשלב qrcode.js)
   ctx.fillStyle = '#000';
   const cells = 21, cell = Math.floor(size / cells);
   const seed = text.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
@@ -3838,7 +3854,6 @@ function drawQr(text) {
     const val = ((seed * (r+1) * (c2+1)) ^ (r * 17 + c2 * 13)) % 3;
     if (val === 0) ctx.fillRect(c2*cell, r*cell, cell-1, cell-1);
   }
-  // finder patterns
   [[0,0],[0,14],[14,0]].forEach(([rx,cx]) => {
     ctx.fillStyle='#000'; ctx.fillRect(cx*cell,rx*cell,7*cell,7*cell);
     ctx.fillStyle='#fff'; ctx.fillRect(cx*cell+cell,rx*cell+cell,5*cell,5*cell);
@@ -4252,7 +4267,9 @@ function renderPlayersBody(f) {
       });
     return;
   }
-  const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+  const players = getPlayers(f)
+    .filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000)
+    .sort((a, b) => b.ts - a.ts);
   buildPlayersHTML(f, players);
 }
 
@@ -5095,7 +5112,7 @@ function updateOnlineStatus() {
     if (!bar) {
       bar = document.createElement('div');
       bar.id = 'offline-bar';
-      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff453a;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:8px;safe-area-inset-top:8px';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff453a;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px';
       bar.textContent = '📴 אין חיבור לאינטרנט — מוצגים נתונים שמורים';
       document.body.prepend(bar);
     }
