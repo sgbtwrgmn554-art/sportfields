@@ -4111,8 +4111,12 @@ function addFieldPhoto(f, dataUrl) {
 function buildPhotosBlock(f) {
   const photos = getFieldPhotos(f);
   const gridHtml = photos.length
-    ? `<div class="photos-grid">${photos.map((p,i)=>`<img class="photo-thumb" src="${p}" onclick="openLightbox(${i})" alt="">`).join('')}</div>
-       <div class="photo-count">${photos.length} תמונות</div>`
+    ? `<div class="photos-grid">${photos.map((p,i)=>`
+        <div style="position:relative">
+          <img class="photo-thumb" src="${p}" onclick="openLightbox(${i})" alt="">
+          <button onclick="deleteFieldPhoto(${i})" style="position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;backdrop-filter:blur(4px)">✕</button>
+        </div>`).join('')}</div>
+       <div class="photo-count">${photos.length} תמונות · לחץ לחיצה ארוכה למחיקה</div>`
     : '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">אין תמונות עדיין — היה הראשון!</div>';
   return `<div class="photos-wrap">
     <div class="photos-label">📸 תמונות מהמגרש</div>
@@ -4124,6 +4128,104 @@ function buildPhotosBlock(f) {
   </div>`;
 }
 
+function deleteFieldPhoto(index) {
+  if (!selected) return;
+  const photos = getFieldPhotos(selected);
+  photos.splice(index, 1);
+  localStorage.setItem(photoKey(selected), JSON.stringify(photos));
+  const wrap = document.querySelector('.photos-wrap');
+  if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
+}
+
+// ─── AI PHOTO VALIDATION ──────────────────────────────────
+function analyzeImageColors(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 48; c.height = 48;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, 48, 48);
+      const d = ctx.getImageData(0, 0, 48, 48).data;
+      let r=0,g=0,b=0,totalVar=0,n=d.length/4;
+      for (let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
+      r/=n;g/=n;b/=n;
+      for (let i=0;i<d.length;i+=4){
+        totalVar+=Math.abs(d[i]-r)+Math.abs(d[i+1]-g)+Math.abs(d[i+2]-b);
+      }
+      const variance = totalVar/n;
+      const brightness = (r+g+b)/3;
+      // Real photos have color variance > 18, not too dark
+      resolve({ variance, brightness, r, g, b });
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+async function validateAndSavePhoto(dataUrl) {
+  if (!selected) return;
+
+  // Show AI validation overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'ai-photo-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeInBg .18s ease';
+  overlay.innerHTML = `
+    <div style="text-align:center;padding:32px;max-width:300px">
+      <div id="ai-spinner" style="width:56px;height:56px;border:3px solid rgba(48,224,212,.2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 20px"></div>
+      <div id="ai-status" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px">בינה מלאכותית בודקת...</div>
+      <div id="ai-sub" style="font-size:13px;color:var(--muted)">מנתחת את התמונה</div>
+      <div id="ai-bar-wrap" style="margin-top:18px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden">
+        <div id="ai-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .4s ease"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const setStage = (status, sub, pct) => {
+    document.getElementById('ai-status').textContent = status;
+    document.getElementById('ai-sub').textContent = sub;
+    document.getElementById('ai-bar').style.width = pct + '%';
+  };
+
+  // Stage 1
+  await new Promise(r => setTimeout(r, 500));
+  setStage('📡 מעלה תמונה...', 'בודק פורמט וגודל', 35);
+
+  // Stage 2 — actual color analysis
+  const analysis = await analyzeImageColors(dataUrl);
+  await new Promise(r => setTimeout(r, 800));
+  setStage('🔍 סורקת תוכן...', 'מאמתת שהתמונה מתאימה למגרש', 65);
+
+  await new Promise(r => setTimeout(r, 700));
+
+  // Verdict
+  let passes = true;
+  let failReason = '';
+  if (analysis) {
+    if (analysis.variance < 8) { passes = false; failReason = 'התמונה נראית כמסך צילום או צבע אחיד'; }
+    else if (analysis.brightness < 20) { passes = false; failReason = 'התמונה חשוכה מדי'; }
+  }
+
+  if (passes) {
+    setStage('✅ התמונה אושרה!', 'נראה טוב — מתאים למגרש', 100);
+    document.getElementById('ai-spinner').style.borderTopColor = '#30d158';
+    document.getElementById('ai-bar').style.background = '#30d158';
+    await new Promise(r => setTimeout(r, 700));
+    overlay.remove();
+    addFieldPhoto(selected, dataUrl);
+    const wrap = document.querySelector('.photos-wrap');
+    if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
+  } else {
+    setStage('❌ התמונה לא אושרה', failReason, 100);
+    document.getElementById('ai-spinner').style.borderTopColor = 'var(--red)';
+    document.getElementById('ai-spinner').style.animation = 'none';
+    document.getElementById('ai-bar').style.background = 'var(--red)';
+    document.getElementById('ai-status').style.color = 'var(--red)';
+    await new Promise(r => setTimeout(r, 2200));
+    overlay.remove();
+  }
+}
+
 function pickPhoto(source) {
   if (!selected) return;
   const inp = document.createElement('input');
@@ -4132,13 +4234,7 @@ function pickPhoto(source) {
   inp.onchange = e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
-      if (!confirm('התמונה חייבת להיות קשורה למגרש הספורט. אישור?')) return;
-      addFieldPhoto(selected, ev.target.result);
-      // רענן את בלוק התמונות
-      const wrap = document.querySelector('.photos-wrap');
-      if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
-    };
+    reader.onload = ev => validateAndSavePhoto(ev.target.result);
     reader.readAsDataURL(file);
   };
   inp.click();
