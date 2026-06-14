@@ -2753,11 +2753,25 @@ function _googleSignIn() {
   });
   google.accounts.id.prompt(notification => {
     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // fallback — popup
-      google.accounts.id.renderButton(
-        document.createElement('div'),
-        { theme:'filled_black', size:'large', width:340 }
-      );
+      // One Tap blocked — use OAuth2 token client popup instead
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'email profile openid',
+        callback: resp => {
+          if (!resp.access_token) { showAuthErr('❌ שגיאה בכניסה עם Google'); return; }
+          fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${resp.access_token}`)
+            .then(r => r.json())
+            .then(u => {
+              currentUser = { email: u.email, name: u.name || u.email, avatar: u.picture, id: u.sub };
+              localStorage.setItem('pg_user', JSON.stringify(currentUser));
+              track('login', { method: 'google' });
+              enterApp();
+            })
+            .catch(() => showAuthErr('❌ שגיאה בכניסה עם Google'));
+        },
+        error_callback: () => showAuthErr('❌ כניסה עם Google בוטלה'),
+      });
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
     }
   });
 }
@@ -2878,12 +2892,22 @@ function enterApp() {
 
 function showUserMenu() {
   if (!currentUser) return;
-  const info = currentUser.guest ? 'אתה גולש כאורח' : `${currentUser.name}\n${currentUser.email}`;
-  const choice = confirm(`${info}\n\n📊 לחץ אישור לדשבורד עסקי\nלחץ ביטול להתנתקות`);
-  if (choice) { openBizPanel(); }
-  else {
-    if (confirm('להתנתק?')) { localStorage.removeItem('pg_user'); location.reload(); }
-  }
+  const existing = document.getElementById('user-menu-sheet');
+  if (existing) { existing.remove(); return; }
+  const sheet = document.createElement('div');
+  sheet.id = 'user-menu-sheet';
+  const info = currentUser.guest ? '👤 אורח' : `${currentUser.name || currentUser.email}`;
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fadeInBg .18s ease';
+  sheet.innerHTML = `
+    <div style="width:100%;background:var(--card);border-radius:22px 22px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);border-top:1px solid var(--border2)">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:14px;padding:0 4px">${info}</div>
+      <button onclick="document.getElementById('user-menu-sheet').remove();openSettingsPanel()" style="width:100%;margin-bottom:10px;padding:14px;border-radius:14px;border:none;background:var(--card2);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;text-align:right;display:flex;align-items:center;gap:10px">⚙️ הגדרות ופרופיל</button>
+      <button onclick="document.getElementById('user-menu-sheet').remove();openBizPanel()" style="width:100%;margin-bottom:10px;padding:14px;border-radius:14px;border:none;background:var(--card2);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;text-align:right;display:flex;align-items:center;gap:10px">📊 דשבורד עסקי</button>
+      <button onclick="document.getElementById('user-menu-sheet').remove();openStatsPanel()" style="width:100%;margin-bottom:10px;padding:14px;border-radius:14px;border:none;background:var(--card2);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;text-align:right;display:flex;align-items:center;gap:10px">📈 הסטטיסטיקות שלי</button>
+      <button onclick="document.getElementById('user-menu-sheet').remove();if(confirm('להתנתק?')){localStorage.removeItem(\'pg_user\');location.reload()}" style="width:100%;margin-bottom:4px;padding:14px;border-radius:14px;border:1.5px solid rgba(255,69,58,.35);background:rgba(255,69,58,.1);color:var(--red);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;text-align:right;display:flex;align-items:center;gap:10px">🚪 התנתקות</button>
+    </div>`;
+  sheet.onclick = e => { if (e.target === sheet) sheet.remove(); };
+  document.body.appendChild(sheet);
 }
 
 // ─── SPONSORED LISTINGS ─────────────────────────────────
@@ -3181,9 +3205,7 @@ function applyMapTheme() {
 }
 
 function toggleDarkMode() {
-  const next = curMapStyle === 'dark' ? 'voyager' : 'dark';
-  setMapStyle(next);
-  localStorage.setItem('pg_map_style', next);
+  setMapStyle(curMapStyle === 'dark' ? 'voyager' : 'dark');
 }
 setTimeout(() => map.invalidateSize(), 400);
 
@@ -3364,7 +3386,34 @@ function highlightArea(type) {
 }
 
 // ─── OVERPASS ───────────────────────────────────────────
+const _overpassCache = new Map();
+const _OVERPASS_TTL = 5 * 60 * 1000;
+const _OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+async function _overpassFetch(body) {
+  for (const url of _OVERPASS_MIRRORS) {
+    try {
+      const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(body) });
+      if (res.ok) return res.json();
+    } catch {}
+  }
+  throw new Error('all mirrors failed');
+}
+
 async function loadFields(lat, lon) {
+  const _cacheKey = `${(lat*100|0)}_${(lon*100|0)}_${curRadius}_${searchScope}_${curCountry}`;
+  const _cached = _overpassCache.get(_cacheKey);
+  if (_cached && Date.now() - _cached.ts < _OVERPASS_TTL) {
+    allFields = _cached.fields;
+    renderMarkers(); renderList();
+    setStatus(`נמצאו ${getFiltered().length} מגרשים (cache)`, true);
+    return;
+  }
+
   renderSkeleton();
   document.getElementById('cnt').textContent = 'טוען...';
 
@@ -3422,11 +3471,7 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
   }
 
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method:'POST', body:'data='+encodeURIComponent(q)
-    });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
+    const data = await _overpassFetch(q);
 
     const leisureMap = {
       pitch:'default',            // unknown pitch — don't assume soccer
@@ -3502,6 +3547,7 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
       setTimeout(() => loadFields(lat, lon), 600);
       return;
     }
+    _overpassCache.set(_cacheKey, { fields: allFields, ts: Date.now() });
     setStatus(`נמצאו ${getFiltered().length} מגרשים`, true);
   } catch(e) {
     setStatus('❌ שגיאה בטעינה — נסה שוב');
@@ -3755,17 +3801,25 @@ async function loadWeather(lat, lon) {
 
 function buildStreakWidget() {
   const log = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
-  const streak = log.length;
+  const total = log.length;
+  const visited = new Set(log.map(v => new Date(v.ts || 0).toLocaleDateString('he-IL')));
+  let streak = 0;
+  let d = new Date();
+  while (visited.has(d.toLocaleDateString('he-IL'))) {
+    streak++;
+    d = new Date(d.getTime() - 86400000);
+  }
   const topSport = (() => {
     const counts = {};
     log.forEach(v => { if(v.sport && v.sport !== 'default') counts[v.sport] = (counts[v.sport]||0)+1; });
     const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     return top ? ico(top[0]) : '🏟️';
   })();
+  const showStreak = streak > 0;
   return `<div class="w-streak">
-    <div class="w-streak-ico">${topSport}</div>
-    <div class="w-streak-num">${streak}</div>
-    <div class="w-streak-lbl">ביקורים</div>
+    <div class="w-streak-ico">${showStreak ? '🔥' : topSport}</div>
+    <div class="w-streak-num">${showStreak ? streak : total}</div>
+    <div class="w-streak-lbl">${showStreak ? 'ימים ברצף' : 'ביקורים'}</div>
   </div>`;
 }
 
@@ -4221,7 +4275,7 @@ function buildPlayersHTML(f, players) {
         <span class="player-sport">${ico(p.sport)}</span>
         <div class="player-name">${esc(p.name)}</div>
         <div class="player-meta">${he(p.sport)} · ${esc(p.level)} · ${esc(p.players)} שחקנים</div>
-        <div class="player-time">⏰ ${new Date(p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="player-time">⏰ ${new Date(p.ts?.toMillis ? p.ts.toMillis() : p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('')
     : '<div class="empty"><div class="empty-ico">👥</div>אין שחקנים כרגע<br><small>היה הראשון!</small></div>';
 
@@ -4258,7 +4312,10 @@ function renderPlayersBody(f) {
       .orderBy('ts', 'desc').limit(30)
       .onSnapshot(snap => {
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        const players = snap.docs.map(d => d.data()).filter(p => p.ts > cutoff);
+        const players = snap.docs.map(d => d.data()).filter(p => {
+          const tsMs = p.ts?.toMillis ? p.ts.toMillis() : (typeof p.ts === 'number' ? p.ts : 0);
+          return tsMs > cutoff;
+        });
         buildPlayersHTML(f, players);
       }, () => {
         // fallback
@@ -4333,6 +4390,23 @@ function deleteFieldPhoto(index) {
   localStorage.setItem(photoKey(selected), JSON.stringify(photos));
   const wrap = document.querySelector('.photos-wrap');
   if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
+}
+
+// ─── PHOTO COMPRESSION ─────────────────────────────────────
+function compressPhoto(dataUrl, maxPx = 900, quality = 0.72) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height, 1));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 }
 
 // ─── AI PHOTO VALIDATION ──────────────────────────────────
@@ -4410,7 +4484,8 @@ async function validateAndSavePhoto(dataUrl) {
     document.getElementById('ai-bar').style.background = '#30d158';
     await new Promise(r => setTimeout(r, 700));
     overlay.remove();
-    addFieldPhoto(selected, dataUrl);
+    const compressed = await compressPhoto(dataUrl);
+    addFieldPhoto(selected, compressed);
     const wrap = document.querySelector('.photos-wrap');
     if (wrap) wrap.outerHTML = buildPhotosBlock(selected);
   } else {
@@ -4655,7 +4730,8 @@ function openDetail(i) {
   map.flyTo([f.lat, f.lon], 17, { duration:0.6 });
   document.getElementById('d-ico').textContent  = ico(f.sport);
   document.getElementById('d-name').textContent = f.name;
-  document.getElementById('d-sub').textContent  = `${fmt(f.dist)} ממיקומך`;
+  const sportLabel = f.sports.filter(s=>s!=='default').map(s=>he(s)).join(' · ') || he(f.sport);
+  document.getElementById('d-sub').textContent  = `${sportLabel} · ${fmt(f.dist)} ממיקומך`;
   const tags = [];
   f.sports.filter(s=>s!=='default').forEach(s => tags.push(`${ico(s)} ${he(s)}`));
   if (!f.sports.filter(s=>s!=='default').length) tags.push(`${ico(f.sport)} ${he(f.sport)}`);
@@ -4666,9 +4742,10 @@ function openDetail(i) {
   if (f.tags?.access === 'private') tags.push('🔒 פרטי');
   else                              tags.push('✅ פתוח לציבור');
   if (f.tags?.opening_hours)        tags.push(`🕐 ${f.tags.opening_hours}`);
-  if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity}`);
+  if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity} מקומות`);
   if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
-  if (f.tags?.website)              tags.push(`🌐 אתר`);
+  const ws = f.tags?.website;
+  if (ws) tags.push(`<a href="${ws.startsWith('http')?ws:'https://'+ws}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌐 אתר רשמי</a>`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
     + buildAvailBlock(f)
     + buildPhotosBlock(f)
