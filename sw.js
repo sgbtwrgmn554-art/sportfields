@@ -1,10 +1,10 @@
-const CACHE = 'dad-fit-v2';
-const FILES = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'dad-fit-v3';
+const STATIC_FILES = ['/', '/index.html', '/manifest.json', '/sw.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(FILES))
+      .then(c => c.addAll(STATIC_FILES))
       .then(() => self.skipWaiting())
   );
 });
@@ -18,8 +18,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(e.request).then(r => r || fetch(e.request).then(response => {
+      if (e.request.method === 'GET' && response.status === 200) {
+        const clone = response.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
+      return response;
+    }))
   );
 });
 
