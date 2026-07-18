@@ -1,9 +1,9 @@
-const CACHE_STATIC = 'playgrounds-static-v23';
+const CACHE_STATIC = 'playgrounds-static-v24';
 const CACHE_TILES  = 'playgrounds-tiles-v3';
 const CACHE_DATA   = 'playgrounds-data-v2';
 
 const ASSETS = [
-  '/sportfields/playgrounds.html',
+  'playgrounds.html',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js',

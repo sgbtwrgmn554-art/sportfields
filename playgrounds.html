@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ארנה">
-<title>🏟️ Arena | ארנה</title>
-<link rel="manifest" href="/sportfields/manifest-playgrounds.json">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1628'/><text y='.9em' font-size='80' x='10'>🏟️</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1628'/><text y='.9em' font-size='80' x='10'>🏟️</text></svg>">
+<title>Arena | ארנה — מגרשי ספורט קרובים אליך</title>
+<link rel="manifest" href="manifest-playgrounds.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -21,14 +21,14 @@
 :root{
   --bg:#050a14;--card:#111820;--card2:#1a2230;
   --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.15);
-  --accent:#30e0d4;--accent-s:rgba(48,224,212,.13);
-  --blue:#0a84ff;--red:#ff453a;
+  --accent:#2ee86e;--accent-s:rgba(46,232,110,.13);
+  --blue:#2ee86e;--red:#ff453a;
   --text:#f0f4ff;--text2:rgba(240,244,255,.72);--muted:rgba(240,244,255,.42);
   --tab-h:calc(56px + env(safe-area-inset-bottom,0px));
   --hdr-h:calc(env(safe-area-inset-top,0px) + 68px);
   --purple:#bf5af2;--orange:#ff9f0a;--green:#30d158;--gold:#ffd60a;
-  --glow-t:0 0 20px rgba(48,224,212,.35);
-  --glow-b:0 0 20px rgba(10,132,255,.35);
+  --glow-t:0 0 20px rgba(46,232,110,.35);
+  --glow-b:0 0 20px rgba(46,232,110,.35);
   /* spacing scale */
   --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;
   /* border-radius scale */
@@ -40,7 +40,7 @@
 html,body{height:100%;overflow:hidden;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 /* Global interaction polish */
 button,input,select,textarea{outline:none;-webkit-appearance:none}
-input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(48,224,212,.12)!important}
+input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(46,232,110,.12)!important}
 /* Prevent iOS overscroll on panels */
 .sheet-body,.fav-body,.players-body,.settings-body{overscroll-behavior:contain}
 #map{position:fixed;inset:0;z-index:1;background:#000;contain:strict;will-change:transform}
@@ -74,17 +74,17 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 #status{
   position:fixed;left:50%;transform:translateX(-50%);z-index:100;
   background:rgba(11,17,26,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border:1px solid rgba(48,224,212,.22);border-radius:24px;
+  border:1px solid rgba(46,232,110,.22);border-radius:24px;
   padding:8px 22px;font-size:13px;font-weight:600;color:var(--text2);
   white-space:nowrap;transition:opacity .4s;pointer-events:none;
-  box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 0 1px rgba(48,224,212,.06);
+  box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 0 1px rgba(46,232,110,.06);
 }
 
 #loc-btn{
   position:fixed;left:16px;z-index:100;
   width:48px;height:48px;border-radius:50%;
   background:rgba(11,17,26,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border:1.5px solid rgba(48,224,212,.45);color:var(--accent);font-size:24px;
+  border:1.5px solid rgba(46,232,110,.45);color:var(--accent);font-size:24px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 22px rgba(0,0,0,.6),var(--glow-t);transition:.18s;
 }
@@ -95,7 +95,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
   bottom:0;height:0;overflow:hidden;
   background:linear-gradient(180deg,#111820 0%,var(--card) 40%);
   border-radius:0;
-  border-top:1px solid rgba(48,224,212,.15);display:flex;flex-direction:column;will-change:transform;
+  border-top:1px solid rgba(46,232,110,.15);display:flex;flex-direction:column;will-change:transform;
   transition:height .3s cubic-bezier(.4,0,.2,1);
 }
 .sheet.list-mode{
@@ -113,7 +113,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .list-row:active{background:var(--card2)}
 .list-row-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .list-row-ico.teal{background:rgba(50,210,200,.18)}
-.list-row-ico.blue{background:rgba(10,132,255,.18)}
+.list-row-ico.blue{background:rgba(46,232,110,.18)}
 .list-row-ico.red{background:rgba(255,69,58,.18)}
 .list-row-ico.orange{background:rgba(255,159,10,.18)}
 .list-row-lbl{flex:1;font-size:15px;font-weight:500}
@@ -126,8 +126,8 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
   height:var(--tab-h);
   background:rgba(7,11,20,.97);
   backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
-  border-top:1px solid rgba(48,224,212,.14);
-  box-shadow:0 -6px 32px rgba(0,0,0,.55),0 -1px 0 rgba(48,224,212,.06);
+  border-top:1px solid rgba(46,232,110,.14);
+  box-shadow:0 -6px 32px rgba(0,0,0,.55),0 -1px 0 rgba(46,232,110,.06);
   display:flex;align-items:flex-start;padding-top:6px;
 }
 .tab-btn{
@@ -142,13 +142,13 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .tab-btn.active::after{
   content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:54px;height:38px;border-radius:20px;
-  background:radial-gradient(ellipse at 50% 30%,rgba(48,224,212,.22) 0%,rgba(48,224,212,.06) 70%,transparent 100%);
+  background:radial-gradient(ellipse at 50% 30%,rgba(46,232,110,.22) 0%,rgba(46,232,110,.06) 70%,transparent 100%);
   animation:tabPillIn .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
 }
 @keyframes tabPillIn{from{transform:translateX(-50%) scale(.4);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 .tab-btn.active .tab-ico{
   animation:tabBounce .35s cubic-bezier(.34,1.56,.64,1);
-  filter:drop-shadow(0 0 6px rgba(48,224,212,.6));
+  filter:drop-shadow(0 0 6px rgba(46,232,110,.6));
 }
 @keyframes tabBounce{from{transform:scale(.65) translateY(6px)}to{transform:scale(1) translateY(0)}}
 .tab-btn:active{opacity:.65;transform:scale(.92)}
@@ -162,9 +162,9 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 }
 .fpill.on{
   border-color:var(--accent);
-  background:rgba(48,224,212,.15);
+  background:rgba(46,232,110,.15);
   color:var(--accent);
-  box-shadow:0 0 12px rgba(48,224,212,.22),inset 0 0 0 .5px rgba(48,224,212,.3);
+  box-shadow:0 0 12px rgba(46,232,110,.22),inset 0 0 0 .5px rgba(46,232,110,.3);
 }
 .fpill:active{transform:scale(.93)}
 .sheet-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
@@ -175,7 +175,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
   color:var(--text);font-family:inherit;font-size:14px;outline:none;
   transition:border-color var(--t-fast),box-shadow var(--t-fast);
 }
-.city-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(48,224,212,.12)}
+.city-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,232,110,.12)}
 .city-inp::placeholder{color:var(--muted)}
 .city-btn{
   min-width:44px;padding:11px 16px;border-radius:var(--r-m);border:none;
@@ -225,8 +225,8 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .radius-sel{background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;outline:none}
 .scope-row{display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .scope-row::-webkit-scrollbar{display:none}
-.scope-btn{flex-shrink:0;padding:7px 14px;border-radius:var(--r-pill);font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:all var(--t-fast);white-space:nowrap}
-.scope-btn.on{border-color:var(--blue);background:rgba(10,132,255,.15);color:var(--blue);box-shadow:0 0 10px rgba(10,132,255,.18)}
+.scope-btn{flex-shrink:0;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:var(--r-pill);font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:all var(--t-fast);white-space:nowrap}
+.scope-btn.on{border-color:var(--blue);background:rgba(46,232,110,.15);color:var(--blue);box-shadow:0 0 10px rgba(46,232,110,.18)}
 .scope-btn:active{transform:scale(.93)}
 .scope-sep{width:1px;flex-shrink:0;background:var(--border2);margin:2px 3px}
 .sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding-top:4px;padding-bottom:8px}
@@ -245,7 +245,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
   box-shadow:0 2px 14px rgba(0,0,0,.22);
 }
 .frow:active{background:var(--card2);transform:scale(.975);box-shadow:0 1px 6px rgba(0,0,0,.15)}
-.frow::after{content:'';position:absolute;inset:0;background:rgba(48,224,212,.04);opacity:0;transition:opacity var(--t-fast);border-radius:20px}
+.frow::after{content:'';position:absolute;inset:0;background:rgba(46,232,110,.04);opacity:0;transition:opacity var(--t-fast);border-radius:20px}
 .frow:active::after{opacity:1}
 .frow-ico-wrap{
   width:50px;height:50px;border-radius:16px;flex-shrink:0;
@@ -264,7 +264,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 #overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end}
 #overlay.on{display:flex;animation:fadeInBg .2s ease}
 #overlay.on .dcard{animation:slideUp .32s cubic-bezier(.22,1,.36,1)}
-.dcard{width:100%;background:linear-gradient(180deg,#101925 0%,#111820 45%,var(--card) 100%);border-radius:26px 26px 0 0;padding:var(--sp5) var(--sp5) calc(env(safe-area-inset-bottom,0px) + var(--sp5));border-top:2px solid rgba(48,224,212,.35);box-shadow:0 -12px 64px rgba(0,0,0,.75),0 -1px 0 rgba(48,224,212,.1)}
+.dcard{width:100%;background:linear-gradient(180deg,#101925 0%,#111820 45%,var(--card) 100%);border-radius:26px 26px 0 0;padding:var(--sp5) var(--sp5) calc(env(safe-area-inset-bottom,0px) + var(--sp5));border-top:2px solid rgba(46,232,110,.35);box-shadow:0 -12px 64px rgba(0,0,0,.75),0 -1px 0 rgba(46,232,110,.1)}
 .dhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .dico{font-size:52px;line-height:1}
 .dname{font-size:21px;font-weight:900;letter-spacing:-.4px;line-height:1.2}
@@ -298,10 +298,10 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 }
 .fav-head{padding:16px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
 .fav-head-title{font-size:18px;font-weight:900;flex:1}
-.fav-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0}
+.fav-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:0;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;margin:-11px}
 .fav-sport-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border);scrollbar-width:none}
 .fav-sport-tabs::-webkit-scrollbar{display:none}
-.fav-stab{flex-shrink:0;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;white-space:nowrap;transition:.2s}
+.fav-stab{flex-shrink:0;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;white-space:nowrap;transition:.2s}
 .fav-stab.on{border-color:#ffcc00;background:rgba(255,204,0,.15);color:#ffcc00}
 .fav-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
 .fav-item{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:.12s}
@@ -310,8 +310,24 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 
 .spinner{display:inline-block;width:22px;height:22px;border:2.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .65s cubic-bezier(.5,0,.5,1) infinite;vertical-align:middle;animation-play-state:running}
 @keyframes sp{to{transform:rotate(360deg)}}
-.spinner:not(:visible){animation-play-state:paused}
 .empty{text-align:center;padding:44px 24px;color:var(--muted);font-size:15px;animation:fadeInScale .35s cubic-bezier(.34,1.56,.64,1)}
+/* professional SVG icon sizing (replaces emoji chrome) */
+.tab-ico svg{width:23px;height:23px;display:block;margin:0 auto}
+.hdr-btn svg{width:19px;height:19px;display:block;margin:auto}
+#loc-btn svg,#return-btn svg{width:21px;height:21px;display:block;margin:auto}
+#share-loc-btn svg{width:18px;height:18px;display:block;margin:auto}
+.overflow-item-ico svg{width:23px;height:23px;display:block;margin:0 auto}
+.msw-btn svg{width:19px;height:19px;display:block;margin:auto}
+.city-btn svg{width:18px;height:18px;display:block;margin:auto}
+/* skeleton loading cards */
+.skel-card{display:flex;align-items:center;gap:12px;padding:14px;margin:0 0 10px;border-radius:16px;background:var(--card,rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.07)}
+.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.08);border-radius:8px}
+.skel::after{content:'';position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:skelShine 1.4s infinite}
+@keyframes skelShine{to{transform:translateX(100%)}}
+.skel-ico{width:46px;height:46px;border-radius:12px;flex-shrink:0}
+.skel-l1{height:14px;width:60%;margin-bottom:8px}
+.skel-l2{height:11px;width:40%}
 .empty-ico{font-size:56px;margin-bottom:14px;filter:grayscale(.3)}
 @keyframes fadeInScale{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
@@ -341,7 +357,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .star:active{transform:scale(1.3)}
 .rtag-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
 .rtag{padding:7px 13px;border-radius:var(--r-pill);font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:all var(--t-fast)}
-.rtag.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent);box-shadow:0 0 8px rgba(48,224,212,.18)}
+.rtag.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent);box-shadow:0 0 8px rgba(46,232,110,.18)}
 .rtag:active{transform:scale(.93)}
 .rating-submit{width:100%;padding:13px;border-radius:var(--r-m);border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:transform var(--t-fast),opacity var(--t-fast)}
 .rating-submit:active{transform:scale(.97);opacity:.85}
@@ -380,7 +396,7 @@ input:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0
 .player-name{font-size:14px;font-weight:800}
 .player-meta{font-size:12px;color:var(--muted);margin-top:2px}
 .player-time{font-size:11px;color:var(--accent);font-weight:700;margin-top:4px}
-.dbtn-players{background:rgba(10,132,255,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
+.dbtn-players{background:rgba(46,232,110,.15);border:1.5px solid var(--blue);color:var(--blue);flex:0.7}
 .dbtn-share{background:rgba(48,209,88,.12);border:1.5px solid var(--accent);color:var(--accent);flex:0.7}
 
 /* ─── ACCESSIBILITY ─── */
@@ -482,7 +498,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .rental-biz-name{font-size:15px;font-weight:800}
 .rental-biz-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .rental-items-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
-.rental-tag{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.3);color:var(--blue)}
+.rental-tag{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;background:rgba(46,232,110,.12);border:1px solid rgba(46,232,110,.3);color:var(--blue)}
 .rental-price{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px}
 .rental-affiliate-note{font-size:10px;color:var(--muted);margin-bottom:8px}
 .rental-actions{display:flex;gap:8px}
@@ -513,7 +529,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 /* favourite sport chips */
 .sport-grid{display:flex;flex-wrap:wrap;gap:7px;padding:6px 0}
 .sport-chip{padding:8px 14px;border-radius:var(--r-pill);border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;cursor:pointer;transition:all var(--t-fast);-webkit-tap-highlight-color:transparent}
-.sport-chip.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent);font-weight:700;box-shadow:0 0 8px rgba(48,224,212,.18)}
+.sport-chip.on{border-color:var(--accent);background:var(--accent-s);color:var(--accent);font-weight:700;box-shadow:0 0 8px rgba(46,232,110,.18)}
 /* reminder time input */
 #reminder-time{background:var(--card2);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;padding:5px 8px;-webkit-appearance:none;cursor:pointer}
 /* toggle switch */
@@ -679,15 +695,15 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .map-pin{
   width:38px;height:38px;border-radius:50%;
   background:linear-gradient(145deg,#1c2a38,#111820);
-  border:2px solid rgba(48,224,212,.55);
+  border:2px solid rgba(46,232,110,.55);
   display:flex;align-items:center;justify-content:center;
   font-size:20px;
-  box-shadow:0 3px 14px rgba(0,0,0,.55),0 0 0 0 rgba(48,224,212,0);
+  box-shadow:0 3px 14px rgba(0,0,0,.55),0 0 0 0 rgba(46,232,110,0);
   transition:.2s cubic-bezier(.34,1.56,.64,1);
 }
 .map-pin:hover{
-  border-color:rgba(48,224,212,.9);
-  box-shadow:0 5px 20px rgba(0,0,0,.6),0 0 14px rgba(48,224,212,.35);
+  border-color:rgba(46,232,110,.9);
+  box-shadow:0 5px 20px rgba(0,0,0,.6),0 0 14px rgba(46,232,110,.35);
   transform:scale(1.12);
 }
 .map-pin:active{transform:scale(.9)}
@@ -695,15 +711,15 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 /* ─── CLUSTER ─── */
 .cl-wrap{
   width:42px;height:42px;border-radius:50%;
-  background:linear-gradient(135deg,#0a84ff,#30d158);
+  background:linear-gradient(135deg,#2ee86e,#30d158);
   border:2.5px solid rgba(255,255,255,.92);
   display:flex;align-items:center;justify-content:center;flex-direction:column;
-  box-shadow:0 3px 14px rgba(10,132,255,.45),0 0 0 5px rgba(10,132,255,.1);
+  box-shadow:0 3px 14px rgba(46,232,110,.45),0 0 0 5px rgba(46,232,110,.1);
   font-family:-apple-system,'Assistant',sans-serif;
   animation:clusterPulse 2.8s ease infinite;
 }
 @keyframes clusterPulse{
-  0%,100%{box-shadow:0 3px 14px rgba(10,132,255,.45),0 0 0 5px rgba(10,132,255,.1)}
+  0%,100%{box-shadow:0 3px 14px rgba(46,232,110,.45),0 0 0 5px rgba(46,232,110,.1)}
   50%{box-shadow:0 4px 20px rgba(48,209,88,.5),0 0 0 8px rgba(48,209,88,.07)}
 }
 .cl-count{font-size:14px;font-weight:900;color:#fff;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -742,7 +758,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 }
 /* top border glow on panels */
 .fav-card,.stats-card,.lb-card,.events-card,.players-card,.coupons-card,.add-card,.settings-card,.rental-card{
-  border-top:1.5px solid rgba(48,224,212,.22);
+  border-top:1.5px solid rgba(46,232,110,.22);
 }
 .biz-card{border-top:1.5px solid rgba(255,159,10,.35)}
 .premium-card{border-top:2px solid rgba(191,90,242,.55)}
@@ -762,11 +778,11 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .w-weather{
   flex-shrink:0;min-width:186px;
   background:linear-gradient(145deg,#091b38,#0c2550);
-  border:1px solid rgba(10,132,255,.18);border-radius:24px;
+  border:1px solid rgba(46,232,110,.18);border-radius:24px;
   padding:18px 18px 14px;position:relative;overflow:hidden;
   box-shadow:0 6px 28px rgba(0,0,0,.45);
 }
-.w-weather::before{content:'';position:absolute;top:-30px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(10,132,255,.18),transparent 70%);pointer-events:none}
+.w-weather::before{content:'';position:absolute;top:-30px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(46,232,110,.18),transparent 70%);pointer-events:none}
 .w-weather-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .w-weather-ico{font-size:40px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,220,50,.5));flex-shrink:0}
 .w-weather-temp{font-size:32px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1}
@@ -787,7 +803,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   min-height:44px;
 }
 .w-quick-btn:active{transform:scale(.94);opacity:.8}
-.w-quick-nearest{background:linear-gradient(135deg,rgba(48,224,212,.2),rgba(48,224,212,.08));border:1px solid rgba(48,224,212,.3);color:var(--accent)}
+.w-quick-nearest{background:linear-gradient(135deg,rgba(46,232,110,.2),rgba(46,232,110,.08));border:1px solid rgba(46,232,110,.3);color:var(--accent)}
 .w-quick-active{background:linear-gradient(135deg,rgba(48,209,88,.2),rgba(48,209,88,.08));border:1px solid rgba(48,209,88,.3);color:#30d158}
 
 /* Streak widget */
@@ -836,7 +852,10 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 /* ─── SPLASH SCREEN ─── */
 #splash-screen{
   position:fixed;inset:0;z-index:9000;
-  background:radial-gradient(ellipse at 50% 40%,#0a1628 0%,#050a14 75%);
+  background:
+    linear-gradient(180deg, rgba(5,10,20,.72) 0%, rgba(5,10,20,.25) 45%, rgba(5,10,20,.78) 100%),
+    url('arena-splash.jpg') center/cover no-repeat,
+    radial-gradient(ellipse at 50% 40%,#0a1628 0%,#050a14 75%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   animation:splashFade 1.9s ease forwards;
   animation-delay:0s;
@@ -857,19 +876,21 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 }
 .splash-ring{
   position:absolute;border-radius:50%;
-  border:1px solid rgba(48,224,212,.2);
+  border:1px solid rgba(46,232,110,.2);
   width:200px;height:200px;
   animation:ringExpand 3s ease-out infinite;
 }
-.splash-ring:nth-child(2){animation-delay:.8s;border-color:rgba(10,132,255,.15)}
+.splash-ring:nth-child(2){animation-delay:.8s;border-color:rgba(46,232,110,.15)}
 .splash-ring:nth-child(3){animation-delay:1.6s;border-color:rgba(48,209,88,.12)}
 @keyframes ringExpand{from{transform:scale(.3);opacity:.9}to{transform:scale(5);opacity:0}}
 .splash-logo{
   font-size:90px;line-height:1;
   animation:logoIn .65s cubic-bezier(.34,1.56,.64,1);
-  filter:drop-shadow(0 0 36px rgba(48,224,212,.55));
+  filter:drop-shadow(0 0 36px rgba(46,232,110,.55));
   position:relative;z-index:1;
 }
+.splash-logo img{width:110px;height:110px;border-radius:26px;display:block;
+  box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(46,232,110,.25), 0 0 44px rgba(46,232,110,.35)}
 @keyframes logoIn{from{transform:scale(0) rotate(-25deg);opacity:0}60%{transform:scale(1.15) rotate(5deg)}to{transform:scale(1) rotate(0);opacity:1}}
 .splash-title{
   font-size:30px;font-weight:900;letter-spacing:-.5px;
@@ -888,13 +909,16 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   height:100%;
   background:linear-gradient(90deg,var(--accent),var(--blue));
   border-radius:2px;animation:loadBar 1.5s ease .3s both;
-  box-shadow:0 0 10px rgba(48,224,212,.6);
+  box-shadow:0 0 10px rgba(46,232,110,.6);
 }
 
 /* ─── ONBOARDING ─── */
 #onboarding-screen{
   position:fixed;inset:0;z-index:8500;
-  background:var(--bg);
+  background:
+    linear-gradient(180deg, rgba(5,10,20,.88) 0%, rgba(5,10,20,.8) 50%, rgba(5,10,20,.92) 100%),
+    url('arena-splash.jpg') center/cover no-repeat,
+    var(--bg);
   display:none;flex-direction:column;align-items:center;justify-content:center;
   padding:32px 24px calc(env(safe-area-inset-bottom,0px)+32px);
 }
@@ -903,6 +927,8 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .ob-slide{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;animation:fadeInScale .4s ease}
 .ob-slide.on{display:flex}
 .ob-ico{font-size:72px;line-height:1}
+.ob-ico img{width:96px;height:96px;border-radius:24px;display:block;margin:0 auto;
+  box-shadow:0 10px 34px rgba(0,0,0,.55), 0 0 0 1px rgba(46,232,110,.22), 0 0 36px rgba(46,232,110,.3)}
 .ob-title{font-size:24px;font-weight:900;letter-spacing:-.4px}
 .ob-desc{font-size:15px;color:var(--text2);line-height:1.6}
 .ob-dots{display:flex;gap:8px;margin-top:24px}
@@ -948,13 +974,18 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 /* ─── AUTH SCREEN ─── */
 #auth-screen{
   position:fixed;inset:0;z-index:1000;
-  background:radial-gradient(ellipse at 50% 30%,#0c1a2e 0%,#050a14 70%);
+  background:
+    linear-gradient(180deg, rgba(5,10,20,.86) 0%, rgba(5,10,20,.72) 40%, rgba(5,10,20,.9) 100%),
+    url('arena-splash.jpg') center/cover no-repeat,
+    radial-gradient(ellipse at 50% 30%,#0c1a2e 0%,#050a14 70%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:32px 24px calc(env(safe-area-inset-bottom,0px) + 32px);
   transition:opacity .45s;
 }
 #auth-screen.hide{opacity:0;pointer-events:none}
 .auth-logo{font-size:72px;margin-bottom:10px;line-height:1}
+.auth-logo img{width:88px;height:88px;border-radius:22px;display:block;margin:0 auto;
+  box-shadow:0 10px 34px rgba(0,0,0,.55), 0 0 0 1px rgba(46,232,110,.22), 0 0 36px rgba(46,232,110,.3)}
 .auth-title{font-size:27px;font-weight:900;margin-bottom:6px;letter-spacing:-.4px}
 .auth-sub{font-size:14px;color:var(--muted);margin-bottom:30px;text-align:center;line-height:1.5}
 .auth-form{width:100%;max-width:340px}
@@ -973,7 +1004,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   background:linear-gradient(135deg,var(--accent),var(--blue));color:#000;border:none;
   font-family:inherit;font-size:16px;font-weight:800;
   cursor:pointer;margin-bottom:13px;transition:.18s;
-  box-shadow:0 4px 18px rgba(48,224,212,.3);
+  box-shadow:0 4px 18px rgba(46,232,110,.3);
 }
 .auth-btn:active{opacity:.88;transform:scale(.97)}
 .auth-div{text-align:center;color:var(--muted);font-size:13px;margin-bottom:13px}
@@ -1002,24 +1033,24 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .msw-btn.on{border-color:var(--accent);background:rgba(48,209,88,.15)}
 @media(min-width:700px){#map-style-sw{right:396px;left:auto;top:100px}}
 /* ─── CITY BADGE ─── */
-.hdr-city{font-size:12px;font-weight:700;color:var(--blue);background:rgba(10,132,255,.12);border:1px solid var(--blue);border-radius:20px;padding:4px 10px;white-space:nowrap;display:none}
+.hdr-city{font-size:12px;font-weight:700;color:var(--blue);background:rgba(46,232,110,.12);border:1px solid var(--blue);border-radius:20px;padding:4px 10px;white-space:nowrap;display:none}
 /* ─── OVERFLOW MENU ─── */
 @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
 #overflow-menu{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end}
 #overflow-menu.on{display:flex;animation:fadeInBg .2s ease}
 #overflow-menu.on .overflow-card{animation:slideUp .32s cubic-bezier(.22,1,.36,1)}
-.overflow-card{width:100%;background:linear-gradient(180deg,#141d28,var(--card) 50%);border-radius:24px 24px 0 0;border-top:1.5px solid rgba(48,224,212,.22);padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);box-shadow:0 -4px 40px rgba(0,0,0,.5)}
+.overflow-card{width:100%;background:linear-gradient(180deg,#141d28,var(--card) 50%);border-radius:24px 24px 0 0;border-top:1.5px solid rgba(46,232,110,.22);padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);box-shadow:0 -4px 40px rgba(0,0,0,.5)}
 .overflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 .overflow-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:13px 8px;border-radius:16px;background:rgba(26,34,48,.9);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:.18s;font-family:inherit;position:relative;overflow:hidden}
-.overflow-item:active{transform:scale(.92);background:rgba(48,224,212,.07);border-color:rgba(48,224,212,.2)}
+.overflow-item:active{transform:scale(.92);background:rgba(46,232,110,.07);border-color:rgba(46,232,110,.2)}
 .overflow-item-ico{font-size:26px;line-height:1}
 .overflow-item-lbl{font-size:11px;font-weight:700;color:var(--text2);text-align:center}
 .overflow-close{width:100%;padding:13px;border-radius:13px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
 /* ─── ADVANCED FILTERS ─── */
 .adv-filter-row{display:flex;gap:6px;overflow-x:auto;padding:7px 14px 0;scrollbar-width:none}
 .adv-filter-row::-webkit-scrollbar{display:none}
-.afpill{flex-shrink:0;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap}
+.afpill{flex-shrink:0;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:inherit;transition:.2s;white-space:nowrap}
 .afpill.on{border-color:#ffd60a;background:rgba(255,214,10,.12);color:#ffd60a}
 .afpill:active{transform:scale(.93)}
 /* ─── SORT BUTTON ─── */
@@ -1063,9 +1094,6 @@ body.a11y-big-btns .fn        { font-size:18px!important }
   gtag('js', new Date());
   gtag('config', GA_ID);
 </script>
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -1077,7 +1105,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="splash-ring"></div>
     <div class="splash-ring"></div>
   </div>
-  <div class="splash-logo">🏟️</div>
+  <div class="splash-logo"><img src="arena-logo.png" alt="Arena"></div>
   <div class="splash-title">Arena · ארנה</div>
   <div class="splash-sub">מגרשי ספורט בכל מקום בעולם</div>
   <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
@@ -1087,7 +1115,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="onboarding-screen">
   <div class="ob-slides">
     <div class="ob-slide on" id="ob-slide-0">
-      <div class="ob-ico">🏟️</div>
+      <div class="ob-ico"><img src="arena-logo.png" alt="Arena"></div>
       <div class="ob-title">ברוך הבא ל-Arena</div>
       <div class="ob-desc">מצא מגרשי ספורט קרובים אליך — בכל מקום בעולם</div>
     </div>
@@ -1127,7 +1155,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 <!-- ─── AUTH SCREEN ─── -->
 <div id="auth-screen">
-  <div class="auth-logo">🏟️</div>
+  <div class="auth-logo"><img src="arena-logo.png" alt="Arena"></div>
   <div class="auth-title">Arena · ארנה</div>
   <div class="auth-sub">גלה מגרשי ספורט קרובים אליך<br>בכל מקום בעולם</div>
   <div class="auth-form">
@@ -1165,7 +1193,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 <div class="hdr">
   <div class="hdr-row">
-    <div class="hdr-title">🏟️ Arena</div>
+    <div class="hdr-title"><img src="arena-logo.png" alt="" style="width:26px;height:26px;border-radius:7px;vertical-align:-6px;box-shadow:0 0 12px rgba(46,232,110,.35)"> Arena</div>
     <div class="hdr-country" id="country-badge" style="display:none;cursor:pointer" onclick="highlightArea('country')"></div>
     <div class="hdr-city" id="city-badge" style="cursor:pointer" onclick="highlightArea('city')"></div>
     <!-- hidden elements kept for JS compatibility -->
@@ -1173,31 +1201,31 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <button id="heat-btn" style="display:none" onclick="toggleHeatmap()">🔥</button>
     <button id="theme-btn" style="display:none" onclick="toggleDarkMode()">🌙</button>
     <!-- visible buttons -->
-    <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים">⭐</button>
-    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים">📅</button>
-    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש">➕</button>
-    <button class="hdr-btn" onclick="openOverflowMenu()" title="עוד">···</button>
-    <button id="share-loc-btn" onclick="toggleLocationShare()" title="שיתוף מיקום חי" style="background:var(--card);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;">📍</button>
+    <button class="hdr-btn" onclick="openFavPanel()" title="מועדפים"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></button>
+    <button class="hdr-btn" onclick="openEventsPanel()" title="אירועים"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></button>
+    <button class="hdr-btn" onclick="openAddPanel()" title="הוסף מגרש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+    <button class="hdr-btn" onclick="openOverflowMenu()" title="עוד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+    <button id="share-loc-btn" onclick="toggleLocationShare()" title="שיתוף מיקום חי" style="background:var(--card);border:none;border-radius:50%;width:38px;height:38px;color:var(--text);cursor:pointer;display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></svg></button>
   </div>
 </div>
 
-<div id="status" style="top:76px">🔍 מאתר מיקום...</div>
-<button id="loc-btn" onclick="locateMe()" title="המיקום שלי">📍</button>
-<button id="return-btn" onclick="returnToLocation()" title="חזור למיקום שלי">🎯</button>
+<div id="status" style="top:calc(env(safe-area-inset-top,0px) + 76px)">🔍 מאתר מיקום...</div>
+<button id="loc-btn" onclick="locateMe()" title="המיקום שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/></svg></button>
+<button id="return-btn" onclick="returnToLocation()" title="חזור למיקום שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>
 
 <!-- ─── TAB BAR ─── -->
 <nav id="tab-bar">
   <button class="tab-btn active" id="tab-map-btn" onclick="switchMainTab('map')">
-    <span class="tab-ico">🗺️</span><span data-i18n="tabMap">מפה</span>
+    <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></span><span data-i18n="tabMap">מפה</span>
   </button>
   <button class="tab-btn" id="tab-list-btn" onclick="switchMainTab('list')">
-    <span class="tab-ico">🏟️</span><span data-i18n="tabList">מגרשים</span>
+    <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span><span data-i18n="tabList">מגרשים</span>
   </button>
   <button class="tab-btn" id="tab-fav-btn" style="display:none" onclick="switchMainTab('fav')">
-    <span class="tab-ico">⭐</span><span data-i18n="tabFav">מועדפים</span>
+    <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></span><span data-i18n="tabFav">מועדפים</span>
   </button>
   <button class="tab-btn" id="tab-profile-btn" onclick="switchMainTab('profile')">
-    <span class="tab-ico">👤</span><span data-i18n="tabProfile">אני</span>
+    <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span data-i18n="tabProfile">אני</span>
   </button>
 </nav>
 
@@ -1205,14 +1233,14 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="overflow-menu" onclick="if(event.target===this)closeOverflowMenu()">
   <div class="overflow-card">
     <div class="overflow-grid">
-      <button class="overflow-item" onclick="closeOverflowMenu();toggleHeatmap()"><span class="overflow-item-ico">🔥</span><span class="overflow-item-lbl" data-i18n="omHeatmap">מפת חום</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openRentalPanel()"><span class="overflow-item-ico">🎾</span><span class="overflow-item-lbl" data-i18n="omRental">השכרה</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico">🏷️</span><span class="overflow-item-lbl" data-i18n="omCoupons">קופונים</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico">📊</span><span class="overflow-item-lbl" data-i18n="omStats">סטטיסטיקות</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico">🏆</span><span class="overflow-item-lbl" data-i18n="omLeaderboard">דירוג</span></button>
-      <button class="overflow-item" onclick="openLangPicker()" id="lang-btn"><span class="overflow-item-ico">🇮🇱</span><span class="overflow-item-lbl" data-i18n="omLang">שפה</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico">⚙️</span><span class="overflow-item-lbl" data-i18n="omSettings">הגדרות</span></button>
-      <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico">👑</span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();toggleHeatmap()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="overflow-item-lbl" data-i18n="omHeatmap">מפת חום</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openRentalPanel()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span><span class="overflow-item-lbl" data-i18n="omRental">השכרה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openCouponsPanel()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></span><span class="overflow-item-lbl" data-i18n="omCoupons">קופונים</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openStatsPanel()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span><span class="overflow-item-lbl" data-i18n="omStats">סטטיסטיקות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openLbPanel()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span><span class="overflow-item-lbl" data-i18n="omLeaderboard">דירוג</span></button>
+      <button class="overflow-item" onclick="openLangPicker()" id="lang-btn"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span><span class="overflow-item-lbl" data-i18n="omLang">שפה</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openSettingsPanel()"><span class="overflow-item-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="overflow-item-lbl" data-i18n="omSettings">הגדרות</span></button>
+      <button class="overflow-item" onclick="closeOverflowMenu();openPremiumPanel()" style="border-color:#bf5af2"><span class="overflow-item-ico" style="color:#bf5af2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.735H5.81a1 1 0 0 1-.957-.735L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/></svg></span><span class="overflow-item-lbl" style="color:#bf5af2">PRO</span></button>
     </div>
     <button class="overflow-close" onclick="closeOverflowMenu()">סגור</button>
   </div>
@@ -1224,12 +1252,12 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <!-- נוצר דינמית לפי מדינה -->
     </div>
     <div class="city-row">
-      <button class="history-btn" onclick="toggleHistoryList()" title="חיפושים אחרונים">🕐</button>
+      <button class="history-btn" onclick="toggleHistoryList()" title="חיפושים אחרונים"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;margin:auto"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
       <input class="city-inp" id="city-inp" type="text" placeholder="🔍 חפש עיר או כתובת..." dir="rtl"
         oninput="onSearchInput(this.value)"
         onkeydown="if(event.key==='Enter'){closeAutocomplete();closeHistoryList();searchCity()}"
         onfocus="closeHistoryList()" />
-      <button class="city-btn" onclick="closeAutocomplete();closeHistoryList();searchCity()">→</button>
+      <button class="city-btn" onclick="closeAutocomplete();closeHistoryList();searchCity()" title="חפש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
       <div id="history-list"></div>
       <div id="autocomplete-list"></div>
     </div>
@@ -1256,8 +1284,8 @@ body.a11y-big-btns .fn        { font-size:18px!important }
       <button class="afpill" data-af="active" onclick="toggleAdvFilter(this,'active')">🟢 פעיל עכשיו</button>
     </div>
   </div>
-  <!-- Google AdSense Banner — החלף YOUR_SLOT_ID -->
-  <div class="ad-wrap">
+  <!-- Google AdSense Banner — מוסתר עד שמגדירים publisher/slot אמיתיים; אז להסיר display:none -->
+  <div class="ad-wrap" style="display:none">
     <div class="ad-lbl">פרסומת</div>
     <ins class="adsbygoogle"
          style="display:block;border-radius:10px;overflow:hidden"
@@ -1270,7 +1298,10 @@ body.a11y-big-btns .fn        { font-size:18px!important }
     <div class="ad-placeholder" id="ad-placeholder">פרסומת Google AdSense — תופיע לאחר הגדרה</div>
   </div>
   <div class="sheet-body" id="list">
-    <div class="empty"><span class="spinner"></span></div>
+    <div class="skel-card"><div class="skel skel-ico"></div><div style="flex:1"><div class="skel skel-l1"></div><div class="skel skel-l2"></div></div></div>
+    <div class="skel-card"><div class="skel skel-ico"></div><div style="flex:1"><div class="skel skel-l1"></div><div class="skel skel-l2"></div></div></div>
+    <div class="skel-card"><div class="skel skel-ico"></div><div style="flex:1"><div class="skel skel-l1"></div><div class="skel skel-l2"></div></div></div>
+    <div class="skel-card"><div class="skel skel-ico"></div><div style="flex:1"><div class="skel skel-l1"></div><div class="skel skel-l2"></div></div></div>
   </div>
 </div>
 
@@ -1665,6 +1696,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ─── RIPPLE EFFECT ──────────────────────────────────────
 function addRipple(el, e) {
@@ -1688,7 +1720,7 @@ document.addEventListener('click', e => {
 function createSplashParticles() {
   const container = document.getElementById('splash-particles');
   if (!container) return;
-  const colors = ['rgba(48,224,212,.8)','rgba(10,132,255,.8)','rgba(48,209,88,.7)','rgba(191,90,242,.6)','rgba(255,159,10,.6)'];
+  const colors = ['rgba(46,232,110,.8)','rgba(46,232,110,.8)','rgba(48,209,88,.7)','rgba(191,90,242,.6)','rgba(255,159,10,.6)'];
   for (let i = 0; i < 22; i++) {
     const p = document.createElement('div');
     p.className = 'splash-particle';
@@ -1726,23 +1758,16 @@ function stripeEnabled() {
   return STRIPE_CONFIG.publishableKey !== 'pk_test_YOUR_PUBLISHABLE_KEY';
 }
 
-// ─── FIREBASE CONFIG (replace with your project values) ───
-const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-let db = null;
+// ─── SUPABASE CLOUD (chat, players, events, ratings, live presence) ───
+// anon key is public by design — data protected by Row Level Security
+const SUPA_URL = 'https://xnxhqfokdtghdcqbftua.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhueGhxZm9rZHRnaGRjcWJmdHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTk4ODcsImV4cCI6MjA5NTAzNTg4N30.vuyzRWKx5WSVd1KfRdcB12Dwnj4a7hAAHMZoZ2p1aXM';
+let sb = null;
 try {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  db = firebase.firestore();
-} catch(e) { console.warn('Firebase not configured, using localStorage fallback'); }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+} catch(e) { console.warn('Supabase not available, using localStorage fallback'); }
 
-function fsEnabled() { return !!db && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY'; }
+function fsEnabled() { return !!sb; }
 
 // ─── GOOGLE ANALYTICS 4 ──────────────────────────────────
 // GA_ID is defined in the <head> script block above
@@ -1910,26 +1935,30 @@ function renderChat() {
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
 
   if (fsEnabled() && chatField) {
-    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
-    chatUnsub = db.collection('chats').doc(fieldId).collection('messages')
-      .orderBy('ts').limitToLast(60)
-      .onSnapshot(snap => {
-        if (!snap.docs.length) {
-          el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
-          return;
-        }
-        el.innerHTML = snap.docs.map(d => {
-          const m = d.data();
-          const me = m.uid === myId;
-          const ts = m.ts?.toMillis ? m.ts.toMillis() : (m.ts || 0);
-          const time = new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-          return `<div class="msg-row ${me?'me':'them'}">
-            <div class="msg-bubble">${esc(m.text)}</div>
-            <div class="msg-meta">${me?'':esc(m.name)+' · '}${time}</div>
-          </div>`;
-        }).join('');
-        el.scrollTop = el.scrollHeight;
-      });
+    const fieldId = String(chatField.id || `${chatField.lat}_${chatField.lon}`);
+    const paint = (rows) => {
+      if (!rows.length) {
+        el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
+        return;
+      }
+      el.innerHTML = rows.map(m => {
+        const me = m.uid === myId;
+        const time = new Date(m.ts || 0).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="msg-row ${me?'me':'them'}">
+          <div class="msg-bubble">${esc(m.text)}</div>
+          <div class="msg-meta">${me?'':esc(m.name)+' · '}${time}</div>
+        </div>`;
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    };
+    const load = () => sb.from('arena_messages').select('*').eq('field_id', fieldId)
+      .order('ts', { ascending: true }).limit(60)
+      .then(({ data, error }) => { if (!error) paint(data || []); });
+    load();
+    const ch = sb.channel('chat_' + fieldId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'arena_messages', filter: `field_id=eq.${fieldId}` }, load)
+      .subscribe();
+    chatUnsub = () => { try { sb.removeChannel(ch); } catch(e){} };
     return;
   }
 
@@ -1968,12 +1997,9 @@ async function sendMsg() {
     ts:   Date.now(),
   };
   if (fsEnabled()) {
-    const fieldId = chatField.id || `${chatField.lat}_${chatField.lon}`;
-    await db.collection('chats').doc(fieldId).collection('messages').add({
-      ...msg,
-      ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    // renderChat is driven by onSnapshot listener — no manual call needed
+    const fieldId = String(chatField.id || `${chatField.lat}_${chatField.lon}`);
+    await sb.from('arena_messages').insert({ field_id: fieldId, uid: msg.uid, name: msg.name, text: msg.text, ts: msg.ts }).then(()=>{});
+    renderChat(); // re-query so the sender sees the message even if realtime lags
   } else {
     const msgs = getChat(chatField);
     msgs.push(msg);
@@ -2002,7 +2028,9 @@ function switchEvTab(btn, tab) {
 function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
 function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
 
+let lastRenderedEvents = []; // the exact list shown on screen — rsvp/share act on it by index
 function renderEventsFromList(evs, body) {
+  lastRenderedEvents = evs;
   if (!evs.length) {
     body.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>אין אירועים קרובים<br><small>צור את הראשון!</small></div>';
     return;
@@ -2028,17 +2056,18 @@ function renderEventsPanel(preField) {
   const body = document.getElementById('events-body');
   if (curEvTab === 'list') {
     if (fsEnabled()) {
-      db.collectionGroup('list')
-        .where('dateTs', '>', Date.now() - 7*24*60*60*1000)
-        .orderBy('dateTs')
-        .get().then(snap => {
-          const evs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const localFallback = () => {
+        const evs = getEvents().filter(e => (e.dateTs || e.ts || 0) > Date.now() - 24*60*60*1000).sort((a,b) => (a.dateTs||a.ts) - (b.dateTs||b.ts));
+        renderEventsFromList(evs, body);
+      };
+      sb.from('arena_events').select('*')
+        .gt('date_ts', Date.now() - 7*24*60*60*1000)
+        .order('date_ts', { ascending: true })
+        .then(({ data, error }) => {
+          if (error) { localFallback(); return; }
+          const evs = (data || []).map(r => ({ id: r.id, cloudId: r.id, title: r.title, fieldName: r.field_name, sport: r.sport, dateTs: r.date_ts, creator: r.creator, rsvp: r.rsvp || [], lat: r.lat, lon: r.lon, ts: r.ts }));
           renderEventsFromList(evs, body);
-        }).catch(() => {
-          // fallback to localStorage
-          const evs = getEvents().filter(e => (e.dateTs || e.ts || 0) > Date.now() - 24*60*60*1000).sort((a,b) => (a.dateTs||a.ts) - (b.dateTs||b.ts));
-          renderEventsFromList(evs, body);
-        });
+        }, localFallback);
     } else {
       const evs = getEvents().filter(e => (e.dateTs || e.ts || 0) > Date.now() - 24*60*60*1000).sort((a,b) => (a.dateTs||a.ts) - (b.dateTs||b.ts));
       renderEventsFromList(evs, body);
@@ -2096,8 +2125,11 @@ function createEvent() {
   if (reminderMin > 0) scheduleEventReminder(ev);
   const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
   if (fsEnabled()) {
-    const fieldId = selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global');
-    db.collection('events').doc(fieldId).collection('list').add(ev).catch(console.warn);
+    const fieldId = String(selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global'));
+    sb.from('arena_events').insert({
+      field_id: fieldId, title: ev.title, field_name: ev.fieldName, sport: ev.sport,
+      date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp, lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts
+    }).then(({ error }) => { if (error) console.warn(error); });
   }
   // שתף קישור
   const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
@@ -2147,14 +2179,19 @@ function restoreReminders() {
 }
 
 function rsvpEvent(i) {
-  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
-  const ev  = evs[i]; if (!ev) return;
+  const ev = lastRenderedEvents[i]; if (!ev) return;
   const uid = currentUser?.email || 'guest';
   if (!ev.rsvp) ev.rsvp = [];
   const idx = ev.rsvp.indexOf(uid);
   if (idx >= 0) ev.rsvp.splice(idx, 1);
   else ev.rsvp.push(uid);
-  // update in storage
+  // update in cloud (events loaded from Supabase carry cloudId)
+  if (fsEnabled() && ev.cloudId) {
+    sb.from('arena_events').update({ rsvp: ev.rsvp }).eq('id', ev.cloudId)
+      .then(({ error }) => { if (error) console.warn(error); renderEventsPanel(); });
+    return;
+  }
+  // update in local storage
   const all = getEvents();
   const ai  = all.findIndex(e => e.id === ev.id);
   if (ai >= 0) { all[ai] = ev; saveEvents(all); }
@@ -2162,8 +2199,7 @@ function rsvpEvent(i) {
 }
 
 function shareEvent(i) {
-  const evs = getEvents().filter(e => e.ts > Date.now() - 7*24*60*60*1000).sort((a,b)=>a.dateTs-b.dateTs);
-  const ev  = evs[i]; if (!ev) return;
+  const ev = lastRenderedEvents[i]; if (!ev) return;
   const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
   if (navigator.share) navigator.share({ title: ev.title, text }).catch(()=>{});
   else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -2366,7 +2402,7 @@ function handleAvatarUpload(e) {
 function renderProfileStats() {
   const log = JSON.parse(localStorage.getItem('pg_visit_log') || '[]');
   const unique = new Set(log.map(v => `${v.lat},${v.lon}`)).size;
-  const favs = Object.keys(getFavs()).length;
+  const favs = Object.values(getFavs()).flat().length;
   const sportCount = {};
   log.forEach(v => { if (v.sport) sportCount[v.sport] = (sportCount[v.sport]||0)+1; });
   const top = Object.entries(sportCount).sort((a,b)=>b[1]-a[1])[0];
@@ -2860,6 +2896,7 @@ function authSubmit() {
 
 function continueAsGuest() {
   currentUser = { guest: true };
+  localStorage.setItem('pg_user', JSON.stringify(currentUser)); // persist guest so refresh skips auth
   enterApp();
 }
 
@@ -3176,11 +3213,12 @@ let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyag
 }).addTo(map);
 
 // ─── MAP STYLE SWITCHER ───────────────────────────────────
+const _svgI = (paths) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 const MAP_STYLES = [
-  { id:'voyager', icon:'🗺️', label:'Voyager',  url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png' },
-  { id:'dark',    icon:'🌑', label:'Dark',     url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png' },
-  { id:'light',   icon:'☀️', label:'Light',    url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png' },
-  { id:'osm',     icon:'🌍', label:'Classic',  url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
+  { id:'voyager', icon:_svgI('<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>'), label:'Voyager',  url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png' },
+  { id:'dark',    icon:_svgI('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'), label:'Dark',     url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png' },
+  { id:'light',   icon:_svgI('<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'), label:'Light',    url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png' },
+  { id:'osm',     icon:_svgI('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'), label:'Classic',  url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
 ];
 let curMapStyle = 'voyager';
 const swEl = document.getElementById('map-style-sw');
@@ -3213,7 +3251,7 @@ setTimeout(() => map.invalidateSize(), 400);
 new ResizeObserver(() => { map.invalidateSize(); }).observe(document.getElementById('map'));
 
 L.control.attribution({ position:'bottomleft', prefix:'© <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>' }).addTo(map);
-L.control.zoom({ position:'topleft' }).addTo(map);
+// zoom control removed — mobile users pinch-zoom; the buttons collided with the top-left FAB
 
 // ─── TAB NAVIGATION ─────────────────────────────────────
 const sheetEl = document.getElementById('sheet');
@@ -3365,6 +3403,7 @@ async function getCityName(lat, lon) {
     if (data.geojson) curCityGeoJSON = data.geojson;
     const badge = document.getElementById('city-badge');
     if (city) { badge.textContent = '📍 ' + city; badge.style.display = 'block'; }
+    else { badge.style.display = 'none'; } // clear stale city when area has no name
   } catch {}
 }
 
@@ -3542,9 +3581,9 @@ node["amenity"="gym"](around:${curRadius},${lat},${lon});
     // אם לא נמצא כלום ב-radius — הגדל אוטומטית
     if (allFields.length === 0 && searchScope === 'radius' && curRadius < 5000) {
       const next = curRadius <= 1000 ? 2000 : 5000;
-      setRadius(next);
       setStatus('🔍 מרחיב חיפוש...');
-      setTimeout(() => loadFields(lat, lon), 600);
+      setRadius(next);                        // setRadius reloads via loadFields when location is known
+      if (uLat == null) loadFields(lat, lon); // fallback when no GPS fix yet
       return;
     }
     _overpassCache.set(_cacheKey, { fields: allFields, ts: Date.now() });
@@ -4061,10 +4100,8 @@ function trackVisit(f) {
 
   if (fsEnabled() && currentUser && !currentUser.guest) {
     const uid = (currentUser.id || currentUser.email || '').replace(/[^a-zA-Z0-9_]/g, '_');
-    db.collection('visits').doc(uid).set({
-      name: currentUser.name || currentUser.email,
-      count: firebase.firestore.FieldValue.increment(1)
-    }, { merge: true }).catch(console.warn);
+    sb.rpc('arena_increment_visit', { p_uid: uid, p_name: currentUser.name || currentUser.email })
+      .then(({ error }) => { if (error) console.warn(error); });
   }
 }
 
@@ -4105,7 +4142,7 @@ function renderStats() {
 
   const barsVisit = topVisits.map(v => `
     <div class="stat-bar-row">
-      <div class="stat-bar-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${v.name}">${ico(v.sport)} ${v.name.slice(0,10)}</div>
+      <div class="stat-bar-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.name)}">${ico(v.sport)} ${esc(v.name.slice(0,10))}</div>
       <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(v.count/maxVisit*100)}%"></div></div>
       <div class="stat-bar-val">${v.count}x</div>
     </div>`).join('');
@@ -4186,7 +4223,7 @@ function renderLb() {
         <div class="lb-rank ${rankClass}">${medal}</div>
         <div style="font-size:28px;flex-shrink:0">${ico(f.sport)}</div>
         <div class="lb-info">
-          <div class="lb-name">${f.name}</div>
+          <div class="lb-name">${esc(f.name)}</div>
           <div class="lb-sub">${he(f.sport)} · ${f.rCount} דירוגים</div>
         </div>
         <div class="lb-score">${'★'.repeat(Math.round(f.avg))} ${f.avg}</div>
@@ -4195,7 +4232,7 @@ function renderLb() {
     return;
   }
 
-  // משתמשים — טען מ-Firestore אם זמין, אחרת localStorage
+  // משתמשים — טען מהענן (Supabase) אם זמין, אחרת localStorage
   function renderLbUsers(leaders) {
     if (!leaders.length) {
       body.innerHTML = '<div class="empty"><div class="empty-ico">👥</div>אין נתוני משתמשים עדיין<br><small>דרג מגרשים כדי להופיע כאן!</small></div>';
@@ -4208,8 +4245,8 @@ function renderLb() {
         <div class="lb-rank ${rankClass}">${medal}</div>
         <div style="font-size:26px;flex-shrink:0">👤</div>
         <div class="lb-info">
-          <div class="lb-name">${u.name}</div>
-          <div class="lb-sub">${u.actions ? u.actions.join(' · ') : 'משתמש פעיל'}</div>
+          <div class="lb-name">${esc(u.name)}</div>
+          <div class="lb-sub">${u.actions ? esc(u.actions.join(' · ')) : 'משתמש פעיל'}</div>
         </div>
         <div class="lb-score">${u.score || u.count || 0} נק'</div>
       </div>`;
@@ -4217,23 +4254,24 @@ function renderLb() {
   }
 
   if (fsEnabled()) {
-    db.collection('visits').orderBy('count', 'desc').limit(20)
-      .get().then(snap => {
-        const leaders = snap.docs.map(d => ({ name: d.data().name, count: d.data().count, score: d.data().count * 10 }));
+    const lbLocalFallback = () => {
+      const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
+      const userActions = {};
+      if (currentUser && !currentUser.guest) {
+        const email = currentUser.email;
+        const name  = currentUser.name || email;
+        if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
+        userActions[email].score += Object.keys(ratings).length * 10;
+        if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
+      }
+      renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
+    };
+    sb.from('arena_visits').select('*').order('count', { ascending: false }).limit(20)
+      .then(({ data, error }) => {
+        if (error) { lbLocalFallback(); return; }
+        const leaders = (data || []).map(d => ({ name: d.name, count: d.count, score: d.count * 10 }));
         renderLbUsers(leaders);
-      }).catch(() => {
-        // fallback to localStorage
-        const ratings = JSON.parse(localStorage.getItem('pg_ratings') || '{}');
-        const userActions = {};
-        if (currentUser && !currentUser.guest) {
-          const email = currentUser.email;
-          const name  = currentUser.name || email;
-          if (!userActions[email]) userActions[email] = { name, score: 0, actions: [] };
-          userActions[email].score += Object.keys(ratings).length * 10;
-          if (Object.keys(ratings).length) userActions[email].actions.push(`${Object.keys(ratings).length} דירוגים`);
-        }
-        renderLbUsers(Object.values(userActions).sort((a,b) => b.score - a.score));
-      });
+      }, lbLocalFallback);
     return;
   }
 
@@ -4261,6 +4299,7 @@ function openPlayersPanel(f) {
 }
 
 function closePlayersPanel() {
+  if (playersUnsub) { playersUnsub(); playersUnsub = null; }
   document.getElementById('players-panel').classList.remove('on');
 }
 
@@ -4275,7 +4314,7 @@ function buildPlayersHTML(f, players) {
         <span class="player-sport">${ico(p.sport)}</span>
         <div class="player-name">${esc(p.name)}</div>
         <div class="player-meta">${he(p.sport)} · ${esc(p.level)} · ${esc(p.players)} שחקנים</div>
-        <div class="player-time">⏰ ${new Date(p.ts?.toMillis ? p.ts.toMillis() : p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="player-time">⏰ ${new Date(p.ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('')
     : '<div class="empty"><div class="empty-ico">👥</div>אין שחקנים כרגע<br><small>היה הראשון!</small></div>';
 
@@ -4305,23 +4344,27 @@ function buildPlayersHTML(f, players) {
   `;
 }
 
+let playersUnsub = null;
 function renderPlayersBody(f) {
   if (fsEnabled()) {
-    const fieldId = f.id || `${f.lat}_${f.lon}`;
-    db.collection('players').doc(fieldId).collection('list')
-      .orderBy('ts', 'desc').limit(30)
-      .onSnapshot(snap => {
+    const fieldId = String(f.id || `${f.lat}_${f.lon}`);
+    if (playersUnsub) { playersUnsub(); playersUnsub = null; } // avoid stacking listeners
+    const load = () => sb.from('arena_players').select('*').eq('field_id', fieldId)
+      .order('ts', { ascending: false }).limit(30)
+      .then(({ data, error }) => {
+        if (error) { // fallback
+          const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
+          buildPlayersHTML(f, players);
+          return;
+        }
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        const players = snap.docs.map(d => d.data()).filter(p => {
-          const tsMs = p.ts?.toMillis ? p.ts.toMillis() : (typeof p.ts === 'number' ? p.ts : 0);
-          return tsMs > cutoff;
-        });
-        buildPlayersHTML(f, players);
-      }, () => {
-        // fallback
-        const players = getPlayers(f).filter(p => Date.now() - p.ts < 24 * 60 * 60 * 1000);
-        buildPlayersHTML(f, players);
+        buildPlayersHTML(f, (data || []).filter(p => p.ts > cutoff));
       });
+    load();
+    const ch = sb.channel('players_' + fieldId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'arena_players', filter: `field_id=eq.${fieldId}` }, load)
+      .subscribe();
+    playersUnsub = () => { try { sb.removeChannel(ch); } catch(e){} };
     return;
   }
   const players = getPlayers(f)
@@ -4343,8 +4386,8 @@ async function postPlayer() {
   list.unshift(player);
   localStorage.setItem(playersKey(selected), JSON.stringify(list.slice(0, 20)));
   if (fsEnabled()) {
-    const fieldId = selected.id || `${selected.lat}_${selected.lon}`;
-    await db.collection('players').doc(fieldId).collection('list').add(player).catch(console.warn);
+    const fieldId = String(selected.id || `${selected.lat}_${selected.lon}`);
+    await sb.from('arena_players').insert({ field_id: fieldId, ...player }).then(({ error }) => { if (error) console.warn(error); });
   }
   renderPlayersBody(selected);
 }
@@ -4360,7 +4403,11 @@ function addFieldPhoto(f, dataUrl) {
   const photos = getFieldPhotos(f);
   photos.unshift(dataUrl);
   // שמור עד 6 תמונות לכל מגרש
-  localStorage.setItem(photoKey(f), JSON.stringify(photos.slice(0, 6)));
+  try {
+    localStorage.setItem(photoKey(f), JSON.stringify(photos.slice(0, 6)));
+  } catch (e) { // QuotaExceeded — אחסון מלא
+    setStatus('⚠️ האחסון מלא — מחק תמונות ישנות ונסה שוב');
+  }
 }
 
 function buildPhotosBlock(f) {
@@ -4444,7 +4491,7 @@ async function validateAndSavePhoto(dataUrl) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeInBg .18s ease';
   overlay.innerHTML = `
     <div style="text-align:center;padding:32px;max-width:300px">
-      <div id="ai-spinner" style="width:56px;height:56px;border:3px solid rgba(48,224,212,.2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 20px"></div>
+      <div id="ai-spinner" style="width:56px;height:56px;border:3px solid rgba(46,232,110,.2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 20px"></div>
       <div id="ai-status" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px">בינה מלאכותית בודקת...</div>
       <div id="ai-sub" style="font-size:13px;color:var(--muted)">מנתחת את התמונה</div>
       <div id="ai-bar-wrap" style="margin-top:18px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden">
@@ -4556,17 +4603,12 @@ async function saveRating(f, stars, tags) {
   localStorage.setItem('pg_all_ratings', JSON.stringify(avg));
 
   if (fsEnabled()) {
-    const fieldId = f.id || `${f.lat}_${f.lon}`;
-    const rating = { stars, tags, user: currentUser?.name || 'אורח', uid: currentUser?.email || 'guest', ts: Date.now() };
-    await db.collection('ratings').doc(fieldId).collection('entries').add(rating);
-    // update aggregate
-    const agg = await db.collection('ratings').doc(fieldId).get();
-    const data = agg.exists ? agg.data() : { total: 0, count: 0 };
-    await db.collection('ratings').doc(fieldId).set({
-      total: (data.total || 0) + stars,
-      count: (data.count || 0) + 1,
-      avg: (((data.total || 0) + stars) / ((data.count || 0) + 1)).toFixed(1)
-    });
+    const fieldId = String(f.id || `${f.lat}_${f.lon}`);
+    await sb.from('arena_ratings').insert({
+      field_id: fieldId, stars, tags: [...(tags || [])],
+      user_name: currentUser?.name || 'אורח', uid: currentUser?.email || 'guest', ts: Date.now()
+    }).then(({ error }) => { if (error) console.warn(error); });
+    // aggregate (avg/count) is computed from arena_ratings on demand
   }
 }
 
@@ -4735,17 +4777,17 @@ function openDetail(i) {
   const tags = [];
   f.sports.filter(s=>s!=='default').forEach(s => tags.push(`${ico(s)} ${he(s)}`));
   if (!f.sports.filter(s=>s!=='default').length) tags.push(`${ico(f.sport)} ${he(f.sport)}`);
-  if (f.tags?.surface)              tags.push(`🌱 ${f.tags.surface}`);
+  if (f.tags?.surface)              tags.push(`🌱 ${esc(f.tags.surface)}`);
   if (f.tags?.lit === 'yes')        tags.push('💡 תאורה לילית');
   if (f.tags?.fee === 'no')         tags.push('🆓 כניסה חינם');
   if (f.tags?.fee === 'yes')        tags.push('💰 בתשלום');
   if (f.tags?.access === 'private') tags.push('🔒 פרטי');
   else                              tags.push('✅ פתוח לציבור');
-  if (f.tags?.opening_hours)        tags.push(`🕐 ${f.tags.opening_hours}`);
-  if (f.tags?.capacity)             tags.push(`👥 ${f.tags.capacity} מקומות`);
-  if (f.tags?.phone)                tags.push(`📞 ${f.tags.phone}`);
+  if (f.tags?.opening_hours)        tags.push(`🕐 ${esc(f.tags.opening_hours)}`);
+  if (f.tags?.capacity)             tags.push(`👥 ${esc(String(f.tags.capacity))} מקומות`);
+  if (f.tags?.phone)                tags.push(`📞 ${esc(f.tags.phone)}`);
   const ws = f.tags?.website;
-  if (ws) tags.push(`<a href="${ws.startsWith('http')?ws:'https://'+ws}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌐 אתר רשמי</a>`);
+  if (ws && /^(https?:\/\/)?[\w.-]+/.test(ws)) tags.push(`<a href="${esc(ws.startsWith('http')?ws:'https://'+ws)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌐 אתר רשמי</a>`);
   document.getElementById('d-tags').innerHTML = tags.map(t => `<span class="dtag">${t}</span>`).join('')
     + buildAvailBlock(f)
     + buildPhotosBlock(f)
@@ -4766,7 +4808,7 @@ function openDetail(i) {
     <button class="dbtn dbtn-share" onclick="shareField()">📤</button>
     <button class="dbtn dbtn-players" onclick="openPlayersPanel()">👥</button>
     <button class="dbtn" style="background:rgba(48,209,88,.1);border:1.5px solid var(--accent);color:var(--accent);flex:.7" onclick="closeDetail();openEventsPanel(selected)">📅</button>
-    <button class="dbtn" style="background:rgba(10,132,255,.1);border:1.5px solid var(--blue);color:var(--blue);flex:.7" onclick="closeDetail();openChatPanel(selected)">💬</button>
+    <button class="dbtn" style="background:rgba(46,232,110,.1);border:1.5px solid var(--blue);color:var(--blue);flex:.7" onclick="closeDetail();openChatPanel(selected)">💬</button>
     <button class="dbtn dbtn-fav${favSaved?' saved':''}" id="fav-btn" onclick="onFavClick(event)">${favSaved?'★':'☆'}</button>
     <button class="dbtn" style="background:rgba(255,159,10,.1);border:1.5px solid #ff9f0a;color:#ff9f0a;flex:.7" onclick="openFixSportPanel()">🏷️</button>
     <button class="dbtn dbtn-close" onclick="closeDetail()">סגור</button>
@@ -4903,13 +4945,15 @@ function cycleSortMode() {
   btn.classList.add('pill-bounce');
   btn.addEventListener('animationend', () => btn.classList.remove('pill-bounce'), { once: true });
   renderList();
+  renderMarkers(); // keep map pin indices in sync with the sorted list
 }
 
 function getSorted(fields) {
   if (curSort === 'rating') {
+    const allR = JSON.parse(localStorage.getItem('pg_all_ratings') || '{}');
     return [...fields].sort((a, b) => {
-      const ra = parseFloat(localStorage.getItem('pg_avgrating_' + a.id) || 0);
-      const rb = parseFloat(localStorage.getItem('pg_avgrating_' + b.id) || 0);
+      const ra = parseFloat((allR[ratingKey(a)] || {}).avg || 0);
+      const rb = parseFloat((allR[ratingKey(b)] || {}).avg || 0);
       return rb - ra || a.dist - b.dist;
     });
   }
@@ -5084,7 +5128,7 @@ async function goToLatLon(lat, lon) {
   map.setView([lat, lon], 15);
   if (uMarker) map.removeLayer(uMarker);
   uMarker = L.circleMarker([lat, lon], {
-    radius:11, fillColor:'#0a84ff', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
+    radius:11, fillColor:'#2ee86e', fillOpacity:1, color:'#fff', weight:3, zIndexOffset:9999
   }).addTo(map);
   curCountry = await getCountry(lat, lon);
   updateFilterPills(curCountry);
@@ -5203,7 +5247,7 @@ updateOnlineStatus();
 
 // ─── SERVICE WORKER ─────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sportfields/sw-playgrounds.js').then(reg => {
+  navigator.serviceWorker.register('sw-playgrounds.js').then(reg => {
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw.addEventListener('statechange', () => {
@@ -5275,7 +5319,7 @@ function checkAndShowLottery() {
 function showLotteryOverlay() {
   // Generate confetti
   const confettiEl = document.getElementById('lottery-confetti');
-  const colors = ['#bf5af2','#ff9f0a','#30d158','#0a84ff','#ff453a','#ffcc00','#ff6fd8'];
+  const colors = ['#bf5af2','#ff9f0a','#30d158','#2ee86e','#ff453a','#ffcc00','#ff6fd8'];
   confettiEl.innerHTML = Array.from({length: 20}, (_, i) => {
     const color = colors[i % colors.length];
     const left = Math.random() * 100;
@@ -5297,7 +5341,8 @@ function showLotteryOverlay() {
   const winner = currentUser?.name ? currentUser.name : fakeNames[Math.floor(Math.random() * fakeNames.length)];
 
   let tick = 0;
-  const interval = setInterval(() => {
+  if (window._lotteryInterval) clearInterval(window._lotteryInterval);
+  const interval = window._lotteryInterval = setInterval(() => {
     slotEl.textContent = '🎰 ' + fakeNames[tick % fakeNames.length];
     tick++;
     if (tick > 18) {
@@ -5313,6 +5358,7 @@ function showLotteryOverlay() {
 }
 
 function closeLotteryOverlay() {
+  if (window._lotteryInterval) { clearInterval(window._lotteryInterval); window._lotteryInterval = null; }
   document.getElementById('lottery-overlay').classList.remove('on');
 }
 
@@ -5347,7 +5393,7 @@ function startLocationShare() {
   if (!currentUser) return;
   liveShareActive = true;
   const btn = document.getElementById('share-loc-btn');
-  if (btn) { btn.classList.add('share-btn-active'); btn.textContent = '🟢'; }
+  if (btn) { btn.classList.add('share-btn-active'); btn.style.color = '#30d158'; }
 
   broadcastLocation();
   liveShareInterval = setInterval(broadcastLocation, 15000);
@@ -5366,11 +5412,12 @@ function stopLocationShare() {
   liveShareInterval = null;
 
   const btn = document.getElementById('share-loc-btn');
-  if (btn) { btn.classList.remove('share-btn-active'); btn.textContent = '📍'; }
+  if (btn) { btn.classList.remove('share-btn-active'); btn.style.color = ''; }
 
-  // Remove own presence from Firestore
+  // Remove own presence from cloud
   if (fsEnabled() && currentUser) {
-    db.collection('live_users').doc(currentUser.id || currentUser.email || currentUser.name).delete().catch(() => {});
+    const myId = String(currentUser.id || currentUser.email || currentUser.name);
+    sb.from('arena_live_users').delete().eq('id', myId).then(()=>{}, ()=>{});
   }
 
   // Remove live markers
@@ -5395,7 +5442,7 @@ function broadcastLocation() {
     };
 
     if (fsEnabled()) {
-      db.collection('live_users').doc(userId).set(payload);
+      sb.from('arena_live_users').upsert({ id: String(userId), ...payload }).then(({ error }) => { if (error) console.warn(error); });
     } else {
       // localStorage fallback — store own location
       localStorage.setItem('pg_live_me', JSON.stringify(payload));
@@ -5410,16 +5457,14 @@ function watchLiveUsers() {
 
   if (liveWatchUnsub) liveWatchUnsub();
 
-  const myId = currentUser?.id || currentUser?.email || currentUser?.name;
+  const myId = String(currentUser?.id || currentUser?.email || currentUser?.name || '');
 
-  liveWatchUnsub = db.collection('live_users').onSnapshot(snap => {
+  const paint = (rows) => {
     const now = Date.now();
     const activeIds = new Set();
 
-    snap.docs.forEach(doc => {
-      const u = doc.data();
-      const id = doc.id;
-
+    (rows || []).forEach(u => {
+      const id = u.id;
       // Skip own marker and expired
       if (id === myId) return;
       if (u.expires && u.expires < now) return;
@@ -5428,7 +5473,7 @@ function watchLiveUsers() {
 
       const icon = L.divIcon({
         className: '',
-        html: `<div class="live-dot" title="${u.name}">${u.name.charAt(0).toUpperCase()}</div>`,
+        html: `<div class="live-dot" title="${esc(u.name || '?')}">${esc((u.name || '?').charAt(0).toUpperCase())}</div>`,
         iconSize: [36, 36],
         iconAnchor: [18, 18]
       });
@@ -5449,7 +5494,15 @@ function watchLiveUsers() {
         delete liveMarkers[id];
       }
     });
-  });
+  };
+
+  const load = () => sb.from('arena_live_users').select('*')
+    .then(({ data, error }) => { if (!error) paint(data); });
+  load();
+  const ch = sb.channel('live_users_all')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'arena_live_users' }, load)
+    .subscribe();
+  liveWatchUnsub = () => { try { sb.removeChannel(ch); } catch(e){} };
 }
 
 window.addEventListener('beforeunload', () => {
@@ -5485,16 +5538,20 @@ window.addEventListener('popstate', () => {
     currentUser = JSON.parse(saved);
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('user-btn').style.display = 'none';
+    document.getElementById('share-loc-btn').style.display = 'flex'; // same init as enterApp
     updateFilterPills('default');
     switchMainTab('map');
     setTimeout(() => { map.invalidateSize(); tileLayer && tileLayer.redraw(); }, 100);
     locateMe();
+    initPushNotifications();
   }
   // אם אין משתמש שמור — מסך ההרשמה מוצג אוטומטית
   if (isPro()) applyProPerks();
   applyLang(curLang);
   applyA11yOnLoad();
   restoreReminders();
+  applyMapTheme(); // auto night-mode on boot
+  setInterval(applyMapTheme, 30 * 60 * 1000); // re-check every 30min so 20:00 switch actually happens
   // Handle Stripe redirect return
   (function handleStripeReturn() {
     const params = new URLSearchParams(window.location.search);

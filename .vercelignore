@@ -1,0 +1,5 @@
+node_modules
+apps
+.claude
+.github
+*.log
