@@ -4065,12 +4065,9 @@ async function subscribePremium(plan = 'monthly') {
     return;
   }
 
-  // Fallback: mock subscription (when Stripe not configured)
-  localStorage.setItem('pg_pro', '1');
-  localStorage.setItem('pg_pro_plan', plan);
-  localStorage.setItem('pg_pro_since', Date.now());
-  applyProPerks();
-  alert(plan === 'yearly' ? '🏆 שנתי — 79₪ לשנה' : '✅ פרמיום חודשי — 9.90₪');
+  // Stripe not configured yet — do NOT grant PRO or fake a payment confirmation.
+  // Honest "coming soon" message until real billing is wired up.
+  alert('מנוי הפרימיום עדיין לא זמין — בקרוב! 🙏');
   const panel = document.getElementById('premium-panel');
   if (panel) panel.classList.remove('on');
 }
