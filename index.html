@@ -2048,6 +2048,28 @@ async function handleBarcodeResult(barcode){
   }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">שגיאת חיבור לאינטרנט</div>';}
 }
 
+// ═══ AI REQUEST ═══
+// כל הקריאות ל-AI עוברות דרך כאן — כולל טיפול במכסת שימוש (429)
+function aiError(msg){const e=new Error(msg);e.aiUser=true;return e;}
+// טקסט לתצוגה — רק שגיאות שלנו מוצגות למשתמש, השאר הודעה גנרית
+function aiErrText(err){return err&&err.aiUser?err.message:'שגיאה בחיבור ל-AI. נסה שוב.';}
+
+async function callAI(payload){
+  const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!resp.ok){
+    if(resp.status===429){
+      let secs=0;
+      try{const j=await resp.json();secs=j.retryAfter||0;}catch(_){}
+      const mins=Math.ceil(secs/60);
+      throw aiError('הגעת למכסת השאלות. נסה שוב'+(mins>0&&mins<=60?' בעוד כ-'+mins+' דק׳.':' מאוחר יותר.'));
+    }
+    if(resp.status===413)throw aiError('התמונה גדולה מדי. נסה תמונה קטנה יותר.');
+    if(resp.status===403)throw aiError('הגישה ל-AI חסומה מהכתובת הזו.');
+    throw aiError('שירות ה-AI לא זמין כרגע. נסה שוב.');
+  }
+  return resp.json();
+}
+
 // ═══ PHOTO SCAN ═══
 async function scanFromPhoto(input){
   const file=input.files[0];if(!file)return;
@@ -2063,11 +2085,10 @@ async function scanFromPhoto(input){
     res.className='tl-result';res.style.display='block';
     res.innerHTML='<div class="spin-wrap" style="justify-content:center"><div class="spinner"></div> AI מזהה מוצר...</div>';
     try{
-      const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:[
+      const data=await callAI({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
         {type:'text',text:'אתה תזונאי ישראלי. זהה את המוצר בתמונה (שם, מרכיבים נראים, ברקוד אם יש). החזר JSON בלבד: {name:"שם המוצר בעברית", light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים ניתוח תזונתי בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}
-      ]}]})});
-      const data=await resp.json();
+      ]}]});
       let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
       const r=JSON.parse(txt);
       const cls={green:'tl-green',yellow:'tl-yellow',red:'tl-red'};
@@ -2080,7 +2101,7 @@ async function scanFromPhoto(input){
       if(S.scanHistory.length>20)S.scanHistory=S.scanHistory.slice(-20);
       save();renderScanHist();
     }catch(err){
-      res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה בחיבור ל-AI.</div>';
+      res.innerHTML='<div style="color:var(--red);padding:10px">'+aiErrText(err)+'</div>';
       document.getElementById('scan-photo-badge').textContent='❌ שגיאה';
     }
   };
@@ -2113,8 +2134,7 @@ async function runScanAI(name,extra){
       if(extra.salt)extraInfo+=` מלח: ${extra.salt}g.`;
       if(extra.ingredients)extraInfo+=` מרכיבים: ${extra.ingredients.slice(0,200)}.`;
     }
-    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי ישראלי. המוצר: "'+name+'".'+extraInfo+' החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}]})});
-    const data=await resp.json();
+    const data=await callAI({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:'אתה תזונאי ישראלי. המוצר: "'+name+'".'+extraInfo+' החזר JSON בלבד: {light:"green"/"yellow"/"red", title:"2-3 מילים", subtitle:"שורה קצרה", desc:"2-3 משפטים בעברית"}. ירוק=מזין ומומלץ, צהוב=במידה, אדום=לא מומלץ.'}]});
     let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const r=JSON.parse(txt);
     const cls={green:'tl-green',yellow:'tl-yellow',red:'tl-red'};
@@ -2124,7 +2144,7 @@ async function runScanAI(name,extra){
     S.scanHistory.push({name,light:r.light,verdict:r.title});
     if(S.scanHistory.length>20)S.scanHistory=S.scanHistory.slice(-20);
     save();renderScanHist();
-  }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">שגיאה בחיבור ל-AI.</div>';}
+  }catch(e){res.innerHTML='<div style="color:var(--red);padding:10px">'+aiErrText(e)+'</div>';}
 }
 
 async function analyzeMeal(event){
@@ -2137,14 +2157,13 @@ async function analyzeMeal(event){
   const preview=URL.createObjectURL(file);
   document.getElementById('upload-area').innerHTML='<img src="'+preview+'" style="max-height:180px;border-radius:12px;max-width:100%">';
   try{
-    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},{type:'text',text:'תזונאי ישראלי. JSON בלבד: {items:[שמות בעברית], calories_est:מספר, protein_est:מספר, score:1-10, verdict:"מצוין"/"טוב"/"בסדר"/"שפר", tips:["טיפ1","טיפ2"]}'}]}]})});
-    const data=await resp.json();
+    const data=await callAI({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},{type:'text',text:'תזונאי ישראלי. JSON בלבד: {items:[שמות בעברית], calories_est:מספר, protein_est:מספר, score:1-10, verdict:"מצוין"/"טוב"/"בסדר"/"שפר", tips:["טיפ1","טיפ2"]}'}]}]});
     let txt=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const r=JSON.parse(txt);
     const sc=r.score>=8?'var(--green)':r.score>=5?'var(--yellow)':'var(--red)';
     const ve={מצוין:'🌟',טוב:'👍',בסדר:'👌',שפר:'⚠️'}[r.verdict]||'📊';
     scoreEl.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:800">🍽️ זיהוי הארוחה</div><div style="font-size:22px;font-weight:900;color:'+sc+'">'+ve+' '+r.score+'/10</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+(r.items||[]).map(i=>'<span class="tag tg">'+i+'</span>').join('')+'</div><div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1;text-align:center;padding:8px;background:var(--accent-s);border-radius:10px"><div style="font-size:18px;font-weight:900;color:var(--accent)">~'+r.calories_est+'</div><div style="font-size:11px;color:var(--muted)">קלוריות</div></div><div style="flex:1;text-align:center;padding:8px;background:var(--green-s);border-radius:10px"><div style="font-size:18px;font-weight:900;color:var(--green)">~'+r.protein_est+'g</div><div style="font-size:11px;color:var(--muted)">חלבון</div></div></div>'+(r.tips&&r.tips.length?'<div style="font-size:13px;color:var(--muted);font-weight:700;margin-bottom:5px">💡 טיפים:</div>'+r.tips.map(t=>'<div style="font-size:13px;padding:6px 10px;background:#0f1117;border-radius:8px;margin-bottom:5px;border:1px solid var(--border)">• '+t+'</div>').join(''):'')+'<button class="btn btn-green" onclick="resetMealPhoto()" style="margin-top:8px">📷 צלם שוב</button>';
-  }catch(e){scoreEl.innerHTML='<div style="color:var(--red);padding:10px">שגיאה. בדוק שמפתח ה-API נכון.</div><button class="btn btn-red" onclick="resetMealPhoto()" style="margin-top:8px">נסה שוב</button>';}
+  }catch(e){scoreEl.innerHTML='<div style="color:var(--red);padding:10px">'+aiErrText(e)+'</div><button class="btn btn-red" onclick="resetMealPhoto()" style="margin-top:8px">נסה שוב</button>';}
 }
 function resetMealPhoto(){
   document.getElementById('upload-area').innerHTML='<div style="font-size:36px;margin-bottom:8px">📷</div><div style="font-weight:700;font-size:15px">לחץ לצילום</div><div style="font-size:12px;color:var(--muted);margin-top:4px">AI יזהה מה יש בצלחת</div>';
@@ -2281,8 +2300,7 @@ async function askAI(){
     } else {
       content=sysPrompt+'\n\nשאלה: '+q;
     }
-    const resp=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})});
-    const data=await resp.json();
+    const data=await callAI({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]});
     const text=data.content?.map(b=>b.text||'').join('')||'';
     ans.textContent=text;
     // שמור בהיסטוריה
@@ -2292,7 +2310,7 @@ async function askAI(){
     // ניקוי
     document.getElementById('ai-inp').value='';
     clearAIMedia();
-  }catch(e){ans.textContent='לא הצלחתי להתחבר. נסה שוב.';}
+  }catch(e){ans.textContent=aiErrText(e);}
   btn.textContent='📩 שלח למאמן';btn.disabled=false;
 }
 
