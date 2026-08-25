@@ -2036,8 +2036,25 @@ function switchEvTab(btn, tab) {
   renderEventsPanel();
 }
 
-function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
-function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
+function getEvents() {
+  // Never let a corrupt or oversized store throw — an invite import runs this
+  // during init, and a thrown error there would take the page down.
+  try {
+    const v = JSON.parse(localStorage.getItem('pg_events') || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch (e) {
+    return [];
+  }
+}
+function saveEvents(evs) {
+  try {
+    localStorage.setItem('pg_events', JSON.stringify(evs));
+  } catch (e) {
+    // Quota or a private-mode block. The event still lives in memory for this
+    // session; losing the write is better than throwing mid-flow.
+    console.warn('saveEvents failed', e);
+  }
+}
 
 /**
  * Write an event to Supabase, defensively.
@@ -2118,15 +2135,26 @@ function repeatGame(i) {
  */
 function encodeGame(ev) {
   const payload = {
-    i: ev.id, t: ev.title, f: ev.fieldName, s: ev.sport,
+    t: ev.title, f: ev.fieldName, s: ev.sport,
     d: ev.dateTs, g: ev.target || 0, la: ev.lat ?? null, lo: ev.lon ?? null,
+    // The cloud row id, when this event has one. It lets the recipient JOIN the
+    // real game rather than a private copy — see openSharedGame. Absent for a
+    // game created while the DB was down; then the import is honestly local.
+    c: ev.cloudId ?? null,
   };
   const json = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+/** Longer than any real game link; anything past this is not a link we made. */
+const MAX_INVITE_LEN = 2000;
+
 function decodeGame(str) {
+  // Cap BEFORE atob/JSON.parse touch it. Those run over the whole string
+  // before any field is truncated, so an unbounded ?g= could freeze init or
+  // exhaust memory — a denial of service from a single crafted URL.
+  if (typeof str !== 'string' || str.length > MAX_INVITE_LEN) return null;
   try {
     const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
     const json = decodeURIComponent(escape(atob(b64)));
@@ -2134,15 +2162,32 @@ function decodeGame(str) {
     // A link is attacker-authored, so every field is validated, not trusted.
     // A bad link returns null and is ignored rather than corrupting the list.
     if (!p || typeof p.t !== 'string' || !Number.isFinite(Number(p.d))) return null;
+    const dateTs = Number(p.d);
+    // A game already in the past is not an invitation to anything. It would be
+    // imported and then filtered out of the list, leaving an invisible record.
+    if (dateTs < Date.now() - 6 * 60 * 60 * 1000) return null;
+    // sport reaches innerHTML through he(), which returns unknown values
+    // UNCHANGED and unescaped — so an arbitrary string here is stored XSS.
+    // It is an enum: keep it only if it is a real icon key, else neutral.
+    const sport = typeof p.s === 'string' && ICONS[p.s] ? p.s : 'multi';
+    // target feeds the bar math; clamp to a sane integer so Infinity or a huge
+    // value cannot land in state.
+    const target = Math.max(0, Math.min(200, Math.floor(Number(p.g)) || 0));
+    const la = Number(p.la);
+    const lo = Number(p.lo);
     return {
-      id: Number(p.i) || Date.now(),
+      // A fresh local id, never the encoded one — dedupe is by id, and trusting
+      // an attacker-chosen id lets a crafted link collide with, and hide, an
+      // event the recipient already has.
+      id: Date.now() + Math.floor((dateTs % 100000)),
+      cloudId: p.c != null ? p.c : undefined,
       title: String(p.t).slice(0, 120),
       fieldName: typeof p.f === 'string' ? p.f.slice(0, 120) : 'מגרש',
-      sport: typeof p.s === 'string' ? p.s.slice(0, 30) : 'multi',
-      dateTs: Number(p.d),
-      target: Number(p.g) || 0,
-      lat: Number.isFinite(Number(p.la)) ? Number(p.la) : null,
-      lon: Number.isFinite(Number(p.lo)) ? Number(p.lo) : null,
+      sport,
+      dateTs,
+      target,
+      lat: Number.isFinite(la) && la >= -90 && la <= 90 ? la : null,
+      lon: Number.isFinite(lo) && lo >= -180 && lo <= 180 ? lo : null,
       rsvp: [],
       fromInvite: true,
     };
@@ -2162,7 +2207,15 @@ function gameDeepLink(ev) {
  */
 function openSharedGame(g) {
   const all = getEvents();
-  if (!all.some((e) => e.id === g.id)) {
+  // Dedupe by the cloud row when the link carried one, else by a content
+  // signature — the local id is freshly minted on every decode, so it cannot
+  // be the key, or opening the same link twice would stack duplicates.
+  const already = all.some((e) =>
+    g.cloudId != null
+      ? e.cloudId === g.cloudId
+      : e.dateTs === g.dateTs && e.title === g.title && e.fieldName === g.fieldName
+  );
+  if (!already) {
     all.unshift(g);
     saveEvents(all);
   }
