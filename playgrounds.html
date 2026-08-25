@@ -476,6 +476,13 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
 .ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ev-count{font-size:11px;color:var(--muted);margin-top:6px}
+.ev-head-wrap{margin-top:8px}
+.ev-head-line{font-size:12px;font-weight:800;color:var(--text);margin-bottom:5px;font-variant-numeric:tabular-nums}
+.ev-head-line.full{color:var(--accent)}
+.ev-head-track{height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.ev-head-fill{height:100%;border-radius:5px;background:var(--gold);transform-origin:right;transition:transform .28s cubic-bezier(.22,1,.36,1)}
+.ev-head-fill.full{background:var(--accent)}
+@media (prefers-reduced-motion:reduce){.ev-head-fill{transition:none}}
 /* create form */
 .ev-form{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
 .ev-form-title{font-size:14px;font-weight:800;color:var(--text2)}
@@ -2048,9 +2055,39 @@ function renderEventsFromList(evs, body) {
         <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
         <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
       </div>
-      <div class="ev-count">👥 ${(e.rsvp||[]).length} מצטרפים</div>
+      ${headcountBlock(e)}
     </div>`;
   }).join('');
+}
+
+/**
+ * How full is this game — the line that makes people show up.
+ *
+ * The gap is the whole point: "חסרים 2" is a job someone can finish, where
+ * "4 מצטרפים" is just a number. So a game WITH a target leads with what is
+ * missing until it is full, then flips to a settled "מלא". A game with no
+ * target keeps the old plain count, so nothing old breaks.
+ *
+ * Bidi: the digits sit inside <bdi> so "4 / 6" never reorders in the RTL line.
+ * The bar is a transform:scaleX fill — GPU-cheap, no layout, safe on a weak
+ * Android, and it animates by CSS transition on the width variable alone.
+ */
+function headcountBlock(e) {
+  const have = (e.rsvp || []).length;
+  const target = Number(e.target) || 0;
+  if (target <= 0) {
+    return `<div class="ev-count">👥 <bdi>${have}</bdi> מצטרפים</div>`;
+  }
+  const missing = Math.max(0, target - have);
+  const ratio = Math.max(0, Math.min(1, have / target));
+  const full = missing === 0;
+  const label = full
+    ? `✅ מלא · <bdi>${have} מתוך ${target}</bdi>`
+    : `<bdi>${have} מתוך ${target}</bdi> · חסרים <bdi>${missing}</bdi>`;
+  return `<div class="ev-head-wrap">
+      <div class="ev-head-line${full ? ' full' : ''}">${label}</div>
+      <div class="ev-head-track"><div class="ev-head-fill${full ? ' full' : ''}" style="transform:scaleX(${ratio.toFixed(3)})"></div></div>
+    </div>`;
 }
 
 function renderEventsPanel(preField) {
@@ -2085,6 +2122,10 @@ function renderEventsPanel(preField) {
     <select class="add-sel" id="ev-sport">
       ${Object.keys(ICONS).filter(k=>k!=='default').slice(0,14).map(k=>`<option value="${k}">${ico(k)} ${he(k)}</option>`).join('')}
     </select>
+    <select class="add-sel" id="ev-target">
+      <option value="0">👥 בלי יעד — כמה שיבואו</option>
+      ${[2,4,6,8,10,12,14,16,20,22].map(n=>`<option value="${n}"${n===6?' selected':''}>🎯 צריך ${n} שחקנים</option>`).join('')}
+    </select>
     <input class="add-inp" id="ev-date" type="datetime-local" style="color-scheme:dark" />
     <input class="add-inp" id="ev-desc" placeholder="פרטים נוספים (אופציונלי)" />
     <select class="add-sel" id="ev-reminder">
@@ -2107,6 +2148,7 @@ function createEvent() {
   const title      = document.getElementById('ev-title')?.value.trim();
   const fieldName  = selected?.name || document.getElementById('ev-field')?.value.trim() || 'מגרש';
   const sport      = document.getElementById('ev-sport')?.value || 'multi';
+  const target     = parseInt(document.getElementById('ev-target')?.value || '0') || 0;
   const dateVal    = document.getElementById('ev-date')?.value;
   const reminderMin= parseInt(document.getElementById('ev-reminder')?.value || '0');
   if (!title || !dateVal) { setStatus('⚠️ יש למלא שם ותאריך', true); return; }
@@ -2115,7 +2157,7 @@ function createEvent() {
   const dateTs = new Date(dateVal).getTime();
   const ev = {
     id: Date.now(), title, fieldName,
-    sport, dateTs,
+    sport, dateTs, target,
     lat: selected?.lat, lon: selected?.lon,
     creator: currentUser?.name || 'אנונימי',
     rsvp: [currentUser?.email || 'guest'],
@@ -2127,13 +2169,31 @@ function createEvent() {
   const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
   if (fsEnabled()) {
     const fieldId = String(selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global'));
-    sb.from('arena_events').insert({
+    // The base row, with only columns known to exist today.
+    const row = {
       field_id: fieldId, title: ev.title, field_name: ev.fieldName, sport: ev.sport,
-      date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp, lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts
-    }).then(({ error }) => { if (error) console.warn(error); });
+      date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp,
+      lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts,
+    };
+    // `target` is the needed headcount. It rides along ONLY if the column
+    // exists — Postgres rejects the whole insert on an unknown column, so
+    // sending it blindly would break event creation the day the DB comes back
+    // without the migration. So: try with target, and if that specific error
+    // comes back, retry without it. The target stays in localStorage either
+    // way, so the number is never lost — it just is not shared until the
+    // one-line migration (ALTER TABLE arena_events ADD COLUMN target int) runs.
+    const insert = (withTarget) =>
+      sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row);
+    insert(ev.target > 0).then(({ error }) => {
+      if (error && ev.target > 0 && /target|column/i.test(error.message || '')) {
+        insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
+      } else if (error) {
+        console.warn(error);
+      }
+    });
   }
   // שתף קישור
-  const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\nמצטרפים דרך Arena!`;
+  const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}מצטרפים דרך Arena!`;
   const switchToList = () => {
     curEvTab = 'list';
     document.querySelectorAll('.ev-tab').forEach((b,i) => b.classList.toggle('on', i===0));
@@ -2201,9 +2261,21 @@ function rsvpEvent(i) {
 
 function shareEvent(i) {
   const ev = lastRenderedEvents[i]; if (!ev) return;
-  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
+  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
   if (navigator.share) navigator.share({ title: ev.title, text }).catch(()=>{});
   else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+/**
+ * The one line that recruits. A share of a game that still needs people leads
+ * with the gap ("חסרים 2 שחקנים!"), because a missing seat is an ask a friend
+ * can answer. A full or targetless game says nothing extra.
+ */
+function gapLine(ev) {
+  const target = Number(ev.target) || 0;
+  if (target <= 0) return '';
+  const missing = Math.max(0, target - (ev.rsvp || []).length);
+  return missing > 0 ? `🔥 חסרים ${missing} שחקנים!\n` : '';
 }
 
 // ─── HEATMAP ────────────────────────────────────────────
