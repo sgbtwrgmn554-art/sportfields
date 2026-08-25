@@ -444,7 +444,9 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 #chat-panel.on{display:flex}
 .chat-hdr{padding:calc(env(safe-area-inset-top,0px)+14px) 16px 12px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
 .chat-back{background:none;border:none;font-size:22px;color:var(--text);cursor:pointer;padding:0}
-.chat-title{font-size:16px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-title-wrap{flex:1;min-width:0}
+.chat-title{font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-context{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .chat-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
 .msg-row{display:flex;flex-direction:column;max-width:80%}
 .msg-row.me{align-self:flex-end;align-items:flex-end}
@@ -1332,7 +1334,10 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 <div id="chat-panel">
   <div class="chat-hdr">
     <button class="chat-back" onclick="closeChatPanel()">‹</button>
-    <div class="chat-title" id="chat-title">💬 צ'אט מגרש</div>
+    <div class="chat-title-wrap">
+      <div class="chat-title" id="chat-title">💬 צ'אט מגרש</div>
+      <div class="chat-context" id="chat-context" style="display:none"></div>
+    </div>
   </div>
   <div class="chat-msgs" id="chat-msgs"></div>
   <div class="chat-inp-row">
@@ -1917,12 +1922,51 @@ function rebuildDetail() {
 // ─── CHAT ───────────────────────────────────────────────
 let chatField = null;
 
-function chatKey(f) { return `pg_chat_${f.lat}_${f.lon}`; }
-function getChat(f) { return JSON.parse(localStorage.getItem(chatKey(f)) || '[]'); }
+// Prefer an explicit id so a game room (id "game_<n>", no coordinates) gets its
+// own store instead of colliding on "pg_chat_undefined_undefined".
+function chatKey(f) { return `pg_chat_${f.id || `${f.lat}_${f.lon}`}`; }
+function getChat(f) {
+  try {
+    const v = JSON.parse(localStorage.getItem(chatKey(f)) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * A game's own room — the same chat, scoped to one game instead of a whole
+ * court. The court chat is everyone who ever passed through; this is the six
+ * people actually playing at 19:00, so "מי מביא כדור?" reaches them and nobody
+ * else. It reuses the chat panel, table and realtime channel verbatim — only
+ * the scope id changes, to "game_<eventId>".
+ */
+function openGameRoom(i) {
+  const ev = lastRenderedEvents[i];
+  if (!ev) return;
+  track('open_game_room');
+  const when = new Date(ev.dateTs).toLocaleString('he-IL', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  const have = rsvpCount(ev);
+  const target = Number(ev.target) || 0;
+  openChatPanel({
+    id: 'game_' + ev.id,
+    name: ev.title,
+    // Shown as a sticky context strip so a message never feels like it landed
+    // in an anonymous room — you always see which game you are talking in.
+    context: `🏟️ ${ev.fieldName} · ⏰ ${when}${target ? ` · 👥 ${have}/${target}` : ''}`,
+  });
+}
 
 function openChatPanel(f) {
   chatField = f || selected; if (!chatField) return;
   document.getElementById('chat-title').textContent = `💬 ${chatField.name}`;
+  // A game room carries a context line; a court chat does not, so the strip
+  // shows only when there is something to say and collapses otherwise.
+  const ctx = document.getElementById('chat-context');
+  if (ctx) {
+    if (chatField.context) { ctx.textContent = chatField.context; ctx.style.display = 'block'; }
+    else { ctx.textContent = ''; ctx.style.display = 'none'; }
+  }
   renderChat();
   document.getElementById('chat-panel').classList.add('on');
   setTimeout(() => {
@@ -2268,8 +2312,9 @@ function renderEventsFromList(evs, body) {
       ? `<button class="ev-rsvp" onclick="repeatGame(${i})">🔁 שוב בשבוע הבא</button>
         <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>`
       : `<button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
-        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
-        <button class="ev-cal" onclick="addToCalendar(${i})" aria-label="הוסף ליומן" title="הוסף ליומן">📅</button>`;
+        <button class="ev-cal" onclick="addToCalendar(${i})" aria-label="הוסף ליומן" title="הוסף ליומן">📅</button>
+        <button class="ev-cal" onclick="openGameRoom(${i})" aria-label="חדר משחק" title="חדר משחק">💬</button>
+        <button class="ev-cal" onclick="shareEvent(${i})" aria-label="שתף" title="שתף">📤</button>`;
     return `<div class="ev-card${past?' past':''}">
       <div class="ev-title">${esc(e.title)}</div>
       <div class="ev-field">🏟️ ${esc(e.fieldName)}</div>
