@@ -2074,8 +2074,21 @@ function renderEventsFromList(evs, body) {
  * The bar is a transform:scaleX fill — GPU-cheap, no layout, safe on a weak
  * Android, and it animates by CSS transition on the width variable alone.
  */
+/**
+ * How many DISTINCT players are in. rsvp can carry duplicates — the same
+ * email pushed twice, or several signed-out users all landing as 'guest' —
+ * and counting the raw length overstated the headcount, so a game read as
+ * fuller than it was and the "missing" number came out too low. Unique is the
+ * honest count. Also the one place rsvp is coerced to an array, so a malformed
+ * value can never throw and blank the card.
+ */
+function rsvpCount(e) {
+  const arr = Array.isArray(e.rsvp) ? e.rsvp : [];
+  return new Set(arr).size;
+}
+
 function headcountBlock(e) {
-  const have = (e.rsvp || []).length;
+  const have = rsvpCount(e);
   const target = Number(e.target) || 0;
   if (target <= 0) {
     return `<div class="ev-count">👥 <bdi>${have}</bdi> מצטרפים</div>`;
@@ -2105,7 +2118,12 @@ function renderEventsPanel(preField) {
         .order('date_ts', { ascending: true })
         .then(({ data, error }) => {
           if (error) { localFallback(); return; }
-          const evs = (data || []).map(r => ({ id: r.id, cloudId: r.id, title: r.title, fieldName: r.field_name, sport: r.sport, dateTs: r.date_ts, creator: r.creator, rsvp: r.rsvp || [], lat: r.lat, lon: r.lon, ts: r.ts }));
+          // target must be carried across, or every cloud event loads
+          // targetless and the whole headcount feature silently dies on the
+          // one path that matters — the shared one. rsvp is forced to an array
+          // so a malformed row cannot throw inside the card map and blank the
+          // entire list.
+          const evs = (data || []).map(r => ({ id: r.id, cloudId: r.id, title: r.title, fieldName: r.field_name, sport: r.sport, dateTs: r.date_ts, target: r.target, creator: r.creator, rsvp: Array.isArray(r.rsvp) ? r.rsvp : [], lat: r.lat, lon: r.lon, ts: r.ts }));
           renderEventsFromList(evs, body);
         }, localFallback);
     } else {
@@ -2186,13 +2204,18 @@ function createEvent() {
     // one-line migration (ALTER TABLE arena_events ADD COLUMN target int) runs.
     const insert = (withTarget) =>
       sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row);
-    insert(ev.target > 0).then(({ error }) => {
-      if (error && ev.target > 0 && /target|column/i.test(error.message || '')) {
-        insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
-      } else if (error) {
-        console.warn(error);
-      }
-    });
+    // Retry ONLY on an error that actually names our column — a broad
+    // /column/ would swallow unrelated failures and hide them behind a second
+    // insert. PostgREST's missing-column error reads "Could not find the
+    // 'target' column … in the schema cache", so it names target.
+    insert(ev.target > 0)
+      .then(({ error }) => {
+        if (error && ev.target > 0 && /target/i.test(error.message || '')) {
+          return insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
+        }
+        if (error) console.warn(error);
+      })
+      .catch((err) => console.warn('event insert failed', err));
   }
   // שתף קישור
   const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}מצטרפים דרך Arena!`;
@@ -2276,7 +2299,7 @@ function shareEvent(i) {
 function gapLine(ev) {
   const target = Number(ev.target) || 0;
   if (target <= 0) return '';
-  const missing = Math.max(0, target - (ev.rsvp || []).length);
+  const missing = Math.max(0, target - rsvpCount(ev));
   return missing > 0 ? `🔥 חסרים ${missing} שחקנים!\n` : '';
 }
 
