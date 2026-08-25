@@ -475,6 +475,7 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .ev-rsvp{flex:1;padding:9px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
 .ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
 .ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ev-cal{padding:9px 11px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;font-size:15px;line-height:1;cursor:pointer;min-width:44px}
 .ev-count{font-size:11px;color:var(--muted);margin-top:6px}
 .ev-head-wrap{margin-top:8px}
 .ev-head-line{font-size:12px;font-weight:800;color:var(--text);margin-bottom:5px;font-variant-numeric:tabular-nums}
@@ -2054,6 +2055,7 @@ function renderEventsFromList(evs, body) {
       <div class="ev-actions">
         <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
         <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
+        <button class="ev-cal" onclick="addToCalendar(${i})" aria-label="הוסף ליומן" title="הוסף ליומן">📅</button>
       </div>
       ${headcountBlock(e)}
     </div>`;
@@ -2276,6 +2278,94 @@ function gapLine(ev) {
   if (target <= 0) return '';
   const missing = Math.max(0, target - (ev.rsvp || []).length);
   return missing > 0 ? `🔥 חסרים ${missing} שחקנים!\n` : '';
+}
+
+/* ─── ADD TO CALENDAR ───────────────────────────────────────────────────────
+ * Committing to a game and remembering to leave the house are days apart. A
+ * calendar entry closes that gap with the device's own reminder — no backend,
+ * no permission prompt, works offline. One .ics the phone knows how to open.
+ */
+
+/** A Date → the ICS UTC stamp, YYYYMMDDTHHMMSSZ. */
+function icsStamp(ms) {
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, '0');
+  return (
+    d.getUTCFullYear() +
+    p(d.getUTCMonth() + 1) +
+    p(d.getUTCDate()) +
+    'T' +
+    p(d.getUTCHours()) +
+    p(d.getUTCMinutes()) +
+    p(d.getUTCSeconds()) +
+    'Z'
+  );
+}
+
+/** ICS escaping: backslash, comma, semicolon, and newline are all special. */
+function icsEsc(s) {
+  return String(s ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
+
+/** A default pickup game runs an hour and a half if nobody says otherwise. */
+const GAME_DEFAULT_MINUTES = 90;
+
+function icsForEvent(ev) {
+  const start = ev.dateTs;
+  const end = start + GAME_DEFAULT_MINUTES * 60 * 1000;
+  const nav = ev.lat ? `https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes` : '';
+  const desc = [ev.fieldName ? `🏟️ ${ev.fieldName}` : '', nav].filter(Boolean).join('\\n');
+  // CRLF between folded lines, per RFC 5545 — some calendar apps reject LF.
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Arena//Pickup Games//HE',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:arena-${ev.id || start}@arena`,
+    `DTSTAMP:${icsStamp(Date.now())}`,
+    `DTSTART:${icsStamp(start)}`,
+    `DTEND:${icsStamp(end)}`,
+    `SUMMARY:${icsEsc(ev.title || 'משחק')}`,
+    ev.fieldName ? `LOCATION:${icsEsc(ev.fieldName)}` : '',
+    desc ? `DESCRIPTION:${desc}` : '',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT2H',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${icsEsc(ev.title || 'משחק')}`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+    .filter(Boolean)
+    .join('\r\n');
+}
+
+function addToCalendar(i) {
+  const ev = lastRenderedEvents[i];
+  if (!ev || !ev.dateTs) return;
+  track('add_to_calendar');
+  try {
+    const blob = new Blob([icsForEvent(ev)], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // A filename with .ics is what makes Android/iOS offer the calendar, not a
+    // download-to-Files. Kept ASCII so no device mangles the name.
+    a.download = 'arena-game.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Revoke on the next tick, after the click has been handed to the OS.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    console.warn('calendar export failed', e);
+    setStatus('⚠️ לא הצלחתי לפתוח את היומן', true);
+  }
 }
 
 // ─── HEATMAP ────────────────────────────────────────────
