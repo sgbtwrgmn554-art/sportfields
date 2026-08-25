@@ -476,6 +476,8 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
 .ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ev-cal{padding:9px 11px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;font-size:15px;line-height:1;cursor:pointer;min-width:44px}
+.ev-card.past{opacity:.72}
+.ev-card.past .ev-rsvp{background:transparent;border:1.5px solid var(--blue);color:var(--blue)}
 .ev-count{font-size:11px;color:var(--muted);margin-top:6px}
 .ev-head-wrap{margin-top:8px}
 .ev-head-line{font-size:12px;font-weight:800;color:var(--text);margin-bottom:5px;font-variant-numeric:tabular-nums}
@@ -2037,6 +2039,74 @@ function switchEvTab(btn, tab) {
 function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
 function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
 
+/**
+ * Write an event to Supabase, defensively.
+ *
+ * Extracted so createEvent and repeatGame share ONE copy — two would drift the
+ * moment either changed, which is exactly how the headcount target got dropped
+ * on one path and not the other.
+ *
+ * `target` rides along only if the column exists. Postgres rejects the entire
+ * insert on an unknown column, so sending it blindly would break event
+ * creation the day the DB returns without the migration. It tries with target
+ * and, on exactly that error (PostgREST names the column: "Could not find the
+ * 'target' column"), retries without. The number stays in localStorage either
+ * way, so it is never lost — just not shared until
+ * `ALTER TABLE arena_events ADD COLUMN target int` runs.
+ */
+function syncEventToCloud(ev, field) {
+  if (!fsEnabled()) return;
+  const fieldId = String(field?.id || (field ? `${field.lat}_${field.lon}` : 'global'));
+  const row = {
+    field_id: fieldId, title: ev.title, field_name: ev.fieldName, sport: ev.sport,
+    date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp,
+    lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts,
+  };
+  const insert = (withTarget) =>
+    sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row);
+  insert(ev.target > 0)
+    .then(({ error }) => {
+      if (error && ev.target > 0 && /target/i.test(error.message || '')) {
+        return insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
+      }
+      if (error) console.warn(error);
+    })
+    .catch((err) => console.warn('event insert failed', err));
+}
+
+/**
+ * Same game, next week. The silent week after a good pickup game is where a
+ * regular habit either forms or dies; this makes re-forming it one tap.
+ *
+ * The roster does NOT carry over — everyone is re-invited, nobody arrives
+ * pre-joined to a game they never agreed to (the same rule the invite link
+ * keeps). Only the person tapping repeat is in, as the new host.
+ */
+function repeatGame(i) {
+  const src = lastRenderedEvents[i];
+  if (!src || !src.dateTs) return;
+  track('repeat_game');
+  const next = {
+    id: Date.now(),
+    title: src.title,
+    fieldName: src.fieldName,
+    sport: src.sport,
+    dateTs: src.dateTs + 7 * 24 * 60 * 60 * 1000,
+    target: Number(src.target) || 0,
+    lat: src.lat ?? null,
+    lon: src.lon ?? null,
+    creator: currentUser?.name || 'אנונימי',
+    rsvp: [currentUser?.email || 'guest'],
+    ts: Date.now(),
+  };
+  const all = getEvents(); all.unshift(next); saveEvents(all);
+  syncEventToCloud(next, src.lat ? { lat: src.lat, lon: src.lon } : null);
+  curEvTab = 'list';
+  renderEventsPanel();
+  const when = new Date(next.dateTs).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'short' });
+  setStatus(`🔁 נקבע שוב ל${when} — הזמינו את החבר׳ה!`, true);
+}
+
 /* ─── DEEP-LINKED INVITE ─────────────────────────────────────────────────────
  * A WhatsApp invite used to die outside Arena: a friend read the text and had
  * nowhere to tap. The link now CARRIES the game — title, court, time, target —
@@ -2112,15 +2182,21 @@ function renderEventsFromList(evs, body) {
     const joined = (e.rsvp||[]).includes(currentUser?.email||'guest');
     const d = new Date(e.dateTs);
     const dateStr = d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="ev-card">
+    // A game whose time has passed cannot be joined again, but it can be run
+    // again — so its actions become a single "same time next week" instead of
+    // a dead join button.
+    const past = e.dateTs < Date.now();
+    const actions = past
+      ? `<button class="ev-rsvp" onclick="repeatGame(${i})">🔁 שוב בשבוע הבא</button>
+        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>`
+      : `<button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
+        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
+        <button class="ev-cal" onclick="addToCalendar(${i})" aria-label="הוסף ליומן" title="הוסף ליומן">📅</button>`;
+    return `<div class="ev-card${past?' past':''}">
       <div class="ev-title">${esc(e.title)}</div>
       <div class="ev-field">🏟️ ${esc(e.fieldName)}</div>
       <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
-      <div class="ev-actions">
-        <button class="ev-rsvp${joined?' joined':''}" onclick="rsvpEvent(${i})">${joined?'✅ אני בפנים':'הצטרף!'}</button>
-        <button class="ev-share" onclick="shareEvent(${i})">📤 שתף</button>
-        <button class="ev-cal" onclick="addToCalendar(${i})" aria-label="הוסף ליומן" title="הוסף ליומן">📅</button>
-      </div>
+      <div class="ev-actions">${actions}</div>
       ${headcountBlock(e)}
     </div>`;
   }).join('');
@@ -2251,36 +2327,7 @@ function createEvent() {
   // קבע תזכורת אם נבחרה
   if (reminderMin > 0) scheduleEventReminder(ev);
   const evs = getEvents(); evs.unshift(ev); saveEvents(evs);
-  if (fsEnabled()) {
-    const fieldId = String(selected?.id || (selected ? `${selected.lat}_${selected.lon}` : 'global'));
-    // The base row, with only columns known to exist today.
-    const row = {
-      field_id: fieldId, title: ev.title, field_name: ev.fieldName, sport: ev.sport,
-      date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp,
-      lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts,
-    };
-    // `target` is the needed headcount. It rides along ONLY if the column
-    // exists — Postgres rejects the whole insert on an unknown column, so
-    // sending it blindly would break event creation the day the DB comes back
-    // without the migration. So: try with target, and if that specific error
-    // comes back, retry without it. The target stays in localStorage either
-    // way, so the number is never lost — it just is not shared until the
-    // one-line migration (ALTER TABLE arena_events ADD COLUMN target int) runs.
-    const insert = (withTarget) =>
-      sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row);
-    // Retry ONLY on an error that actually names our column — a broad
-    // /column/ would swallow unrelated failures and hide them behind a second
-    // insert. PostgREST's missing-column error reads "Could not find the
-    // 'target' column … in the schema cache", so it names target.
-    insert(ev.target > 0)
-      .then(({ error }) => {
-        if (error && ev.target > 0 && /target/i.test(error.message || '')) {
-          return insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
-        }
-        if (error) console.warn(error);
-      })
-      .catch((err) => console.warn('event insert failed', err));
-  }
+  syncEventToCloud(ev, selected);
   // שתף קישור
   const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}\n👉 הצטרפו בלחיצה: ${gameDeepLink(ev)}`;
   const switchToList = () => {
