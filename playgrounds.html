@@ -2141,12 +2141,28 @@ function syncEventToCloud(ev, field) {
     date_ts: ev.dateTs, creator: ev.creator, rsvp: ev.rsvp,
     lat: ev.lat ?? null, lon: ev.lon ?? null, ts: ev.ts,
   };
+  // .select() so the inserted row comes back with its id, which is stored on
+  // the local event as cloudId. Without it, a later release or RSVP on a
+  // freshly created event had no row to update and stayed local-only.
   const insert = (withTarget) =>
-    sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row);
+    sb.from('arena_events').insert(withTarget ? { ...row, target: ev.target || null } : row).select('id');
+  const keep = ({ data, error }) => {
+    if (!error && data && data[0]) {
+      ev.cloudId = data[0].id;
+      // Persist it — the event was saved to localStorage before this async
+      // insert resolved, so the stored copy needs the id written back or a
+      // reload would lose it and release/RSVP would fall back to local-only.
+      const all = getEvents();
+      const stored = all.find((e) => e.id === ev.id);
+      if (stored) { stored.cloudId = ev.cloudId; saveEvents(all); }
+    }
+    return error;
+  };
   insert(ev.target > 0)
-    .then(({ error }) => {
+    .then((r1) => {
+      const error = keep(r1);
       if (error && ev.target > 0 && /target/i.test(error.message || '')) {
-        return insert(false).then(({ error: e2 }) => { if (e2) console.warn(e2); });
+        return insert(false).then((r2) => { const e2 = keep(r2); if (e2) console.warn(e2); });
       }
       if (error) console.warn(error);
     })
@@ -2356,31 +2372,37 @@ function renderEventsFromList(evs, body) {
  */
 const _gameWeatherCache = {};
 
-/** Weather at a game's hour, or null. Cached per rounded location and day. */
+/** Weather at a game's hour, or null. */
 async function weatherForGame(ev) {
   if (ev.lat == null || ev.lon == null || !ev.dateTs) return null;
-  const day = new Date(ev.dateTs);
-  const dayKey = day.toISOString().slice(0, 10);
   // open-meteo's hourly forecast reaches ~16 days; past that there is nothing
-  // to fetch. Also skip anything already in the past.
+  // to fetch, and a past game needs none.
   const ahead = ev.dateTs - Date.now();
   if (ahead < 0 || ahead > 15 * 24 * 60 * 60 * 1000) return null;
+  // Keyed by COURT, not court+day: one response already carries all 16 days, so
+  // every game at a court shares a single call. And the cache holds the PROMISE,
+  // not just the settled value, so ten games at one court that all resolve
+  // before the fetch returns queue behind one request instead of firing ten.
   const latR = ev.lat.toFixed(2), lonR = ev.lon.toFixed(2);
-  const key = `${latR}_${lonR}_${dayKey}`;
-  if (_gameWeatherCache[key]) return pickHour(_gameWeatherCache[key], ev.dateTs);
-  try {
+  const key = `${latR}_${lonR}`;
+  if (!_gameWeatherCache[key]) {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latR}&longitude=${lonR}` +
       `&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode` +
       `&wind_speed_unit=kmh&forecast_days=16&timezone=auto`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.hourly || !Array.isArray(data.hourly.time)) return null;
-    _gameWeatherCache[key] = data.hourly;
-    return pickHour(data.hourly, ev.dateTs);
-  } catch (e) {
-    return null;
+    _gameWeatherCache[key] = fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const hr = data && data.hourly;
+        // Every array the verdict reads must be present, or a later cache hit
+        // would throw outside this promise's control. A malformed response is
+        // cached as null so it is not retried in a tight loop.
+        if (!hr || !Array.isArray(hr.time) || !Array.isArray(hr.weathercode)) return null;
+        return hr;
+      })
+      .catch(() => null);
   }
+  const hourly = await _gameWeatherCache[key];
+  return hourly ? pickHour(hourly, ev.dateTs) : null;
 }
 
 /** The forecast row closest to the game's hour, turned into a verdict. */
@@ -2391,7 +2413,9 @@ function pickHour(hourly, ts) {
     if (gap < bestGap) { bestGap = gap; best = i; }
   }
   if (best < 0 || bestGap > 90 * 60 * 1000) return null; // no hour within 90 min
-  const code = hourly.weathercode[best];
+  // Optional chaining on every array but time/weathercode (validated at cache
+  // time): a partial forecast degrades to zero rather than throwing.
+  const code = hourly.weathercode?.[best] ?? 0;
   const rainProb = hourly.precipitation_probability?.[best] ?? 0;
   const wind = Math.round(hourly.windspeed_10m?.[best] ?? 0);
   const temp = Math.round(hourly.temperature_2m?.[best] ?? 0);
@@ -2406,14 +2430,16 @@ function pickHour(hourly, ts) {
 function annotateWeather(events) {
   events.forEach((ev) => {
     if (ev.lat == null || ev.lon == null) return;
-    weatherForGame(ev).then((w) => {
-      if (!w || !w.bad) return; // silent unless there is something to warn about
-      const el = document.getElementById('evw-' + ev.id);
-      if (!el) return; // card gone or re-rendered
-      const why = w.stormy ? '⛈️ סערה צפויה' : w.rainProb >= 60 ? `☔ ${w.rainProb}% גשם` : `💨 רוח ${w.wind} קמ״ש`;
-      el.className = 'ev-weather bad';
-      el.textContent = `${why} בזמן המשחק · שווה לשקול מועד אחר`;
-    });
+    weatherForGame(ev)
+      .then((w) => {
+        if (!w || !w.bad) return; // silent unless there is something to warn about
+        const el = document.getElementById('evw-' + ev.id);
+        if (!el) return; // card gone or re-rendered
+        const why = w.stormy ? '⛈️ סערה צפויה' : w.rainProb >= 60 ? `☔ ${w.rainProb}% גשם` : `💨 רוח ${w.wind} קמ״ש`;
+        el.className = 'ev-weather bad';
+        el.textContent = `${why} בזמן המשחק · שווה לשקול מועד אחר`;
+      })
+      .catch(() => {}); // a forecast that fails just stays silent
   });
 }
 
@@ -2634,8 +2660,8 @@ function checkReconfirm() {
   bar.innerHTML =
     `<div class="rc-txt">עוד באים ל${esc(ev.title)}? <b>${t} · ${esc(ev.fieldName)}</b></div>` +
     `<div class="rc-btns">` +
-    `<button class="rc-yes" onclick="reconfirmAnswer(${ev.id}, true)">כן, באים 💪</button>` +
-    `<button class="rc-no" onclick="reconfirmAnswer(${ev.id}, false)">לא אצליח</button>` +
+    `<button class="rc-yes" onclick="reconfirmAnswer('${String(ev.id).replace(/'/g,'')}', true)">כן, באים 💪</button>` +
+    `<button class="rc-no" onclick="reconfirmAnswer('${String(ev.id).replace(/'/g,'')}', false)">לא אצליח</button>` +
     `</div>`;
   bar.classList.add('on');
 }
@@ -2646,8 +2672,11 @@ function reconfirmAnswer(id, coming) {
   if (bar) bar.classList.remove('on');
   if (coming) { setStatus('✅ נהדר, נתראה במגרש!', true); return; }
   // Release: leave the roster so the seat is visibly open again.
+  // Loose compare — the id arrives as a string from the onclick, while a
+  // stored id is a number; a strict === would never match and the seat would
+  // never free.
   const all = getEvents();
-  const ev = all.find((e) => e.id === id);
+  const ev = all.find((e) => String(e.id) === String(id));
   if (ev && Array.isArray(ev.rsvp)) {
     const me = currentUser?.email || 'guest';
     ev.rsvp = ev.rsvp.filter((u) => u !== me);
