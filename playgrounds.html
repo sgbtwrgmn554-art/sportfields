@@ -5062,7 +5062,7 @@ async function fetchSuggestions(q) {
     const list = document.getElementById('autocomplete-list');
     if (!acResults.length) { closeAutocomplete(); return; }
     list.innerHTML = acResults.map((r, i) => {
-      const label = r.display_name.split(',').slice(0,3).join(', ');
+      const label = esc(r.display_name.split(',').slice(0,3).join(', '));
       return `<div class="ac-item" onclick="selectSuggestion(${i})">📍 ${label}</div>`;
     }).join('');
     list.classList.add('open');
@@ -5481,7 +5481,7 @@ function watchLiveUsers() {
       } else {
         liveMarkers[id] = L.marker([u.lat, u.lon], { icon })
           .addTo(map)
-          .bindTooltip(u.name, { permanent: false, direction: 'top' });
+          .bindTooltip(esc(u.name), { permanent: false, direction: 'top' });
       }
     });
 
