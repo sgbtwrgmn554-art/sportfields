@@ -486,6 +486,9 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .rc-btns{display:flex;gap:8px}
 .rc-yes{flex:1;padding:11px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;min-height:44px}
 .rc-no{padding:11px 16px;border-radius:11px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
+.ev-weather:empty{display:none}
+.ev-weather{margin-top:8px;font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px}
+.ev-weather.bad{background:rgba(255,159,10,.13);color:#ff9f0a;border:1px solid rgba(255,159,10,.3)}
 .ev-card.past{opacity:.72}
 .ev-card.past .ev-rsvp{background:transparent;border:1.5px solid var(--blue);color:var(--blue)}
 .ev-count{font-size:11px;color:var(--muted);margin-top:6px}
@@ -2336,8 +2339,82 @@ function renderEventsFromList(evs, body) {
       <div class="ev-meta">📅 ${dateStr} · ${ico(e.sport)} ${he(e.sport)}</div>
       <div class="ev-actions">${actions}</div>
       ${headcountBlock(e)}
+      <div class="ev-weather" id="evw-${e.id}"></div>
     </div>`;
   }).join('');
+  // Weather is fetched after the list paints, so a slow forecast never holds
+  // up the cards; each warning drops into its own slot when it arrives.
+  annotateWeather(evs);
+}
+
+/* ─── GAME-TIME WEATHER GUARD ────────────────────────────────────────────────
+ * A game dies quietly when rain arrives and everyone privately decides not to
+ * come. Knowing the night before turns silent dropouts into one shared
+ * decision: the host sees "70% גשם ב-19:00" on the card and can move it while
+ * there is still time. Only bad weather speaks — a clear evening says nothing,
+ * because a chip on every card is noise.
+ */
+const _gameWeatherCache = {};
+
+/** Weather at a game's hour, or null. Cached per rounded location and day. */
+async function weatherForGame(ev) {
+  if (ev.lat == null || ev.lon == null || !ev.dateTs) return null;
+  const day = new Date(ev.dateTs);
+  const dayKey = day.toISOString().slice(0, 10);
+  // open-meteo's hourly forecast reaches ~16 days; past that there is nothing
+  // to fetch. Also skip anything already in the past.
+  const ahead = ev.dateTs - Date.now();
+  if (ahead < 0 || ahead > 15 * 24 * 60 * 60 * 1000) return null;
+  const latR = ev.lat.toFixed(2), lonR = ev.lon.toFixed(2);
+  const key = `${latR}_${lonR}_${dayKey}`;
+  if (_gameWeatherCache[key]) return pickHour(_gameWeatherCache[key], ev.dateTs);
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latR}&longitude=${lonR}` +
+      `&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode` +
+      `&wind_speed_unit=kmh&forecast_days=16&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.hourly || !Array.isArray(data.hourly.time)) return null;
+    _gameWeatherCache[key] = data.hourly;
+    return pickHour(data.hourly, ev.dateTs);
+  } catch (e) {
+    return null;
+  }
+}
+
+/** The forecast row closest to the game's hour, turned into a verdict. */
+function pickHour(hourly, ts) {
+  let best = -1, bestGap = Infinity;
+  for (let i = 0; i < hourly.time.length; i++) {
+    const gap = Math.abs(new Date(hourly.time[i]).getTime() - ts);
+    if (gap < bestGap) { bestGap = gap; best = i; }
+  }
+  if (best < 0 || bestGap > 90 * 60 * 1000) return null; // no hour within 90 min
+  const code = hourly.weathercode[best];
+  const rainProb = hourly.precipitation_probability?.[best] ?? 0;
+  const wind = Math.round(hourly.windspeed_10m?.[best] ?? 0);
+  const temp = Math.round(hourly.temperature_2m?.[best] ?? 0);
+  // Storm / heavy-rain / snow codes, or a high chance of rain, or a wind that
+  // ruins ball games. Anything else is playable and stays silent.
+  const stormy = [65, 71, 73, 75, 82, 95, 96, 99].includes(code);
+  const bad = stormy || rainProb >= 60 || wind >= 40;
+  return { bad, stormy, rainProb, wind, temp, code };
+}
+
+/** Fill each upcoming game's weather slot, once, when its forecast resolves. */
+function annotateWeather(events) {
+  events.forEach((ev) => {
+    if (ev.lat == null || ev.lon == null) return;
+    weatherForGame(ev).then((w) => {
+      if (!w || !w.bad) return; // silent unless there is something to warn about
+      const el = document.getElementById('evw-' + ev.id);
+      if (!el) return; // card gone or re-rendered
+      const why = w.stormy ? '⛈️ סערה צפויה' : w.rainProb >= 60 ? `☔ ${w.rainProb}% גשם` : `💨 רוח ${w.wind} קמ״ש`;
+      el.className = 'ev-weather bad';
+      el.textContent = `${why} בזמן המשחק · שווה לשקול מועד אחר`;
+    });
+  });
 }
 
 /**
