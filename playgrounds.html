@@ -2037,6 +2037,70 @@ function switchEvTab(btn, tab) {
 function getEvents()     { return JSON.parse(localStorage.getItem('pg_events') || '[]'); }
 function saveEvents(evs) { localStorage.setItem('pg_events', JSON.stringify(evs)); }
 
+/* ─── DEEP-LINKED INVITE ─────────────────────────────────────────────────────
+ * A WhatsApp invite used to die outside Arena: a friend read the text and had
+ * nowhere to tap. The link now CARRIES the game — title, court, time, target —
+ * so it opens the exact game and a one-tap join, and it works even while the
+ * database is paused, because nothing has to be fetched.
+ *
+ * The payload is UTF-8-safe base64url (Hebrew survives btoa only through the
+ * encodeURIComponent dance). Keys are short to keep the URL WhatsApp-friendly.
+ */
+function encodeGame(ev) {
+  const payload = {
+    i: ev.id, t: ev.title, f: ev.fieldName, s: ev.sport,
+    d: ev.dateTs, g: ev.target || 0, la: ev.lat ?? null, lo: ev.lon ?? null,
+  };
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeGame(str) {
+  try {
+    const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(escape(atob(b64)));
+    const p = JSON.parse(json);
+    // A link is attacker-authored, so every field is validated, not trusted.
+    // A bad link returns null and is ignored rather than corrupting the list.
+    if (!p || typeof p.t !== 'string' || !Number.isFinite(Number(p.d))) return null;
+    return {
+      id: Number(p.i) || Date.now(),
+      title: String(p.t).slice(0, 120),
+      fieldName: typeof p.f === 'string' ? p.f.slice(0, 120) : 'מגרש',
+      sport: typeof p.s === 'string' ? p.s.slice(0, 30) : 'multi',
+      dateTs: Number(p.d),
+      target: Number(p.g) || 0,
+      lat: Number.isFinite(Number(p.la)) ? Number(p.la) : null,
+      lon: Number.isFinite(Number(p.lo)) ? Number(p.lo) : null,
+      rsvp: [],
+      fromInvite: true,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+/** The full shareable URL for a game. */
+function gameDeepLink(ev) {
+  return window.location.origin + window.location.pathname + '?g=' + encodeGame(ev);
+}
+
+/**
+ * Someone opened an invite link. Import the game if it is new, then open the
+ * events panel on it so the very next thing they see is one join button.
+ */
+function openSharedGame(g) {
+  const all = getEvents();
+  if (!all.some((e) => e.id === g.id)) {
+    all.unshift(g);
+    saveEvents(all);
+  }
+  track('open_shared_game');
+  openEventsPanel();
+  setStatus('🎯 הוזמנת למשחק — הצטרפו כאן!', true);
+}
+
 let lastRenderedEvents = []; // the exact list shown on screen — rsvp/share act on it by index
 function renderEventsFromList(evs, body) {
   lastRenderedEvents = evs;
@@ -2218,7 +2282,7 @@ function createEvent() {
       .catch((err) => console.warn('event insert failed', err));
   }
   // שתף קישור
-  const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}מצטרפים דרך Arena!`;
+  const shareText = `📅 ${title}\n🏟️ ${fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}\n👉 הצטרפו בלחיצה: ${gameDeepLink(ev)}`;
   const switchToList = () => {
     curEvTab = 'list';
     document.querySelectorAll('.ev-tab').forEach((b,i) => b.classList.toggle('on', i===0));
@@ -2286,7 +2350,7 @@ function rsvpEvent(i) {
 
 function shareEvent(i) {
   const ev = lastRenderedEvents[i]; if (!ev) return;
-  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}${ev.lat?`https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
+  const text = `📅 ${ev.title}\n🏟️ ${ev.fieldName}\n⏰ ${new Date(ev.dateTs).toLocaleString('he-IL')}\n${gapLine(ev)}👉 הצטרפו בלחיצה: ${gameDeepLink(ev)}${ev.lat?`\n🧭 ניווט: https://waze.com/ul?ll=${ev.lat},${ev.lon}&navigate=yes`:''}`;
   if (navigator.share) navigator.share({ title: ev.title, text }).catch(()=>{});
   else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
@@ -5748,6 +5812,17 @@ window.addEventListener('popstate', () => {
     } else if (params.get('premium') === 'cancel') {
       window.history.replaceState({}, '', window.location.pathname);
     }
+  })();
+  // An invite link: ?g=<encoded game>. Decoded, imported, opened — then the
+  // URL is cleaned so a refresh does not re-open it. A malformed link decodes
+  // to null and is silently ignored.
+  (function handleGameInvite() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('g');
+    if (!raw) return;
+    const g = decodeGame(raw);
+    window.history.replaceState({}, '', window.location.pathname);
+    if (g) setTimeout(() => openSharedGame(g), 600);
   })();
   // Check lottery after a short delay (after auth loads)
   setTimeout(checkAndShowLottery, 2500);
