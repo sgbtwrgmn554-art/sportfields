@@ -2099,25 +2099,50 @@ function syncEventToCloud(ev, field) {
  * pre-joined to a game they never agreed to (the same rule the invite link
  * keeps). Only the person tapping repeat is in, as the new host.
  */
+/**
+ * The next FUTURE occurrence of a game's day-and-time.
+ *
+ * Two things a bare "+7 days in milliseconds" gets wrong, both caught in
+ * review:
+ *  - DST. Adding 168 hours shifts the wall-clock time across a daylight
+ *    change — an 18:00 game becomes 17:00 or 19:00. Stepping by calendar days
+ *    with setDate keeps the local time fixed, which is what "same time next
+ *    week" means to a person.
+ *  - A stale source. Repeating a game from ten days ago and adding one week
+ *    lands three days ago — still in the past. So it steps forward a week at a
+ *    time until it clears now.
+ */
+function nextWeeklyDate(fromTs) {
+  const d = new Date(fromTs);
+  const now = Date.now();
+  do {
+    d.setDate(d.getDate() + 7);
+  } while (d.getTime() <= now);
+  return d.getTime();
+}
+
 function repeatGame(i) {
   const src = lastRenderedEvents[i];
   if (!src || !src.dateTs) return;
   track('repeat_game');
+  const hasGeo = src.lat != null && src.lon != null;
   const next = {
     id: Date.now(),
     title: src.title,
     fieldName: src.fieldName,
     sport: src.sport,
-    dateTs: src.dateTs + 7 * 24 * 60 * 60 * 1000,
+    dateTs: nextWeeklyDate(src.dateTs),
     target: Number(src.target) || 0,
-    lat: src.lat ?? null,
-    lon: src.lon ?? null,
+    // != null, not truthiness: the equator's lat 0 is a real coordinate, and
+    // treating it as missing would drop the location to a 'global' field.
+    lat: hasGeo ? src.lat : null,
+    lon: hasGeo ? src.lon : null,
     creator: currentUser?.name || 'אנונימי',
     rsvp: [currentUser?.email || 'guest'],
     ts: Date.now(),
   };
   const all = getEvents(); all.unshift(next); saveEvents(all);
-  syncEventToCloud(next, src.lat ? { lat: src.lat, lon: src.lon } : null);
+  syncEventToCloud(next, hasGeo ? { lat: src.lat, lon: src.lon } : null);
   curEvTab = 'list';
   renderEventsPanel();
   const when = new Date(next.dateTs).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'short' });
