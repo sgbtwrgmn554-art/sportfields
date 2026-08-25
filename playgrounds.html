@@ -478,6 +478,14 @@ body.a11y-big-btns .fn        { font-size:18px!important }
 .ev-rsvp.joined{background:rgba(48,209,88,.2);border:1.5px solid var(--accent);color:var(--accent)}
 .ev-share{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ev-cal{padding:9px 11px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;font-size:15px;line-height:1;cursor:pointer;min-width:44px}
+#reconfirm-bar{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:650;background:var(--card);border:1px solid var(--blue);border-radius:16px;padding:13px 15px;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(140%);transition:transform .3s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;gap:10px}
+#reconfirm-bar.on{transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){#reconfirm-bar{transition:none}}
+.rc-txt{font-size:14px;color:var(--text)}
+.rc-txt b{color:var(--blue);font-weight:800}
+.rc-btns{display:flex;gap:8px}
+.rc-yes{flex:1;padding:11px;border-radius:11px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;min-height:44px}
+.rc-no{padding:11px 16px;border-radius:11px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
 .ev-card.past{opacity:.72}
 .ev-card.past .ev-rsvp{background:transparent;border:1.5px solid var(--blue);color:var(--blue)}
 .ev-count{font-size:11px;color:var(--muted);margin-top:6px}
@@ -1982,16 +1990,23 @@ function closeChatPanel() {
 }
 
 let chatUnsub = null;
+// Bumped on every renderChat. A SELECT fired for one room can resolve after the
+// user has switched to another; without this its rows would paint into the
+// shared message list under the new room's header. Each load captures the
+// generation it belongs to and paints only if it is still current.
+let chatGen = 0;
 function renderChat() {
   const myId = currentUser?.email || 'guest';
   const el   = document.getElementById('chat-msgs');
   if (!el) return;
 
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  const gen = ++chatGen;
 
   if (fsEnabled() && chatField) {
     const fieldId = String(chatField.id || `${chatField.lat}_${chatField.lon}`);
     const paint = (rows) => {
+      if (gen !== chatGen) return; // a newer room took over while this was in flight
       if (!rows.length) {
         el.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ico">💬</div>אין הודעות עדיין<br><small>היה הראשון לכתוב!</small></div>';
         return;
@@ -2488,6 +2503,84 @@ function scheduleEventReminder(ev) {
   const reminders = JSON.parse(localStorage.getItem('pg_reminders') || '[]');
   reminders.push({ evId: ev.id, fireTs: ev.dateTs - ev.reminderMin * 60 * 1000, title: ev.title, fieldName: ev.fieldName, dateTs: ev.dateTs });
   localStorage.setItem('pg_reminders', JSON.stringify(reminders.filter(r => r.fireTs > Date.now())));
+}
+
+/* ─── RECONFIRM OR RELEASE ───────────────────────────────────────────────────
+ * The hours before a game are where a stale "כן" quietly becomes a no-show —
+ * the person half-forgot, never said otherwise, and the other five are left a
+ * player short with no warning. On open, a game you joined that starts soon
+ * asks once: still coming, or free the spot so someone can take it. Either
+ * answer is better than silence, which is the only thing that actually breaks
+ * a game.
+ */
+
+/** How close to game time the question becomes worth asking. */
+const RECONFIRM_WINDOW_MS = 5 * 60 * 60 * 1000;
+
+function reconfirmedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('pg_reconfirmed') || '[]')); }
+  catch (e) { return new Set(); }
+}
+function markReconfirmed(id) {
+  const s = reconfirmedSet(); s.add(id);
+  // Keep it from growing without bound — only recent ids matter.
+  try { localStorage.setItem('pg_reconfirmed', JSON.stringify([...s].slice(-100))); } catch (e) {}
+}
+
+/** The soonest joined game inside the window that has not been answered yet. */
+function pendingReconfirm() {
+  const me = currentUser?.email || 'guest';
+  const now = Date.now();
+  const answered = reconfirmedSet();
+  return getEvents()
+    .filter((e) =>
+      e.dateTs > now &&
+      e.dateTs - now <= RECONFIRM_WINDOW_MS &&
+      Array.isArray(e.rsvp) && e.rsvp.includes(me) &&
+      !answered.has(String(e.id))
+    )
+    .sort((a, b) => a.dateTs - b.dateTs)[0] || null;
+}
+
+function checkReconfirm() {
+  const ev = pendingReconfirm();
+  if (!ev) return;
+  let bar = document.getElementById('reconfirm-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'reconfirm-bar';
+    document.body.appendChild(bar);
+  }
+  const t = new Date(ev.dateTs).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  // esc() on every game-supplied string — this is the same untrusted content
+  // as anywhere else it reaches innerHTML.
+  bar.innerHTML =
+    `<div class="rc-txt">עוד באים ל${esc(ev.title)}? <b>${t} · ${esc(ev.fieldName)}</b></div>` +
+    `<div class="rc-btns">` +
+    `<button class="rc-yes" onclick="reconfirmAnswer(${ev.id}, true)">כן, באים 💪</button>` +
+    `<button class="rc-no" onclick="reconfirmAnswer(${ev.id}, false)">לא אצליח</button>` +
+    `</div>`;
+  bar.classList.add('on');
+}
+
+function reconfirmAnswer(id, coming) {
+  markReconfirmed(String(id));
+  const bar = document.getElementById('reconfirm-bar');
+  if (bar) bar.classList.remove('on');
+  if (coming) { setStatus('✅ נהדר, נתראה במגרש!', true); return; }
+  // Release: leave the roster so the seat is visibly open again.
+  const all = getEvents();
+  const ev = all.find((e) => e.id === id);
+  if (ev && Array.isArray(ev.rsvp)) {
+    const me = currentUser?.email || 'guest';
+    ev.rsvp = ev.rsvp.filter((u) => u !== me);
+    saveEvents(all);
+    if (fsEnabled() && ev.cloudId) {
+      sb.from('arena_events').update({ rsvp: ev.rsvp }).eq('id', ev.cloudId)
+        .then(({ error }) => { if (error) console.warn(error); });
+    }
+  }
+  setStatus('שוחרר המקום — תודה שעדכנת 🙏', true);
 }
 
 function restoreReminders() {
@@ -5967,6 +6060,9 @@ window.addEventListener('popstate', () => {
   applyLang(curLang);
   applyA11yOnLoad();
   restoreReminders();
+  // A joined game starting soon gets one "still coming?" — after auth has
+  // settled, so currentUser is known and the rsvp check is meaningful.
+  setTimeout(checkReconfirm, 1500);
   applyMapTheme(); // auto night-mode on boot
   setInterval(applyMapTheme, 30 * 60 * 1000); // re-check every 30min so 20:00 switch actually happens
   // Handle Stripe redirect return
