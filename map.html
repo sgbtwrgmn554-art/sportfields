@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ארנה">
+<title>ארנה 🏟️</title>
+<link rel="stylesheet" href="leaflet.css"/>
+<script src="leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#000;--bg2:#0c0c0e;--card:#1c1c1e;--card2:#2c2c2e;
+  --border:#38383a;--border2:#48484a;
+  --green:#30d158;--green-s:rgba(48,209,88,.12);
+  --blue:#0a84ff;--blue-s:rgba(10,132,255,.12);
+  --red:#ff453a;--red-s:rgba(255,69,58,.12);
+  --yellow:#ffd60a;--orange:#ff9f0a;--purple:#bf5af2;
+  --text:#fff;--text2:rgba(235,235,245,.8);--muted:rgba(235,235,245,.38);
+  --r:16px;
+}
+html,body{height:100%;font-family:-apple-system,'Assistant',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+
+/* ── HEADER ── */
+.hdr{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:.5px solid var(--border);
+  padding:0 16px 0;
+  padding-top:max(14px,env(safe-area-inset-top));
+}
+.hdr-top{display:flex;align-items:center;gap:10px;padding-bottom:12px}
+.hdr-logo{font-size:20px;font-weight:900;color:var(--green);letter-spacing:-.5px}
+.hdr-count{font-size:11px;color:var(--muted);font-weight:700;background:var(--card2);padding:3px 8px;border-radius:10px;border:.5px solid var(--border)}
+.hdr-actions{margin-right:auto;display:flex;gap:8px}
+.hdr-btn{background:var(--card2);border:.5px solid var(--border);border-radius:20px;color:var(--text2);font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:.15s}
+.hdr-btn:active{transform:scale(.94);opacity:.8}
+.hdr-btn.on{background:var(--green);border-color:var(--green);color:#000}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:.5px solid var(--border)}
+.tab{flex:1;text-align:center;padding:9px 0;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;position:relative;transition:.2s}
+.tab.active{color:var(--green)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--green);border-radius:2px}
+
+/* ── FILTER PILLS ── */
+.pills{
+  position:fixed;z-index:500;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  padding:10px 16px;
+  transition:top .3s;
+}
+.pills::-webkit-scrollbar{display:none}
+.pill{
+  flex-shrink:0;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1.5px solid var(--border);border-radius:20px;
+  color:var(--text2);font-size:13px;font-weight:700;padding:7px 13px;
+  cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;
+  transition:.15s;white-space:nowrap;
+}
+.pill.on{border-color:var(--green);color:var(--green);background:var(--green-s)}
+.pill:active{transform:scale(.94)}
+
+/* ── MAP ── */
+#map-view{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;display:block}
+#map{width:100%;height:100%}
+
+/* ── LIST VIEW ── */
+#list-view{
+  position:fixed;left:0;right:0;bottom:0;overflow-y:auto;z-index:1;
+  display:none;background:var(--bg);
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+}
+.list-item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-bottom:.5px solid var(--border);
+  cursor:pointer;transition:.15s;
+  animation:fadeIn .3s ease both;
+}
+.list-item:active{background:var(--card)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.li-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.li-info{flex:1;min-width:0}
+.li-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-sub{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;display:flex;align-items:center;gap:6px}
+.li-badge{font-size:11px;padding:2px 7px;border-radius:8px;font-weight:700}
+.li-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.li-stars{font-size:12px;color:var(--yellow)}
+.li-fav{font-size:18px;cursor:pointer}
+
+/* ── SKELETON ── */
+.skeleton{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sk-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid var(--border)}
+.sk-icon{width:46px;height:46px;border-radius:14px;background:var(--card2)}
+.sk-line{background:var(--card2);border-radius:6px}
+
+/* ── BOTTOM SHEET ── */
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:800;
+  background:var(--card);border-radius:20px 20px 0 0;
+  border-top:.5px solid var(--border2);
+  padding-bottom:max(28px,env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform .42s cubic-bezier(.34,1.2,.64,1);
+  max-height:88vh;overflow-y:auto;
+}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:14px auto 0}
+.sheet-close{position:absolute;top:14px;left:16px;width:30px;height:30px;border-radius:50%;background:var(--card2);border:none;color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+
+/* ── SHEET CONTENT ── */
+.sh-hero{margin:16px 16px 0;border-radius:16px;overflow:hidden;height:140px;display:flex;align-items:center;justify-content:center;font-size:72px;flex-shrink:0}
+.sh-body{padding:16px}
+.sh-name{font-size:22px;font-weight:900;line-height:1.2;margin-bottom:4px}
+.sh-sport{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:10px;margin-bottom:14px}
+.sh-stars{display:flex;gap:4px;margin-bottom:14px}
+.sh-star{font-size:26px;cursor:pointer;transition:.15s;filter:grayscale(1);opacity:.4}
+.sh-star.on{filter:none;opacity:1;animation:starPop .2s cubic-bezier(.34,1.56,.64,1)}
+@keyframes starPop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.sh-section{margin-bottom:16px}
+.sh-section-title{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+.sh-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border)}
+.sh-row:last-child{border-bottom:none}
+.sh-row-icon{font-size:18px;width:26px;text-align:center;flex-shrink:0}
+.sh-row-val{font-size:14px;color:var(--text2);font-weight:600}
+.sh-row-val a{color:var(--blue);text-decoration:none;font-weight:700}
+
+/* ── PLAYERS ── */
+.players{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.player-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.player-chip{display:flex;align-items:center;gap:7px;background:var(--card2);border:.5px solid var(--border);border-radius:12px;padding:5px 10px 5px 6px;cursor:pointer}
+.player-name{font-size:13px;font-weight:700}
+.player-since{font-size:10px;color:var(--muted);font-weight:600}
+.add-player{background:var(--green-s);border:1.5px dashed var(--green);border-radius:12px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--green);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+
+/* ── NAV BUTTONS ── */
+.nav-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.nav-btn{padding:13px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;border:none;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;text-decoration:none}
+.nav-btn:active{transform:scale(.96);opacity:.85}
+.nav-btn-waze{background:#33ccff;color:#000}
+.nav-btn-gmap{background:#4285f4;color:#fff}
+
+/* ── CHECKIN BTN ── */
+.checkin-btn{
+  width:100%;padding:15px;border-radius:16px;font-size:16px;font-weight:900;
+  background:var(--green);color:#000;border:none;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:.15s;margin-bottom:12px;
+}
+.checkin-btn:active{transform:scale(.97)}
+.checkin-btn.checked{background:var(--card2);color:var(--green);border:.5px solid var(--green)}
+
+/* ── FAV BTN ── */
+.fav-btn{
+  width:100%;padding:13px;border-radius:16px;font-size:14px;font-weight:800;
+  background:var(--card2);color:var(--text2);border:.5px solid var(--border);cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:.15s;
+}
+.fav-btn.on{background:rgba(255,45,85,.12);color:#ff2d55;border-color:#ff2d55}
+.fav-btn:active{transform:scale(.97)}
+
+/* ── PULL TO REFRESH ── */
+.ptr{
+  position:fixed;top:-60px;left:50%;transform:translateX(-50%);z-index:600;
+  width:40px;height:40px;border-radius:50%;background:var(--card2);
+  border:.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:20px;transition:top .3s cubic-bezier(.34,1.2,.64,1);
+}
+.ptr.show{top:calc(max(14px,env(safe-area-inset-top)) + 70px)}
+
+/* ── LOCATE ── */
+.locate-btn{
+  position:fixed;bottom:72px;right:16px;z-index:500;
+  width:50px;height:50px;border-radius:50%;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(16px);
+  border:.5px solid var(--border2);color:var(--blue);
+  font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);transition:.15s;
+}
+.locate-btn:active{transform:scale(.9)}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);
+  background:var(--card2);color:var(--text);border-radius:22px;
+  padding:11px 20px;font-size:13px;font-weight:700;z-index:1200;
+  border:.5px solid var(--border2);box-shadow:0 8px 24px rgba(0,0,0,.5);
+  transition:.35s cubic-bezier(.34,1.2,.64,1);white-space:nowrap;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── COUNTRY SWITCHER ── */
+.country-bar{display:flex;gap:6px;padding:0 0 8px}
+.country-btn{
+  flex:1;padding:7px 0;border-radius:12px;font-size:13px;font-weight:800;
+  border:.5px solid var(--border);background:var(--card2);color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.country-btn.on{background:var(--green-s);border-color:var(--green);color:var(--green)}
+
+/* ── LANG SWITCHER ── */
+.lang-bar{display:flex;gap:6px;padding:0 0 10px}
+.lang-btn{
+  flex:1;padding:6px 0;border-radius:10px;font-size:12px;font-weight:800;
+  border:.5px solid var(--border);background:transparent;color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.lang-btn.on{background:rgba(10,132,255,.15);border-color:var(--blue);color:var(--blue)}
+
+/* ── LOAD AREA BTN ── */
+.load-area-btn{
+  position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:600;
+  background:var(--blue);color:#fff;border:none;border-radius:24px;
+  padding:11px 22px;font-size:14px;font-weight:800;font-family:inherit;
+  cursor:pointer;box-shadow:0 4px 20px rgba(10,132,255,.4);
+  display:none;align-items:center;gap:8px;white-space:nowrap;
+  transition:.2s cubic-bezier(.34,1.2,.64,1);
+}
+.load-area-btn.show{display:flex}
+.load-area-btn:active{transform:translateX(-50%) scale(.95)}
+
+/* ── EMPTY ── */
+.empty{padding:60px 24px;text-align:center}
+.empty-icon{font-size:56px;margin-bottom:12px}
+.empty-title{font-size:18px;font-weight:800;margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--muted);font-weight:600}
+
+/* ── ADS ── */
+
+/* Bottom banner */
+.ad-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:700;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(16px);
+  border-top:.5px solid var(--border);
+  padding:6px 12px max(8px,env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:center;
+  min-height:56px;
+}
+.ad-banner ins{display:block;width:100%;max-width:360px}
+.ad-banner-label{
+  position:absolute;top:4px;left:8px;
+  font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;
+}
+
+/* A – Chip */
+.ad-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;margin:4px 16px 2px;
+  background:var(--card);border:.5px solid var(--border2);border-radius:14px;
+  animation:fadeIn .3s ease both;
+}
+.ad-chip-logo{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ad-chip-body{flex:1;min-width:0}
+.ad-chip-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-chip-desc{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-chip-tag{font-size:9px;font-weight:800;background:rgba(255,255,255,.06);padding:2px 7px;border-radius:6px;color:var(--muted);letter-spacing:.4px;margin-top:4px;display:inline-block}
+.ad-chip-btn{background:var(--card2);border:.5px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--text2);white-space:nowrap;font-family:inherit;cursor:pointer;flex-shrink:0}
+.ad-chip-btn:active{opacity:.7}
+
+/* B – Native Card */
+.ad-native{
+  margin:4px 16px 2px;border-radius:16px;overflow:hidden;
+  border:.5px solid var(--border2);background:var(--card);
+  animation:fadeIn .3s ease both;
+}
+.ad-native-img{height:110px;display:flex;align-items:center;justify-content:center;font-size:58px;position:relative}
+.ad-native-sp{position:absolute;top:8px;right:10px;font-size:9px;font-weight:800;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:6px;letter-spacing:.5px;color:var(--muted)}
+.ad-native-body{padding:12px 14px 14px}
+.ad-native-title{font-size:15px;font-weight:900;margin-bottom:3px}
+.ad-native-sub{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px}
+.ad-native-cta{border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:900;font-family:inherit;cursor:pointer}
+.ad-native-cta:active{opacity:.8}
+
+/* C – Strip */
+.ad-strip{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;margin:4px 16px 2px;
+  border-radius:0 12px 12px 0;
+  animation:fadeIn .3s ease both;
+}
+.ad-strip-icon{font-size:24px;flex-shrink:0}
+.ad-strip-text{flex:1;min-width:0}
+.ad-strip-title{font-size:13px;font-weight:800}
+.ad-strip-desc{font-size:11px;color:var(--muted);font-weight:600}
+.ad-strip-sp{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-top:2px;opacity:.6}
+.ad-strip-btn{font-size:12px;font-weight:800;background:none;border:none;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.ad-strip-btn:active{opacity:.6}
+
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-popup-content-wrapper{background:var(--card)!important;color:var(--text)!important;border:.5px solid var(--border)!important;border-radius:14px!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important}
+.leaflet-popup-tip{background:var(--card)!important}
+.leaflet-popup-content{margin:12px 16px!important;font-family:'Assistant',sans-serif!important;font-size:14px!important;font-weight:700!important}
+.leaflet-control-zoom{border:none!important}
+.leaflet-control-zoom a{background:rgba(0,0,0,.88)!important;backdrop-filter:blur(16px)!important;color:var(--text)!important;border:.5px solid var(--border)!important;width:36px!important;height:36px!important;line-height:36px!important;font-size:18px!important}
+.leaflet-control-zoom-in{border-radius:10px 10px 0 0!important}
+.leaflet-control-zoom-out{border-radius:0 0 10px 10px!important}
+.leaflet-control-attribution{background:rgba(0,0,0,.7)!important;color:var(--muted)!important;font-size:9px!important}
+.leaflet-control-attribution a{color:var(--muted)!important}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr" id="hdr">
+  <div class="hdr-top">
+    <div style="font-size:22px">🏟️</div>
+    <div>
+      <div class="hdr-logo">ארנה</div>
+    </div>
+    <span class="hdr-count" id="hdr-count">טוען...</span>
+    <div class="hdr-actions">
+      <button class="hdr-btn" id="btn-favs" onclick="toggleFavsOnly()">❤️ <span data-t="favs"></span></button>
+      <button class="hdr-btn" onclick="locateMe()">📍</button>
+    </div>
+  </div>
+  <!-- COUNTRY BAR -->
+  <div class="country-bar">
+    <button class="country-btn on" id="cbtn-il" onclick="switchCountry('il')">🇮🇱 <span data-t="israel"></span></button>
+    <button class="country-btn"   id="cbtn-us" onclick="switchCountry('us')">🇺🇸 <span data-t="usa"></span></button>
+  </div>
+  <!-- LANG BAR -->
+  <div class="lang-bar">
+    <button class="lang-btn on" id="lbtn-he" onclick="setLang('he')">🇮🇱 עברית</button>
+    <button class="lang-btn"   id="lbtn-en" onclick="setLang('en')">🇺🇸 English</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tab-map" onclick="switchTab('map')">🗺️ <span data-t="tab_map"></span></div>
+    <div class="tab" id="tab-list" onclick="switchTab('list')">📋 <span data-t="tab_list"></span></div>
+  </div>
+</div>
+
+<!-- FILTER PILLS (rendered dynamically) -->
+<div class="pills" id="pills"></div>
+
+<!-- MAP VIEW -->
+<div id="map-view">
+  <div id="map"></div>
+</div>
+
+<!-- LIST VIEW -->
+<div id="list-view">
+  <div id="list-content"></div>
+</div>
+
+<!-- LOCATE -->
+<button class="locate-btn" id="locate-btn" onclick="locateMe()">📍</button>
+
+<!-- LOAD AREA (USA mode) -->
+<button class="load-area-btn" id="load-area-btn" onclick="loadAreaFields()">🔍 טען מגרשים באזור זה</button>
+
+<!-- PULL-TO-REFRESH -->
+<div class="ptr" id="ptr">🔄</div>
+
+<!-- BOTTOM SHEET -->
+<div class="sheet" id="sheet">
+  <button class="sheet-close" onclick="closeSheet()">✕</button>
+  <div class="sheet-handle"></div>
+  <div id="sheet-inner"></div>
+</div>
+<div id="sheet-overlay" style="position:fixed;inset:0;z-index:799;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.3s" onclick="closeSheet()"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- AD BANNER (bottom) -->
+<div class="ad-banner" id="ad-banner">
+  <span class="ad-banner-label">פרסומת</span>
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+    data-ad-slot="1234567890"
+    data-ad-format="horizontal"
+    data-full-width-responsive="true"></ins>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  TRANSLATIONS
+// ─────────────────────────────────────────────
+const STRINGS = {
+  he:{
+    israel:'ישראל', usa:'ארצות הברית',
+    tab_map:'מפה', tab_list:'רשימה',
+    favs:'מועדפים',
+    loading:'טוען...', select_area:'בחר אזור',
+    load_area:'🔍 טען מגרשים באזור זה',
+    loaded_n:(n)=>`✅ נטענו ${n} מגרשים`,
+    added_n:(a,t)=>`✅ נוספו ${a} מגרשים (סה"כ ${t})`,
+    err_load:'❌ שגיאת טעינה – בדוק אינטרנט',
+    fly_us:'🇺🇸 זום לאזור ולחץ "טען מגרשים"',
+    locating:'📍 מאתר מיקום...',
+    located:'✅ מיקום נמצא!',
+    locate_err:'❌ לא ניתן לאתר מיקום',
+    locate_na:'⚠️ מיקום לא זמין',
+    favs_only:'❤️ מועדפים בלבד', all_fields:'🏟️ כל המגרשים',
+    fav_add:'❤️ נוסף למועדפים', fav_rem:'💔 הוסר ממועדפים',
+    checkin_done:'🎉 צ׳ק-אין!', rating_saved:(n)=>`⭐ דירוג נשמר: ${n}/5`,
+    player_added:(n)=>`👤 ${n} נוסף!`, player_remove:'הסר',
+    sec_rating:'דירוג שלך', sec_details:'פרטים', sec_nav:'ניווט', sec_players:'שחקנים',
+    checkin_btn:'📍 צ׳ק-אין', checkin_done_btn:'✅ צ׳ק-אין בוצע',
+    fav_add_btn:'🤍 הוסף למועדפים', fav_rem_btn:'❤️ הסר ממועדפים',
+    add_player:'+ הוסף שחקן', player_prompt:'שם השחקן:',
+    remove_player_confirm:(n)=>`הסר ${n}?`,
+    waze:'🚗 Waze', gmap:'🗺️ Google Maps',
+    empty_title:'אין מגרשים', empty_sub:'נסה להוריד את הפילטר',
+    public:'ציבורי ✅', private:'פרטי 🔒',
+    lit_yes:'יש תאורה ✅', lit_no:'ללא תאורה',
+    free:'חינם 🆓', paid:'בתשלום',
+    // filter pills
+    all:'הכל', soccer:'כדורגל', basketball:'כדורסל',
+    racket:'מחבט', volleyball:'כדורעף', handball:'כדוריד',
+    fitness_f:'כושר', rugby:'רוגבי', baseball:'בייסבול',
+    cricket:'קריקט', swimming:'שחייה', athletics:'אתלטיקה',
+    golf:'גולף', wheels:'גלגלים', equestrian:'רכיבה',
+    archery:'קשתות', ice_hockey:'הוקי קרח', american_football:'פוטבול',
+    field_hockey:'הוקי שדה', lacrosse:'לקרוס', disc_golf:'פריסבי',
+    boules:'פטנק', multi:'רב תכליתי', other:'אחר',
+    // surfaces
+    surf_grass:'דשא 🌿', surf_turf:'דשא סינטטי', surf_asphalt:'אספלט',
+    surf_concrete:'בטון', surf_sand:'חול 🏖️', surf_clay:'חימר',
+    surf_tartan:'טרטן', surf_rubber:'גומי',
+  },
+  en:{
+    israel:'Israel', usa:'United States',
+    tab_map:'Map', tab_list:'List',
+    favs:'Favorites',
+    loading:'Loading...', select_area:'Select area',
+    load_area:'🔍 Load fields in this area',
+    loaded_n:(n)=>`✅ Loaded ${n} fields`,
+    added_n:(a,t)=>`✅ Added ${a} fields (total ${t})`,
+    err_load:'❌ Load error – check internet',
+    fly_us:'🇺🇸 Zoom to an area and tap "Load fields"',
+    locating:'📍 Finding location...',
+    located:'✅ Location found!',
+    locate_err:'❌ Could not find location',
+    locate_na:'⚠️ Location unavailable',
+    favs_only:'❤️ Favorites only', all_fields:'🏟️ All fields',
+    fav_add:'❤️ Added to favorites', fav_rem:'💔 Removed from favorites',
+    checkin_done:'🎉 Checked in!', rating_saved:(n)=>`⭐ Rating saved: ${n}/5`,
+    player_added:(n)=>`👤 ${n} added!`, player_remove:'Remove',
+    sec_rating:'Your Rating', sec_details:'Details', sec_nav:'Navigation', sec_players:'Players',
+    checkin_btn:'📍 Check In', checkin_done_btn:'✅ Checked In',
+    fav_add_btn:'🤍 Add to Favorites', fav_rem_btn:'❤️ Remove from Favorites',
+    add_player:'+ Add Player', player_prompt:'Player name:',
+    remove_player_confirm:(n)=>`Remove ${n}?`,
+    waze:'🚗 Waze', gmap:'🗺️ Google Maps',
+    empty_title:'No fields found', empty_sub:'Try changing the filter',
+    public:'Public ✅', private:'Private 🔒',
+    lit_yes:'Lights ✅', lit_no:'No lights',
+    free:'Free 🆓', paid:'Paid',
+    // filter pills
+    all:'All', soccer:'Soccer', basketball:'Basketball',
+    racket:'Racket', volleyball:'Volleyball', handball:'Handball',
+    fitness_f:'Fitness', rugby:'Rugby', baseball:'Baseball',
+    cricket:'Cricket', swimming:'Swimming', athletics:'Athletics',
+    golf:'Golf', wheels:'Wheels', equestrian:'Equestrian',
+    archery:'Archery', ice_hockey:'Ice Hockey', american_football:'Football',
+    field_hockey:'Field Hockey', lacrosse:'Lacrosse', disc_golf:'Disc Golf',
+    boules:'Boules', multi:'Multi-sport', other:'Other',
+    // surfaces
+    surf_grass:'Grass 🌿', surf_turf:'Artificial Turf', surf_asphalt:'Asphalt',
+    surf_concrete:'Concrete', surf_sand:'Sand 🏖️', surf_clay:'Clay',
+    surf_tartan:'Tartan', surf_rubber:'Rubber',
+  }
+};
+
+let currentLang = localStorage.getItem('arena_lang')||'he';
+function t(key,...args){
+  const s=STRINGS[currentLang]||STRINGS.he;
+  const v=s[key];
+  return typeof v==='function'?v(...args):(v||key);
+}
+
+function setLang(lang){
+  currentLang=lang;
+  localStorage.setItem('arena_lang',lang);
+  // update lang buttons
+  document.getElementById('lbtn-he').classList.toggle('on',lang==='he');
+  document.getElementById('lbtn-en').classList.toggle('on',lang==='en');
+  // RTL/LTR
+  document.documentElement.setAttribute('dir',lang==='he'?'rtl':'ltr');
+  document.documentElement.setAttribute('lang',lang==='he'?'he':'en');
+  // update data-t spans
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    el.textContent=t(el.dataset.t);
+  });
+  // re-render pills
+  renderPills();
+  // re-render list if open
+  if(currentTab==='list') renderList();
+}
+
+// ─────────────────────────────────────────────
+//  FILTER PILLS (dynamic)
+// ─────────────────────────────────────────────
+const PILL_LIST=[
+  {sport:'all',      emoji:'🏟️', tkey:'all'},
+  {sport:'soccer',   emoji:'⚽', tkey:'soccer'},
+  {sport:'basketball',emoji:'🏀',tkey:'basketball'},
+  {sport:'racket',   emoji:'🎾', tkey:'racket'},
+  {sport:'volleyball',emoji:'🏐',tkey:'volleyball'},
+  {sport:'handball', emoji:'🤾', tkey:'handball'},
+  {sport:'fitness',  emoji:'💪', tkey:'fitness_f'},
+  {sport:'rugby',    emoji:'🏉', tkey:'rugby'},
+  {sport:'baseball', emoji:'⚾', tkey:'baseball'},
+  {sport:'cricket',  emoji:'🏏', tkey:'cricket'},
+  {sport:'swimming', emoji:'🏊', tkey:'swimming'},
+  {sport:'athletics',emoji:'🏃', tkey:'athletics'},
+  {sport:'golf',     emoji:'⛳', tkey:'golf'},
+  {sport:'wheels',   emoji:'🛹', tkey:'wheels'},
+  {sport:'equestrian',emoji:'🏇',tkey:'equestrian'},
+  {sport:'archery',  emoji:'🏹', tkey:'archery'},
+  {sport:'ice_hockey',emoji:'🏒',tkey:'ice_hockey'},
+  {sport:'american_football',emoji:'🏈',tkey:'american_football'},
+  {sport:'field_hockey',emoji:'🏑',tkey:'field_hockey'},
+  {sport:'lacrosse', emoji:'🥍', tkey:'lacrosse'},
+  {sport:'disc_golf',emoji:'🥏', tkey:'disc_golf'},
+  {sport:'boules',   emoji:'🎳', tkey:'boules'},
+  {sport:'multi',    emoji:'🏟️', tkey:'multi'},
+  {sport:'other',    emoji:'🎯', tkey:'other'},
+];
+
+function renderPills(){
+  document.getElementById('pills').innerHTML=PILL_LIST.map(p=>
+    `<button class="pill${currentFilter===p.sport?' on':''}" data-sport="${p.sport}"
+      onclick="setFilter('${p.sport}',this)">${p.emoji} ${t(p.tkey)}</button>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  CONSTANTS & DATA
+// ─────────────────────────────────────────────
+const SPORT_META = {
+  // ⚽ כדורגל ושטח
+  soccer:        {label:'כדורגל',labelEn:'Soccer',          emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  football:      {label:'כדורגל',labelEn:'Soccer',          emoji:'⚽',color:'#30d158',bg:'#0a1a0f'},
+  futsal:        {label:'פוטסל', labelEn:'Futsal',          emoji:'🥅',color:'#2ecc71',bg:'#092b15'},
+  rugby:         {label:'רוגבי', labelEn:'Rugby',           emoji:'🏉',color:'#8e5cf6',bg:'#13093d'},
+  rugby_league:  {label:'רוגבי ליג',labelEn:'Rugby League', emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  rugby_union:   {label:'רוגבי יוניון',labelEn:'Rugby Union',emoji:'🏉',color:'#7c4dff',bg:'#13093d'},
+  field_hockey:  {label:'הוקי שדה',labelEn:'Field Hockey',  emoji:'🏑',color:'#1abc9c',bg:'#09241f'},
+  american_football:{label:'פוטבול אמריקאי',labelEn:'Football',emoji:'🏈',color:'#e67e22',bg:'#2b1608'},
+  australian_football:{label:'פוטבול אוסטרלי',labelEn:'Aussie Rules',emoji:'🏈',color:'#d35400',bg:'#2b1608'},
+  // 🏀 מגרשי כדור
+  basketball:    {label:'כדורסל',labelEn:'Basketball',      emoji:'🏀',color:'#ff9f0a',bg:'#1a110a'},
+  volleyball:    {label:'כדורעף',labelEn:'Volleyball',      emoji:'🏐',color:'#0a84ff',bg:'#0a0f1a'},
+  handball:      {label:'כדוריד',labelEn:'Handball',        emoji:'🤾',color:'#ff6b35',bg:'#1a0e09'},
+  baseball:      {label:'בייסבול',labelEn:'Baseball',       emoji:'⚾',color:'#e74c3c',bg:'#1f0909'},
+  softball:      {label:'סופטבול',labelEn:'Softball',       emoji:'🥎',color:'#f39c12',bg:'#1f1509'},
+  cricket:       {label:'קריקט', labelEn:'Cricket',         emoji:'🏏',color:'#27ae60',bg:'#091a0f'},
+  lacrosse:      {label:'לקרוס', labelEn:'Lacrosse',        emoji:'🥍',color:'#16a085',bg:'#091918'},
+  netball:       {label:'נטבול', labelEn:'Netball',         emoji:'🏐',color:'#9b59b6',bg:'#160b20'},
+  // 🎾 מחבט
+  tennis:        {label:'טניס',  labelEn:'Tennis',          emoji:'🎾',color:'#ffd60a',bg:'#1a180a'},
+  padel:         {label:'פאדל',  labelEn:'Padel',           emoji:'🎾',color:'#5ac8fa',bg:'#0a1418'},
+  badminton:     {label:'בדמינטון',labelEn:'Badminton',     emoji:'🏸',color:'#e91e63',bg:'#1f0912'},
+  squash:        {label:'סקווש', labelEn:'Squash',          emoji:'🎾',color:'#ff5722',bg:'#1f0d09'},
+  table_tennis:  {label:'פינג פונג',labelEn:'Table Tennis', emoji:'🏓',color:'#00bcd4',bg:'#091a1f'},
+  racquetball:   {label:'רקטבול',labelEn:'Racquetball',     emoji:'🎾',color:'#ff4081',bg:'#1f0912'},
+  pickleball:    {label:'פיקלבול',labelEn:'Pickleball',     emoji:'🏓',color:'#76ff03',bg:'#0f1f03'},
+  // 🏃 ריצה וכושר
+  athletics:     {label:'אתלטיקה',labelEn:'Athletics',      emoji:'🏃',color:'#ff453a',bg:'#1f0909'},
+  running:       {label:'ריצה',  labelEn:'Running',         emoji:'🏃',color:'#ff6b6b',bg:'#1f0909'},
+  fitness:       {label:'כושר',  labelEn:'Fitness',         emoji:'💪',color:'#30d158',bg:'#0a1a0f'},
+  gymnastics:    {label:'התעמלות',labelEn:'Gymnastics',     emoji:'🤸',color:'#ff2d55',bg:'#1f0912'},
+  yoga:          {label:'יוגה',  labelEn:'Yoga',            emoji:'🧘',color:'#af52de',bg:'#160b20'},
+  martial_arts:  {label:'אומנויות לחימה',labelEn:'Martial Arts',emoji:'🥋',color:'#ff3b30',bg:'#1f0909'},
+  boxing:        {label:'איגרוף',labelEn:'Boxing',          emoji:'🥊',color:'#ff3b30',bg:'#1f0909'},
+  wrestling:     {label:'היאבקות',labelEn:'Wrestling',      emoji:'🤼',color:'#ff6b35',bg:'#1f0d09'},
+  // 🚴 פנאי ואחר
+  swimming:      {label:'שחייה', labelEn:'Swimming',        emoji:'🏊',color:'#0a84ff',bg:'#0a0f1a'},
+  cycling:       {label:'אופניים',labelEn:'Cycling',        emoji:'🚴',color:'#34c759',bg:'#0a1a0f'},
+  skateboard:    {label:'סקייטבורד',labelEn:'Skateboarding',emoji:'🛹',color:'#ff9500',bg:'#1a1209'},
+  roller_skating:{label:'החלקה', labelEn:'Roller Skating',  emoji:'🛼',color:'#5ac8fa',bg:'#0a1418'},
+  ice_hockey:    {label:'הוקי קרח',labelEn:'Ice Hockey',    emoji:'🏒',color:'#64d2ff',bg:'#091418'},
+  equestrian:    {label:'רכיבה על סוסים',labelEn:'Equestrian',emoji:'🏇',color:'#a2845e',bg:'#1a1209'},
+  archery:       {label:'קשתות', labelEn:'Archery',         emoji:'🏹',color:'#ff9f0a',bg:'#1a110a'},
+  golf:          {label:'גולף',  labelEn:'Golf',            emoji:'⛳',color:'#34c759',bg:'#0a1a0f'},
+  disc_golf:     {label:'פריסבי גולף',labelEn:'Disc Golf',  emoji:'🥏',color:'#5e5ce6',bg:'#0e0e20'},
+  bowls:         {label:'בולינג דשא',labelEn:'Bowls',       emoji:'🎳',color:'#aeaeb2',bg:'#111113'},
+  boules:        {label:'פטנק',  labelEn:'Boules',          emoji:'🎳',color:'#636366',bg:'#111113'},
+  // 🏟️ כללי
+  multi:         {label:'רב תכליתי',labelEn:'Multi-sport',  emoji:'🏟️',color:'#bf5af2',bg:'#120a1a'},
+  other:         {label:'ספורט', labelEn:'Sport',           emoji:'🎯',color:'#636366',bg:'#111113'},
+};
+
+function getSportKey(tags){
+  if(!tags) return 'other';
+  const raw=(tags.sport||'').toLowerCase().split(';')[0].trim();
+  // direct match
+  if(SPORT_META[raw]) return raw;
+  // aliases
+  if(raw==='football') return 'soccer';
+  if(['multi','multi-sport','multisport','various'].includes(raw)) return 'multi';
+  if(raw==='running') return 'athletics';
+  if(['boules','petanque','bocce'].includes(raw)) return 'boules';
+  if(['rugby_league','rugby_union'].includes(raw)) return 'rugby';
+  // name guessing (Hebrew + English)
+  const n=(tags.name||tags['name:he']||tags['name:en']||'').toLowerCase();
+  if(n.includes('כדורגל')||n.includes('soccer')||n.includes('football')) return 'soccer';
+  if(n.includes('כדורסל')||n.includes('basket')) return 'basketball';
+  if(n.includes('טניס')||n.includes('tennis')) return 'tennis';
+  if(n.includes('כדורעף')||n.includes('volley')) return 'volleyball';
+  if(n.includes('פוטסל')||n.includes('futsal')) return 'futsal';
+  if(n.includes('כדוריד')||n.includes('handball')) return 'handball';
+  if(n.includes('פאדל')||n.includes('padel')) return 'padel';
+  if(n.includes('בדמינטון')||n.includes('badminton')) return 'badminton';
+  if(n.includes('פינג')||n.includes('table_tennis')||n.includes('ping')) return 'table_tennis';
+  if(n.includes('כושר')||n.includes('fitness')||n.includes('gym')) return 'fitness';
+  if(n.includes('התעמלות')||n.includes('gymnastics')) return 'gymnastics';
+  if(n.includes('שחייה')||n.includes('swim')||n.includes('בריכה')) return 'swimming';
+  if(n.includes('אתלט')||n.includes('athletics')||n.includes('track')) return 'athletics';
+  if(n.includes('גולף')||n.includes('golf')) return 'golf';
+  if(n.includes('אופנ')||n.includes('cycl')||n.includes('bike')) return 'cycling';
+  if(n.includes('סקייט')||n.includes('skate')) return 'skateboard';
+  if(raw) return 'other';
+  return 'other';
+}
+function getFilterGroup(k){
+  if(['soccer','football','futsal'].includes(k)) return 'soccer';
+  if(['multi','multisport'].includes(k)) return 'multi';
+  if(['rugby','rugby_league','rugby_union'].includes(k)) return 'rugby';
+  if(['tennis','padel','squash','badminton','table_tennis','racquetball','pickleball'].includes(k)) return 'racket';
+  if(['athletics','running','fitness','gymnastics','yoga','martial_arts','boxing','wrestling'].includes(k)) return 'fitness';
+  if(['cycling','skateboard','roller_skating'].includes(k)) return 'wheels';
+  return k;
+}
+
+// ─────────────────────────────────────────────
+//  COUNTRIES CONFIG
+// ─────────────────────────────────────────────
+const COUNTRIES = {
+  il:{
+    id:'il', flag:'🇮🇱', name:'ישראל',
+    center:[31.5,34.9], zoom:9,
+    // bbox: south,west,north,east
+    bbox:[29.4,34.2,33.4,35.9],
+    fullLoad:true,   // load all at once (small country)
+    minZoomLoad:11,
+  },
+  us:{
+    id:'us', flag:'🇺🇸', name:'ארצות הברית',
+    center:[39.5,-98.5], zoom:5,
+    bbox:[24.5,-125.0,49.5,-66.9],
+    fullLoad:false,  // too big → load by viewport
+    minZoomLoad:12,  // must zoom to at least 12 to load
+  },
+};
+let currentCountry = 'il';
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let allFields = [];
+let allMarkers = [];
+let markerLayer;
+let currentFilter = 'all';
+let favsOnly = false;
+let currentTab = 'map';
+let ratings = JSON.parse(localStorage.getItem('arena_ratings')||'{}');
+let favs    = JSON.parse(localStorage.getItem('arena_favs')||'{}');
+let checkins= JSON.parse(localStorage.getItem('arena_checkins')||'{}');
+let players = JSON.parse(localStorage.getItem('arena_players')||'{}');
+
+function save(){
+  localStorage.setItem('arena_ratings', JSON.stringify(ratings));
+  localStorage.setItem('arena_favs',    JSON.stringify(favs));
+  localStorage.setItem('arena_checkins',JSON.stringify(checkins));
+  localStorage.setItem('arena_players', JSON.stringify(players));
+}
+
+// ─────────────────────────────────────────────
+//  MAP INIT
+// ─────────────────────────────────────────────
+const map = L.map('map',{center:[31.5,34.9],zoom:9,zoomControl:true});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CARTO</a>',
+  maxZoom:19
+}).addTo(map);
+
+markerLayer = L.layerGroup().addTo(map);
+
+// Show/hide "load area" button for USA based on zoom
+map.on('moveend zoomend', ()=>{
+  if(currentCountry!=='us') return;
+  const z=map.getZoom();
+  const btn=document.getElementById('load-area-btn');
+  if(z>=COUNTRIES.us.minZoomLoad){
+    btn.classList.add('show');
+    btn.innerHTML=t('load_area');
+  } else {
+    btn.classList.remove('show');
+  }
+});
+
+// ─────────────────────────────────────────────
+//  HEADER HEIGHT → OFFSET PILLS & VIEWS
+// ─────────────────────────────────────────────
+function updateLayout(){
+  const hh = document.getElementById('hdr').offsetHeight;
+  document.getElementById('pills').style.top = hh+'px';
+  document.getElementById('list-view').style.top = (hh+54)+'px';
+  document.getElementById('map-view').style.top  = '0';
+  document.getElementById('map-view').style.paddingTop = (hh+54)+'px';
+  map.invalidateSize();
+}
+window.addEventListener('resize', updateLayout);
+setTimeout(updateLayout, 100);
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+function switchTab(t){
+  currentTab = t;
+  document.getElementById('tab-map').classList.toggle('active', t==='map');
+  document.getElementById('tab-list').classList.toggle('active', t==='list');
+  document.getElementById('map-view').style.display  = t==='map'  ? 'block':'none';
+  document.getElementById('list-view').style.display = t==='list' ? 'block':'none';
+  document.getElementById('locate-btn').style.display= t==='map'  ? 'flex' :'none';
+  if(t==='list') renderList();
+  if(t==='map') { map.invalidateSize(); updateLayout(); }
+}
+
+// ─────────────────────────────────────────────
+//  COUNTRY SWITCH
+// ─────────────────────────────────────────────
+function switchCountry(id){
+  if(currentCountry===id) return;
+  currentCountry=id;
+  haptic('medium');
+  // update buttons
+  document.getElementById('cbtn-il').classList.toggle('on',id==='il');
+  document.getElementById('cbtn-us').classList.toggle('on',id==='us');
+  // clear fields
+  allFields=[];allMarkers=[];markerLayer.clearLayers();
+  document.getElementById('hdr-count').textContent='טוען...';
+  // fly to country
+  const c=COUNTRIES[id];
+  map.flyTo(c.center,c.zoom,{duration:1.2});
+  // hide USA load-area btn
+  document.getElementById('load-area-btn').classList.remove('show');
+  if(c.fullLoad){
+    loadFields();
+  } else {
+    showToast(t('fly_us'));
+    document.getElementById('hdr-count').textContent=t('select_area');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  OVERPASS FETCH
+// ─────────────────────────────────────────────
+function buildQuery(south,west,north,east){
+  const bb=`(${south},${west},${north},${east})`;
+  return `[out:json][timeout:60];(node["leisure"="pitch"]${bb};way["leisure"="pitch"]${bb};node["leisure"="sports_centre"]${bb};way["leisure"="sports_centre"]${bb};);out center tags;`;
+}
+
+async function loadFields(){
+  const c=COUNTRIES[currentCountry];
+  const [s,w,n,e]=c.bbox;
+  showSkeleton();
+  await fetchAndProcess(s,w,n,e);
+}
+
+async function loadAreaFields(){
+  const btn=document.getElementById('load-area-btn');
+  btn.innerHTML='⏳ '+t('loading');
+  btn.style.pointerEvents='none';
+  const b=map.getBounds();
+  const s=b.getSouth().toFixed(4),w=b.getWest().toFixed(4);
+  const n=b.getNorth().toFixed(4),e=b.getEast().toFixed(4);
+  showSkeleton();
+  await fetchAndProcess(s,w,n,e,true);
+  btn.innerHTML=t('load_area');
+  btn.style.pointerEvents='auto';
+}
+
+async function fetchAndProcess(s,w,n,e,append=false){
+  const query=buildQuery(s,w,n,e);
+  try{
+    const r=await fetch('https://overpass-api.de/api/interpreter',{
+      method:'POST',
+      body:'data='+encodeURIComponent(query),
+      headers:{'Content-Type':'application/x-www-form-urlencoded'}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    processFields(d.elements||[],append);
+  }catch(e){
+    console.error(e);
+    showToast(t('err_load'));
+    hideSkeleton();
+  }
+}
+
+function processFields(els,append=false){
+  if(!append){
+    allFields=[];
+    markerLayer.clearLayers();
+    allMarkers=[];
+  }
+  const existingIds=new Set(allFields.map(f=>f.id));
+  let added=0;
+
+  els.forEach(el=>{
+    let lat,lng;
+    if(el.type==='node'){lat=el.lat;lng=el.lon}
+    else if(el.center){lat=el.center.lat;lng=el.center.lon}
+    else return;
+    const id=el.id+'';
+    if(existingIds.has(id)) return; // no duplicates
+    const tags=el.tags||{};
+    const sk=getSportKey(tags);
+    const meta=SPORT_META[sk]||SPORT_META.other;
+    const nameHe=tags['name:he']||tags.name||meta.label;
+    const nameEn=tags['name:en']||tags.name||meta.labelEn||meta.label;
+    const city=tags['addr:city']||tags['addr:town']||tags['addr:state']||'';
+    const f={id,name:nameHe,nameEn,sk,meta,city,tags,lat,lng,fg:getFilterGroup(sk)};
+    allFields.push(f);
+    existingIds.add(id);
+    added++;
+
+    const marker=L.marker([lat,lng],{icon:makeIcon(sk)});
+    marker._f=f;
+    marker.on('click',()=>openSheet(f));
+    allMarkers.push(marker);
+  });
+
+  applyFilter(currentFilter);
+  hideSkeleton();
+  const fieldWord=currentLang==='he'?'מגרשים':'fields';
+  document.getElementById('hdr-count').textContent=allFields.length+' '+fieldWord;
+  if(append){
+    showToast(t('added_n',added,allFields.length));
+  } else {
+    showToast(t('loaded_n',allFields.length));
+  }
+  if(currentTab==='list') renderList();
+}
+
+// ─────────────────────────────────────────────
+//  MARKER ICON
+// ─────────────────────────────────────────────
+function makeIcon(sk,sz=30){
+  const m=SPORT_META[sk]||SPORT_META.other;
+  const s=sz;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s*1.35}">
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".5"/></filter>
+    <circle cx="${s/2}" cy="${s/2}" r="${s/2-1.5}" fill="${m.color}" filter="url(#sh)" opacity=".95"/>
+    <text x="${s/2}" y="${s/2+5.5}" text-anchor="middle" font-size="${s*.48}px">${m.emoji}</text>
+    <polygon points="${s/2-4},${s-2} ${s/2+4},${s-2} ${s/2},${s*1.28}" fill="${m.color}" opacity=".85"/>
+  </svg>`;
+  return L.divIcon({html:svg,className:'',iconSize:[s,s*1.35],iconAnchor:[s/2,s*1.35],popupAnchor:[0,-s*1.35]});
+}
+
+// ─────────────────────────────────────────────
+//  FILTER
+// ─────────────────────────────────────────────
+function setFilter(sport,el){
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  currentFilter=sport;
+  applyFilter(sport);
+  if(currentTab==='list') renderList();
+}
+
+function applyFilter(sport){
+  markerLayer.clearLayers();
+  let n=0;
+  allMarkers.forEach(m=>{
+    const show=(sport==='all'||m._f.fg===sport||m._f.sk===sport)&&(!favsOnly||favs[m._f.id]);
+    if(show){markerLayer.addLayer(m);n++;}
+  });
+  const fw=currentLang==='he'?'מגרשים':'fields';
+  document.getElementById('hdr-count').textContent=n+' '+fw;
+}
+
+function toggleFavsOnly(){
+  favsOnly=!favsOnly;
+  document.getElementById('btn-favs').classList.toggle('on',favsOnly);
+  applyFilter(currentFilter);
+  if(currentTab==='list') renderList();
+  showToast(favsOnly?t('favs_only'):t('all_fields'));
+}
+
+// ─────────────────────────────────────────────
+//  AD TEMPLATES (A + B + C rotating)
+// ─────────────────────────────────────────────
+const ADS = [
+  // ── A – Chip ──
+  { type:'chip', logo:'🏋️', gradient:'linear-gradient(135deg,#ff9f0a,#ff453a)',
+    name:{he:'PowerFit חדר כושר', en:'PowerFit Gym'},
+    desc:{he:'3 חודשים ב-₪99 · סניפים ליד מגרשים', en:'3 months for $29 · Near your courts'},
+    btn:{he:'לפרטים', en:'Details'}, url:'#' },
+  // ── B – Native Card ──
+  { type:'native', img:'👟', gradient:'linear-gradient(135deg,#0a0f1a,#1a1a3a)', accent:'#0a84ff',
+    name:{he:'Nike Air Max – 30% הנחה', en:'Nike Air Max – 30% Off'},
+    desc:{he:'מבצע מיוחד לשחקני מגרש · עד גמר המלאי', en:'Special deal for court players · While stock lasts'},
+    btn:{he:'לקנייה →', en:'Shop now →'}, url:'#' },
+  // ── C – Strip ──
+  { type:'strip', icon:'🏃', accent:'#bf5af2', border:'#bf5af2',
+    name:{he:'אדידס – קולקציית ספורט', en:'Adidas – Sport Collection'},
+    desc:{he:'הנחות בלעדיות לשחקנים', en:'Exclusive deals for players'},
+    btn:{he:'הצג ←', en:'View ←'}, url:'#' },
+  // ── A – Chip (2nd) ──
+  { type:'chip', logo:'⚽', gradient:'linear-gradient(135deg,#30d158,#0a84ff)',
+    name:{he:'ליגת חובבים תל אביב', en:'Tel Aviv Amateur League'},
+    desc:{he:'הצטרף עכשיו לעונה הבאה · כל הרמות', en:'Join next season · All levels welcome'},
+    btn:{he:'הצטרף', en:'Join'}, url:'#' },
+  // ── B – Native Card (2nd) ──
+  { type:'native', img:'🥤', gradient:'linear-gradient(135deg,#1a0a0f,#2a0a1a)', accent:'#ff453a',
+    name:{he:'Gatorade – שתייה לספורטאים', en:'Gatorade – Sports Drink'},
+    desc:{he:'מארז 12 קופסאות ב-₪59 · משלוח חינם', en:'12-pack for $15 · Free shipping'},
+    btn:{he:'להזמנה →', en:'Order →'}, url:'#' },
+  // ── C – Strip (2nd) ──
+  { type:'strip', icon:'🎽', accent:'#ffd60a', border:'#ffd60a',
+    name:{he:'Under Armour – גופיות ספורט', en:'Under Armour – Sport Shirts'},
+    desc:{he:'2+1 חינם · משלוח עד הבית', en:'Buy 2 get 1 free · Home delivery'},
+    btn:{he:'קנה ←', en:'Buy ←'}, url:'#' },
+];
+
+function buildAdHtml(ad, idx){
+  const lang=currentLang;
+  if(ad.type==='chip'){
+    return `<div class="ad-chip" style="animation-delay:${idx*.03}s" onclick="location.href='${ad.url}'">
+      <div class="ad-chip-logo" style="background:${ad.gradient}">${ad.logo}</div>
+      <div class="ad-chip-body">
+        <div class="ad-chip-name">${ad.name[lang]||ad.name.he}</div>
+        <div class="ad-chip-desc">${ad.desc[lang]||ad.desc.he}</div>
+        <span class="ad-chip-tag">${lang==='en'?'Sponsored':'ממומן'}</span>
+      </div>
+      <button class="ad-chip-btn">${ad.btn[lang]||ad.btn.he}</button>
+    </div>`;
+  }
+  if(ad.type==='native'){
+    return `<div class="ad-native" style="animation-delay:${idx*.03}s" onclick="location.href='${ad.url}'">
+      <div class="ad-native-img" style="background:${ad.gradient}">${ad.img}
+        <span class="ad-native-sp">${lang==='en'?'Sponsored':'ממומן'}</span>
+      </div>
+      <div class="ad-native-body">
+        <div class="ad-native-title">${ad.name[lang]||ad.name.he}</div>
+        <div class="ad-native-sub">${ad.desc[lang]||ad.desc.he}</div>
+        <button class="ad-native-cta" style="background:${ad.accent};color:${ad.accent==='#ffd60a'?'#000':'#fff'}">${ad.btn[lang]||ad.btn.he}</button>
+      </div>
+    </div>`;
+  }
+  if(ad.type==='strip'){
+    return `<div class="ad-strip" style="animation-delay:${idx*.03}s;border-right:3px solid ${ad.accent};background:${ad.accent}0f" onclick="location.href='${ad.url}'">
+      <span class="ad-strip-icon">${ad.icon}</span>
+      <div class="ad-strip-text">
+        <div class="ad-strip-title">${ad.name[lang]||ad.name.he}</div>
+        <div class="ad-strip-desc">${ad.desc[lang]||ad.desc.he}</div>
+        <div class="ad-strip-sp">${lang==='en'?'Sponsored':'ממומן'}</div>
+      </div>
+      <button class="ad-strip-btn" style="color:${ad.accent}">${ad.btn[lang]||ad.btn.he}</button>
+    </div>`;
+  }
+  return '';
+}
+
+// ─────────────────────────────────────────────
+//  LIST VIEW
+// ─────────────────────────────────────────────
+const AD_EVERY = 6; // insert ad every N items
+
+function renderList(){
+  const el=document.getElementById('list-content');
+  const visible=allFields.filter(f=>{
+    const filterOk=(currentFilter==='all'||f.fg===currentFilter||f.sk===currentFilter);
+    const favOk=!favsOnly||favs[f.id];
+    return filterOk&&favOk;
+  });
+
+  if(!visible.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🏟️</div><div class="empty-title">${t('empty_title')}</div><div class="empty-sub">${t('empty_sub')}</div></div>`;
+    return;
+  }
+
+  let adIdx=0;
+  el.innerHTML=visible.slice(0,150).map((f,i)=>{
+    const m=f.meta;
+    const r=ratings[f.id]||0;
+    const stars=r?'⭐'.repeat(r):'';
+    const isFav=favs[f.id];
+    const dispName=currentLang==='en'?(f.nameEn||f.name):f.name;
+    const sportLabel=currentLang==='en'?(m.labelEn||m.label):m.label;
+    const item=`<div class="list-item" onclick="openSheet(allFields[${allFields.indexOf(f)}])" style="animation-delay:${Math.min(i*0.03,.5)}s">
+      <div class="li-icon" style="background:${m.bg}">${m.emoji}</div>
+      <div class="li-info">
+        <div class="li-name">${dispName}</div>
+        <div class="li-sub">
+          <span class="li-badge" style="background:${m.color}22;color:${m.color}">${sportLabel}</span>
+          ${f.city?`<span>${f.city}</span>`:''}
+        </div>
+      </div>
+      <div class="li-right">
+        <div class="li-fav" onclick="event.stopPropagation();toggleFav('${f.id}')" id="fav-li-${f.id}">${isFav?'❤️':'🤍'}</div>
+        ${stars?`<div class="li-stars">${stars}</div>`:''}
+      </div>
+    </div>`;
+    const ad=((i+1)%AD_EVERY===0)?buildAdHtml(ADS[adIdx++%ADS.length],i):'';
+    return item+ad;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  BOTTOM SHEET
+// ─────────────────────────────────────────────
+function openSheet(f){
+  haptic('light');
+  const m=f.meta;
+  const id=f.id;
+  const r=ratings[id]||0;
+  const isFav=favs[id];
+  const isChecked=checkins[id];
+  const ps=players[id]||[];
+  const tg=f.tags; // use tg to avoid shadowing t()
+
+  // pick name based on lang
+  const dispName=(currentLang==='en'&&tg['name:en'])?tg['name:en']:
+                 (tg['name:he']||tg.name||m.label);
+  const sportLabel=currentLang==='en'?(m.labelEn||m.label):m.label;
+
+  const rows=[];
+  if(f.city) rows.push(['📍',f.city]);
+  if(tg.surface) rows.push(['🌱',surfaceLabel(tg.surface)]);
+  if(tg.lit) rows.push(['💡',tg.lit==='yes'?t('lit_yes'):t('lit_no')]);
+  if(tg.access) rows.push(['🔓',accessLabel(tg.access)]);
+  if(tg.fee) rows.push(['💰',tg.fee==='yes'?t('paid'):t('free')]);
+  if(tg.opening_hours) rows.push(['🕒',tg.opening_hours]);
+  if(tg.operator) rows.push(['🏢',tg.operator]);
+  if(tg.phone||tg['contact:phone']) rows.push(['📞',`<a href="tel:${tg.phone||tg['contact:phone']}">${tg.phone||tg['contact:phone']}</a>`]);
+
+  document.getElementById('sheet-inner').innerHTML=`
+    <div class="sh-hero" style="background:${m.bg}">${m.emoji}</div>
+    <div class="sh-body">
+      <div class="sh-name">${dispName}</div>
+      <span class="sh-sport" style="background:${m.color}22;color:${m.color};border:.5px solid ${m.color}44">${m.emoji} ${sportLabel}</span>
+
+      <div class="sh-section">
+        <div class="sh-section-title">${t('sec_rating')}</div>
+        <div class="sh-stars" id="stars-row">
+          ${[1,2,3,4,5].map(n=>`<span class="sh-star${n<=r?' on':''}" data-n="${n}" onclick="setRating('${id}',${n})">⭐</span>`).join('')}
+        </div>
+      </div>
+
+      ${rows.length?`<div class="sh-section">
+        <div class="sh-section-title">${t('sec_details')}</div>
+        ${rows.map(([ic,v])=>`<div class="sh-row"><span class="sh-row-icon">${ic}</span><span class="sh-row-val">${v}</span></div>`).join('')}
+      </div>`:''}
+
+      <div class="sh-section">
+        <div class="sh-section-title">${t('sec_nav')}</div>
+        <div class="nav-btns">
+          <a class="nav-btn nav-btn-waze" href="https://waze.com/ul?ll=${f.lat},${f.lng}&navigate=yes" target="_blank" onclick="haptic('medium')">${t('waze')}</a>
+          <a class="nav-btn nav-btn-gmap" href="https://maps.google.com/?q=${f.lat},${f.lng}" target="_blank" onclick="haptic('medium')">${t('gmap')}</a>
+        </div>
+      </div>
+
+      <div class="sh-section">
+        <div class="sh-section-title">${t('sec_players')} (${ps.length})</div>
+        <div class="players" id="players-row">
+          ${ps.map(p=>`<div class="player-chip" onclick="removePlayer('${id}','${p.name}')">
+            <div class="player-av" style="background:${p.color}">${p.initials}</div>
+            <div><div class="player-name">${p.name}</div><div class="player-since">${p.since}</div></div>
+          </div>`).join('')}
+          <button class="add-player" onclick="addPlayerPrompt('${id}')">${t('add_player')}</button>
+        </div>
+      </div>
+
+      <button class="checkin-btn${isChecked?' checked':''}" id="checkin-btn" onclick="doCheckin('${id}')">
+        ${isChecked?t('checkin_done_btn'):t('checkin_btn')}
+      </button>
+      <button class="fav-btn${isFav?' on':''}" id="fav-btn" onclick="toggleFav('${id}')">
+        ${isFav?t('fav_rem_btn'):t('fav_add_btn')}
+      </button>
+    </div>`;
+
+  document.getElementById('sheet').classList.add('open');
+  const ov=document.getElementById('sheet-overlay');
+  ov.style.opacity='1';ov.style.pointerEvents='auto';
+}
+
+function closeSheet(){
+  document.getElementById('sheet').classList.remove('open');
+  const ov=document.getElementById('sheet-overlay');
+  ov.style.opacity='0';ov.style.pointerEvents='none';
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function setRating(id,n){
+  haptic('light');
+  ratings[id]=n;save();
+  document.querySelectorAll('.sh-star').forEach(s=>{
+    const v=+s.dataset.n;
+    s.classList.toggle('on',v<=n);
+  });
+  showToast(t('rating_saved',n));
+}
+
+function toggleFav(id){
+  haptic('medium');
+  if(favs[id]) delete favs[id]; else favs[id]=Date.now();
+  save();
+  const on=!!favs[id];
+  const b=document.getElementById('fav-btn');
+  if(b){b.className='fav-btn'+(on?' on':'');b.innerHTML=on?t('fav_rem_btn'):t('fav_add_btn')}
+  const li=document.getElementById('fav-li-'+id);
+  if(li) li.textContent=on?'❤️':'🤍';
+  showToast(on?t('fav_add'):t('fav_rem'));
+}
+
+function doCheckin(id){
+  haptic('success');
+  checkins[id]=Date.now();save();
+  const b=document.getElementById('checkin-btn');
+  if(b){b.className='checkin-btn checked';b.innerHTML=t('checkin_done_btn')}
+  showToast(t('checkin_done'));
+  // confetti burst
+  burst();
+}
+
+function addPlayerPrompt(id){
+  haptic('light');
+  const name=prompt(t('player_prompt'));
+  if(!name||!name.trim()) return;
+  if(!players[id]) players[id]=[];
+  const colors=['#30d158','#0a84ff','#bf5af2','#ff9f0a','#ff453a','#ffd60a','#5ac8fa'];
+  const color=colors[players[id].length%colors.length];
+  const initials=name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const locale=currentLang==='he'?'he-IL':'en-US';
+  const since=new Date().toLocaleDateString(locale,{day:'2-digit',month:'2-digit'});
+  players[id].push({name:name.trim(),initials,color,since});
+  save();
+  const row=document.getElementById('players-row');
+  if(row){
+    const chip=document.createElement('div');
+    chip.className='player-chip';
+    chip.innerHTML=`<div class="player-av" style="background:${color}">${initials}</div><div><div class="player-name">${name.trim()}</div><div class="player-since">${since}</div></div>`;
+    row.insertBefore(chip,row.lastElementChild);
+  }
+  showToast(t('player_added',name.trim()));
+}
+
+function removePlayer(id,name){
+  if(!confirm(t('remove_player_confirm',name))) return;
+  players[id]=(players[id]||[]).filter(p=>p.name!==name);
+  save();
+  openSheet(allFields.find(f=>f.id===id));
+}
+
+// ─────────────────────────────────────────────
+//  LOCATE
+// ─────────────────────────────────────────────
+let userMarker=null;
+function locateMe(){
+  if(!navigator.geolocation){showToast(t('locate_na'));return}
+  haptic('light');
+  showToast(t('locating'));
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat,longitude:lng}=pos.coords;
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker=L.layerGroup([
+      L.circle([lat,lng],{radius:200,color:'#0a84ff',fillColor:'#0a84ff',fillOpacity:.1,weight:1.5}),
+      L.circleMarker([lat,lng],{radius:7,color:'#fff',fillColor:'#0a84ff',fillOpacity:1,weight:2.5})
+    ]).addTo(map);
+    map.setView([lat,lng],15);
+    haptic('success');
+    showToast(t('located'));
+  },()=>{showToast(t('locate_err'))});
+}
+
+// ─────────────────────────────────────────────
+//  SKELETON
+// ─────────────────────────────────────────────
+function showSkeleton(){
+  if(currentTab==='list'){
+    document.getElementById('list-content').innerHTML=
+      Array(6).fill(0).map((_,i)=>`
+        <div class="sk-item skeleton" style="animation-delay:${i*.1}s">
+          <div class="sk-icon"></div>
+          <div style="flex:1">
+            <div class="sk-line" style="height:14px;width:${60+Math.random()*30}%;margin-bottom:8px"></div>
+            <div class="sk-line" style="height:10px;width:40%"></div>
+          </div>
+        </div>`).join('');
+  }
+}
+function hideSkeleton(){}
+
+// ─────────────────────────────────────────────
+//  PULL TO REFRESH (list view)
+// ─────────────────────────────────────────────
+let ptStart=0,ptActive=false;
+document.getElementById('list-view').addEventListener('touchstart',e=>{
+  if(document.getElementById('list-view').scrollTop===0) ptStart=e.touches[0].clientY;
+},{passive:true});
+document.getElementById('list-view').addEventListener('touchmove',e=>{
+  const dy=e.touches[0].clientY-ptStart;
+  if(dy>50&&!ptActive){
+    ptActive=true;
+    document.getElementById('ptr').classList.add('show');
+    haptic('light');
+  }
+},{passive:true});
+document.getElementById('list-view').addEventListener('touchend',()=>{
+  if(ptActive){
+    ptActive=false;
+    document.getElementById('ptr').classList.remove('show');
+    loadFields();
+    showToast('🔄 מרענן...');
+  }
+},{passive:true});
+
+// ─────────────────────────────────────────────
+//  CONFETTI BURST
+// ─────────────────────────────────────────────
+function burst(){
+  const colors=['#30d158','#0a84ff','#ffd60a','#bf5af2','#ff453a'];
+  for(let i=0;i<18;i++){
+    const d=document.createElement('div');
+    Object.assign(d.style,{
+      position:'fixed',
+      top:'50%',left:'50%',
+      width:'8px',height:'8px',
+      borderRadius:'50%',
+      background:colors[i%colors.length],
+      pointerEvents:'none',
+      zIndex:9999,
+      animation:`burst-${i} .8s ease-out forwards`,
+    });
+    const angle=(i/18)*360;
+    const dist=80+Math.random()*80;
+    const dx=Math.cos(angle*Math.PI/180)*dist;
+    const dy=Math.sin(angle*Math.PI/180)*dist;
+    const st=document.createElement('style');
+    st.textContent=`@keyframes burst-${i}{0%{transform:translate(0,0);opacity:1}100%{transform:translate(${dx}px,${dy}px);opacity:0}}`;
+    document.head.appendChild(st);
+    document.body.appendChild(d);
+    setTimeout(()=>{d.remove();st.remove()},900);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function surfaceLabel(s){
+  const he={grass:'דשא 🌿',artificial_turf:'דשא סינטטי',asphalt:'אספלט',concrete:'בטון',sand:'חול 🏖️',clay:'חימר',tartan:'טרטן',rubber:'גומי'};
+  const en={grass:'Grass 🌿',artificial_turf:'Artificial Turf',asphalt:'Asphalt',concrete:'Concrete',sand:'Sand 🏖️',clay:'Clay',tartan:'Tartan',rubber:'Rubber'};
+  return (currentLang==='en'?en:he)[s]||s;
+}
+function accessLabel(a){
+  const he={yes:'ציבורי ✅',public:'ציבורי ✅',private:'פרטי 🔒',permissive:'ברשות',customers:'לקוחות בלבד'};
+  const en={yes:'Public ✅',public:'Public ✅',private:'Private 🔒',permissive:'Permitted',customers:'Customers only'};
+  return (currentLang==='en'?en:he)[a]||a;
+}
+
+function haptic(type){
+  if(navigator.vibrate){
+    const p={light:[10],medium:[15],heavy:[25],success:[10,60,10],error:[30]};
+    navigator.vibrate(p[type]||[10]);
+  }
+}
+
+function showToast(msg,ms=2600){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+// ─────────────────────────────────────────────
+//  SEED DATA – real Israeli sports fields
+//  shown immediately while API loads
+// ─────────────────────────────────────────────
+const SEED_IL = [
+  // ── תל אביב ──
+  {id:'s1', name:'אצטדיון בלומפילד',     nameEn:'Bloomfield Stadium',      lat:32.0627,lng:34.7660,sport:'soccer'},
+  {id:'s2', name:'מגרש כדורסל גורדון',   nameEn:'Gordon Basketball Court', lat:32.0870,lng:34.7762,sport:'basketball'},
+  {id:'s3', name:'מגרשי טניס הירקון',    nameEn:'Hayarkon Tennis Courts',  lat:32.1012,lng:34.8002,sport:'tennis'},
+  {id:'s4', name:'מגרש כדורגל לוינסקי',  nameEn:'Levinski Soccer Field',   lat:32.0553,lng:34.7732,sport:'soccer'},
+  {id:'s5', name:'מגרש כדורעף גורדון',   nameEn:'Gordon Beach Volleyball', lat:32.0872,lng:34.7741,sport:'volleyball'},
+  {id:'s6', name:'מגרש כדורסל נורדאו',   nameEn:'Nordau Basketball',       lat:32.0935,lng:34.7808,sport:'basketball'},
+  {id:'s7', name:'מגרש פוטסל הירקון',    nameEn:'Yarkon Futsal',           lat:32.1050,lng:34.8120,sport:'futsal'},
+  {id:'s8', name:'מגרש כדורגל ביאליק',   nameEn:'Bialik Soccer',           lat:32.0850,lng:34.7950,sport:'soccer'},
+  {id:'s9', name:'מגרש טניס רמת אביב',   nameEn:'Ramat Aviv Tennis',       lat:32.1150,lng:34.8050,sport:'tennis'},
+  {id:'s10',name:'מגרש כדורסל פלורנטין', nameEn:'Florentin Basketball',    lat:32.0590,lng:34.7670,sport:'basketball'},
+  // ── ירושלים ──
+  {id:'s11',name:'אצטדיון טדי',           nameEn:'Teddy Stadium',           lat:31.7714,lng:35.1883,sport:'soccer'},
+  {id:'s12',name:'ארנה ירושלים',          nameEn:'Jerusalem Arena',         lat:31.7840,lng:35.2170,sport:'basketball'},
+  {id:'s13',name:'מגרשי טניס גן סאקר',   nameEn:'Sacher Park Tennis',      lat:31.7780,lng:35.2020,sport:'tennis'},
+  {id:'s14',name:'מגרש כדורגל מלחה',     nameEn:'Malcha Soccer Field',     lat:31.7550,lng:35.1900,sport:'soccer'},
+  {id:'s15',name:'מגרש כדורסל רמות',     nameEn:'Ramot Basketball',        lat:31.8250,lng:35.1880,sport:'basketball'},
+  {id:'s16',name:'מגרש כדורגל קטמון',    nameEn:'Katamon Soccer',          lat:31.7630,lng:35.2050,sport:'soccer'},
+  // ── חיפה ──
+  {id:'s17',name:'אצטדיון סמי עופר',     nameEn:'Sammy Ofer Stadium',      lat:32.8200,lng:34.9880,sport:'soccer'},
+  {id:'s18',name:'מגרש כדורסל כרמל',     nameEn:'Carmel Basketball',       lat:32.8050,lng:34.9890,sport:'basketball'},
+  {id:'s19',name:'מגרשי טניס חיפה',      nameEn:'Haifa Tennis Center',     lat:32.8120,lng:34.9970,sport:'tennis'},
+  {id:'s20',name:'מגרש כדורגל קרית חיים',nameEn:'Kiryat Haim Soccer',     lat:32.8470,lng:35.0600,sport:'soccer'},
+  {id:'s21',name:'מגרש כדורעף בת גלים',  nameEn:'Bat Galim Volleyball',    lat:32.8280,lng:34.9720,sport:'volleyball'},
+  // ── באר שבע ──
+  {id:'s22',name:'אצטדיון טרנר',         nameEn:'Turner Stadium',          lat:31.2440,lng:34.8100,sport:'soccer'},
+  {id:'s23',name:'מגרש כדורסל נגב',      nameEn:'Negev Basketball Court',  lat:31.2520,lng:34.7970,sport:'basketball'},
+  {id:'s24',name:'מגרשי טניס באר שבע',   nameEn:'Beer Sheva Tennis',       lat:31.2600,lng:34.8050,sport:'tennis'},
+  {id:'s25',name:'מגרש כדורגל דרום',     nameEn:'South Soccer Field',      lat:31.2350,lng:34.8200,sport:'soccer'},
+  // ── ראשון לציון ──
+  {id:'s26',name:'אצטדיון ראשון לציון',  nameEn:'Rishon LeZion Stadium',   lat:31.9612,lng:34.8017,sport:'soccer'},
+  {id:'s27',name:'מגרש כדורסל ראשון',    nameEn:'Rishon Basketball',       lat:31.9680,lng:34.8050,sport:'basketball'},
+  {id:'s28',name:'מגרש כדורגל נחשון',    nameEn:'Nachshon Soccer',         lat:31.9520,lng:34.7980,sport:'soccer'},
+  // ── פתח תקוה ──
+  {id:'s29',name:'אצטדיון הטוטו',        nameEn:'HaToto Stadium',          lat:32.0850,lng:34.8880,sport:'soccer'},
+  {id:'s30',name:'מגרש כדורסל פ"ת',      nameEn:'Petah Tikva Basketball',  lat:32.0920,lng:34.8820,sport:'basketball'},
+  // ── נתניה ──
+  {id:'s31',name:'אצטדיון עירוני נתניה', nameEn:'Netanya Municipal Stadium',lat:32.3200,lng:34.8600,sport:'soccer'},
+  {id:'s32',name:'מגרש כדורסל נתניה',    nameEn:'Netanya Basketball',       lat:32.3280,lng:34.8570,sport:'basketball'},
+  {id:'s33',name:'מגרשי טניס נתניה',     nameEn:'Netanya Tennis',           lat:32.3350,lng:34.8520,sport:'tennis'},
+  // ── אשדוד ──
+  {id:'s34',name:'אצטדיון אשדוד',        nameEn:'Ashdod Stadium',          lat:31.8100,lng:34.6560,sport:'soccer'},
+  {id:'s35',name:'מגרש כדורסל אשדוד',    nameEn:'Ashdod Basketball',       lat:31.8150,lng:34.6500,sport:'basketball'},
+  // ── רמת גן ──
+  {id:'s36',name:'אצטדיון רמת גן',       nameEn:'Ramat Gan National Stadium',lat:32.0740,lng:34.8270,sport:'soccer'},
+  {id:'s37',name:'מגרש כדורסל גבעתיים',  nameEn:'Givatayim Basketball',    lat:32.0720,lng:34.8140,sport:'basketball'},
+  // ── הרצליה ──
+  {id:'s38',name:'מגרש כדורגל הרצליה',   nameEn:'Herzliya Soccer Field',   lat:32.1640,lng:34.8430,sport:'soccer'},
+  {id:'s39',name:'מגרשי טניס הרצליה',    nameEn:'Herzliya Tennis Club',    lat:32.1680,lng:34.8350,sport:'tennis'},
+  // ── רחובות ──
+  {id:'s40',name:'מגרש כדורגל רחובות',   nameEn:'Rehovot Soccer',          lat:31.8930,lng:34.8140,sport:'soccer'},
+  {id:'s41',name:'מגרש כדורסל רחובות',   nameEn:'Rehovot Basketball',      lat:31.8980,lng:34.8080,sport:'basketball'},
+  // ── עפולה ──
+  {id:'s42',name:'אצטדיון עפולה',        nameEn:'Afula Stadium',           lat:32.6060,lng:35.2900,sport:'soccer'},
+  // ── נצרת ──
+  {id:'s43',name:'מגרש כדורגל נצרת',     nameEn:'Nazareth Soccer Field',   lat:32.7040,lng:35.2990,sport:'soccer'},
+  {id:'s44',name:'מגרש כדורסל נצרת',     nameEn:'Nazareth Basketball',     lat:32.7010,lng:35.3020,sport:'basketball'},
+  // ── אשקלון ──
+  {id:'s45',name:'מגרש כדורגל אשקלון',   nameEn:'Ashkelon Soccer',         lat:31.6688,lng:34.5742,sport:'soccer'},
+  // ── כפר סבא ──
+  {id:'s46',name:'מגרש כדורגל כ"ס',      nameEn:'Kfar Saba Soccer',        lat:32.1762,lng:34.9077,sport:'soccer'},
+  // ── מגרשי חוף ──
+  {id:'s47',name:'כדורעף חוף תל אביב',   nameEn:'Tel Aviv Beach Volleyball',lat:32.0780,lng:34.7650,sport:'volleyball'},
+  {id:'s48',name:'כדורעף חוף נתניה',     nameEn:'Netanya Beach Volleyball', lat:32.3300,lng:34.8520,sport:'volleyball'},
+  {id:'s49',name:'כדורעף חוף חיפה',      nameEn:'Haifa Beach Volleyball',   lat:32.8190,lng:34.9680,sport:'volleyball'},
+  // ── מגרשי פאדל ──
+  {id:'s50',name:'מגרשי פאדל תל אביב',   nameEn:'Tel Aviv Padel',           lat:32.0990,lng:34.8080,sport:'padel'},
+  {id:'s51',name:'מגרשי פאדל ירושלים',   nameEn:'Jerusalem Padel',          lat:31.7900,lng:35.2100,sport:'padel'},
+  {id:'s52',name:'מגרשי פאדל חיפה',      nameEn:'Haifa Padel',              lat:32.8100,lng:35.0100,sport:'padel'},
+  // ── מגרשי כדוריד ──
+  {id:'s53',name:'אולם כדוריד ראשון',    nameEn:'Rishon Handball Hall',     lat:31.9640,lng:34.8010,sport:'handball'},
+  {id:'s54',name:'אולם כדוריד ת"א',      nameEn:'Tel Aviv Handball',        lat:32.0750,lng:34.7900,sport:'handball'},
+  // ── אתלטיקה ──
+  {id:'s55',name:'מסלול אתלטיקה ת"א',    nameEn:'Tel Aviv Athletics Track', lat:32.1020,lng:34.7970,sport:'athletics'},
+  {id:'s56',name:'מסלול אתלטיקה ירושלים',nameEn:'Jerusalem Athletics Track',lat:31.7850,lng:35.2150,sport:'athletics'},
+  // ── בריכות שחייה ──
+  {id:'s57',name:'בריכת גורדון',         nameEn:'Gordon Pool',              lat:32.0880,lng:34.7760,sport:'swimming'},
+  {id:'s58',name:'בריכת ירושלים',        nameEn:'Jerusalem Pool',           lat:31.7760,lng:35.1990,sport:'swimming'},
+  {id:'s59',name:'בריכת חיפה',           nameEn:'Haifa Pool',               lat:32.8090,lng:34.9920,sport:'swimming'},
+  // ── רב תכליתי ──
+  {id:'s60',name:'מתחם ספורט הירקון',    nameEn:'Yarkon Sports Complex',    lat:32.1080,lng:34.8090,sport:'multi'},
+  {id:'s61',name:'מתחם ספורט ירושלים',   nameEn:'Jerusalem Sports Center',  lat:31.7900,lng:35.2050,sport:'multi'},
+  {id:'s62',name:'מתחם ספורט חיפה',      nameEn:'Haifa Sports Center',      lat:32.8140,lng:35.0000,sport:'multi'},
+  {id:'s63',name:'מתחם ספורט ב"ש',       nameEn:'Beer Sheva Sports Center', lat:31.2480,lng:34.7990,sport:'multi'},
+];
+
+function loadSeedData(){
+  const els = SEED_IL.map(s=>({
+    type:'node',
+    id: s.id,
+    lat: s.lat,
+    lon: s.lng,
+    tags:{
+      name: s.name,
+      'name:en': s.nameEn,
+      sport: s.sport,
+      access:'yes',
+      leisure:'pitch',
+    }
+  }));
+  processFields(els, false);
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+// Apply saved language on load
+setLang(currentLang);
+// update load-area button text
+document.getElementById('load-area-btn').innerHTML=t('load_area');
+// Init AdSense banner
+try{ (adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
+// Show seed data immediately, then load live
+loadSeedData();
+loadFields();
+</script>
+</body>
+</html>
